@@ -8,7 +8,7 @@ This repository's **Phase 0** spike is a small test app that de-risks three inte
 
 | Area | Purpose |
 | --- | --- |
-| **Windows media controls** | Spotify now-playing via `GlobalSystemMediaTransportControlsSessionManager` (no Spotify login). Shows title, artist, album, duration, status, raw timeline position, and a smoothed interpolated clock between timeline events. |
+| **Windows media controls** | Spotify now-playing via `GlobalSystemMediaTransportControlsSessionManager` (no Spotify login). Polls ~250ms, classifies track/playback/timeline changes, shows raw timeline position and a smoothed interpolated clock between updates. |
 | **Transparent overlay window** | Frameless, always-on-top, transparent WebView2 window; draggable title bar; click-through toggle (UI, tray, **Ctrl+Alt+C**); Hebrew RTL + English sample lines; bouncing-ball `requestAnimationFrame` demo and FPS counter (idle when animation is off). |
 | **WorkerW wallpaper attach** | Re-parent behind desktop icons (Progman `0x052C` / WorkerW) and undo (**Ctrl+Alt+W**, tray, UI). |
 

@@ -17,9 +17,9 @@ static WALLPAPER_STATE: LazyLock<Mutex<WallpaperRestore>> =
 mod imp {
     use super::*;
     use windows::core::w;
-    use windows::Win32::Foundation::{BOOL, HWND, LPARAM, TRUE};
+    use windows::Win32::Foundation::HWND;
     use windows::Win32::UI::WindowsAndMessaging::{
-        EnumWindows, FindWindowExW, FindWindowW, GetWindowLongPtrW, SendMessageW, SetParent,
+        FindWindowExW, FindWindowW, GetWindowLongPtrW, SendMessageW, SetParent,
         SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE, GWL_STYLE, SWP_FRAMECHANGED,
         SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW, WM_USER,
     };
@@ -38,29 +38,12 @@ mod imp {
             let _ = SendMessageW(progman, WM_USER + 0x052C, None, None);
         }
 
-        let mut workerw = HWND::default();
-        unsafe extern "system" fn enum_proc(hwnd: HWND, lparam: LPARAM) -> BOOL {
-            if let Ok(shell) =
-                FindWindowExW(Some(hwnd), None, w!("SHELLDLL_DefView"), None)
-            {
-                if hwnd_valid(shell) {
-                    if let Ok(behind) = FindWindowExW(None, Some(hwnd), w!("WorkerW"), None) {
-                        if hwnd_valid(behind) {
-                            let target = lparam.0 as *mut HWND;
-                            unsafe {
-                                *target = behind;
-                            }
-                        }
-                    }
-                }
-            }
-            TRUE
+        let defview = FindWindowExW(Some(progman), None, w!("SHELLDLL_DefView"), None).ok()?;
+        if !hwnd_valid(defview) {
+            return None;
         }
 
-        unsafe {
-            let _ = EnumWindows(Some(enum_proc), LPARAM(&mut workerw as *mut _ as isize));
-        }
-
+        let workerw = FindWindowExW(None, Some(defview), w!("WorkerW"), None).ok()?;
         if hwnd_valid(workerw) {
             Some(workerw)
         } else {
