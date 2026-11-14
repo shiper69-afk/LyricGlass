@@ -55,7 +55,6 @@ pub fn log_panic(payload: &str, location: &str, backtrace: &std::backtrace::Back
 
 #[cfg(windows)]
 pub fn show_error_dialog(title: &str, message: &str) {
-    use windows::core::w;
     use windows::Win32::UI::WindowsAndMessaging::{MessageBoxW, MB_ICONERROR, MB_OK};
 
     let wide: Vec<u16> = format!("{message}\n\nLog: {}", log_path_display())

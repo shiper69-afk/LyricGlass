@@ -183,10 +183,8 @@ mod imp {
 
     fn watcher_loop(app: AppHandle, shared: SharedMediaState) {
         unsafe {
-            match CoInitializeEx(None, COINIT_APARTMENTTHREADED) {
-                Ok(()) => crate::startup::step("media watcher: COM STA initialized"),
-                Err(e) => crate::startup::step(&format!("media watcher: COM init note: {e}")),
-            }
+            let hr = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+            crate::startup::step(&format!("media watcher: CoInitializeEx -> {hr:?}"));
         }
 
         let mut last: Option<Snapshot> = None;
