@@ -38,12 +38,16 @@ mod imp {
             let _ = SendMessageW(progman, WM_USER + 0x052C, None, None);
         }
 
-        let defview = FindWindowExW(Some(progman), None, w!("SHELLDLL_DefView"), None).ok()?;
+        let defview = unsafe {
+            FindWindowExW(Some(progman), None, w!("SHELLDLL_DefView"), None).ok()?
+        };
         if !hwnd_valid(defview) {
             return None;
         }
 
-        let workerw = FindWindowExW(None, Some(defview), w!("WorkerW"), None).ok()?;
+        let workerw = unsafe {
+            FindWindowExW(None, Some(defview), w!("WorkerW"), None).ok()?
+        };
         if hwnd_valid(workerw) {
             Some(workerw)
         } else {
