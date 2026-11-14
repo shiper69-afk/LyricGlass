@@ -204,8 +204,10 @@ mod imp {
         let app_timeline = app.clone();
         let _ = session.TimelinePropertiesChanged(&TypedEventHandler::new(
             move |sender, _args| {
-                apply_timeline(&sender, &shared_timeline);
-                let _ = app_timeline.emit("media-state", shared_timeline.read().clone());
+                if let Some(sender) = sender {
+                    apply_timeline(&sender, &shared_timeline);
+                    let _ = app_timeline.emit("media-state", shared_timeline.read().clone());
+                }
                 Ok(())
             },
         ));
@@ -214,6 +216,9 @@ mod imp {
         let app_playback = app.clone();
         let _ = session.PlaybackInfoChanged(&TypedEventHandler::new(
             move |sender, _args| {
+                let Some(sender) = sender else {
+                    return Ok(());
+                };
                 let status = sender
                     .GetPlaybackInfo()
                     .ok()
@@ -232,6 +237,9 @@ mod imp {
         let app_props = app.clone();
         let _ = session.MediaPropertiesChanged(&TypedEventHandler::new(
             move |sender, _args| {
+                let Some(sender) = sender else {
+                    return Ok(());
+                };
                 let props = sender
                     .TryGetMediaPropertiesAsync()
                     .ok()
