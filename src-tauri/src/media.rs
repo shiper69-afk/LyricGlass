@@ -167,7 +167,8 @@ mod imp {
         let sessions = manager.GetSessions().ok()?;
         for session in sessions {
             if let Ok(id) = session.SourceAppUserModelId() {
-                if id.to_string().to_lowercase().contains("spotify") {
+                let id_lower = id.to_string().to_lowercase();
+                if id_lower.contains("spotify") || id_lower.contains("spotifyab") {
                     return Some(session);
                 }
             }
@@ -180,15 +181,17 @@ mod imp {
         wait_async!(op)
     }
 
-    pub fn start_media_watcher(app: AppHandle, shared: SharedMediaState) {
-        std::thread::spawn(move || {
-            unsafe {
-                let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+    fn watcher_loop(app: AppHandle, shared: SharedMediaState) {
+        unsafe {
+            match CoInitializeEx(None, COINIT_APARTMENTTHREADED) {
+                Ok(()) => crate::startup::step("media watcher: COM STA initialized"),
+                Err(e) => crate::startup::step(&format!("media watcher: COM init note: {e}")),
             }
+        }
 
-            let mut last: Option<Snapshot> = None;
+        let mut last: Option<Snapshot> = None;
 
-            loop {
+        loop {
                 let message = if let Some(manager) = request_manager() {
                     if let Some(session) = find_spotify_session(&manager) {
                         let snap = capture_snapshot(&session);
@@ -250,6 +253,17 @@ mod imp {
                 }
 
                 std::thread::sleep(Duration::from_millis(250));
+            }
+    }
+
+    pub fn start_media_watcher(app: AppHandle, shared: SharedMediaState) {
+        std::thread::spawn(move || {
+            crate::startup::step("media watcher thread spawned");
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                watcher_loop(app, shared);
+            })) {
+                Ok(_) => crate::startup::step("media watcher thread ended"),
+                Err(_) => crate::startup::step("media watcher thread panicked (caught)"),
             }
         });
     }

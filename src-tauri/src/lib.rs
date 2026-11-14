@@ -1,5 +1,6 @@
 mod clock;
 mod media;
+mod startup;
 mod wallpaper;
 
 use media::{now_unix_ms, smoothed_now, MediaState, SharedMediaState, start_media_watcher};
@@ -47,6 +48,11 @@ fn get_smoothed_position(state: tauri::State<SharedMediaState>) -> u64 {
 #[tauri::command]
 fn get_ui_state(flags: tauri::State<SharedFlags>) -> UiState {
     current_ui_state(flags.inner())
+}
+
+#[tauri::command]
+fn get_startup_log_path() -> String {
+    startup::log_path_display()
 }
 
 fn set_click_through(window: &WebviewWindow, flags: &SharedFlags, enabled: bool) -> Result<(), String> {
@@ -116,48 +122,80 @@ fn toggle_wallpaper_mode(
     Ok(next)
 }
 
-fn register_shortcuts(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    let click_shortcut: Shortcut = "Ctrl+Alt+C".parse()?;
-    let wallpaper_shortcut: Shortcut = "Ctrl+Alt+W".parse()?;
-
-    let app_click = app.clone();
-    app.global_shortcut().on_shortcut(click_shortcut, move |_app, _shortcut, event| {
-        if event.state == ShortcutState::Pressed {
-            if let Some(window) = app_click.get_webview_window("main") {
-                let flags = app_click.state::<SharedFlags>();
-                let next = !flags.lock().click_through;
-                if set_click_through(&window, flags.inner(), next).is_ok() {
-                    let _ = app_click.emit("ui-state", current_ui_state(flags.inner()));
-                }
-            }
-        }
-    })?;
-
-    let app_wallpaper = app.clone();
-    app.global_shortcut().on_shortcut(wallpaper_shortcut, move |_app, _shortcut, event| {
-        if event.state == ShortcutState::Pressed {
-            if let Some(window) = app_wallpaper.get_webview_window("main") {
-                let flags = app_wallpaper.state::<SharedFlags>();
-                if set_wallpaper_mode_inner(&window, !wallpaper::is_attached()).is_ok() {
-                    let _ = app_wallpaper.emit("ui-state", current_ui_state(flags.inner()));
-                }
-            }
-        }
-    })?;
-
-    app.global_shortcut().register(click_shortcut)?;
-    app.global_shortcut().register(wallpaper_shortcut)?;
-    Ok(())
+fn register_shortcuts(app: &AppHandle) {
+    register_one_shortcut(app, "Ctrl+Alt+C", true);
+    register_one_shortcut(app, "Ctrl+Alt+W", false);
 }
 
-fn build_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    let toggle_click = MenuItem::with_id(app, "toggle_click", "Toggle click-through", true, None::<&str>)?;
-    let toggle_wallpaper =
-        MenuItem::with_id(app, "toggle_wallpaper", "Toggle wallpaper mode", true, None::<&str>)?;
-    let quit = PredefinedMenuItem::quit(app, None)?;
-    let menu = Menu::with_items(app, &[&toggle_click, &toggle_wallpaper, &quit])?;
+fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, click: bool) {
+    let parsed: Shortcut = match shortcut_str.parse() {
+        Ok(s) => s,
+        Err(e) => {
+            startup::step(&format!("hotkey parse failed ({shortcut_str}): {e}"));
+            return;
+        }
+    };
 
-    let _tray = TrayIconBuilder::with_id("main")
+    let app_handle = app.clone();
+    if let Err(e) = app.global_shortcut().on_shortcut(parsed, move |_app, _shortcut, event| {
+        if event.state != ShortcutState::Pressed {
+            return;
+        }
+        if let Some(window) = app_handle.get_webview_window("main") {
+            let flags = app_handle.state::<SharedFlags>();
+            if click {
+                let next = !flags.lock().click_through;
+                if set_click_through(&window, flags.inner(), next).is_ok() {
+                    let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
+                }
+            } else if set_wallpaper_mode_inner(&window, !wallpaper::is_attached()).is_ok() {
+                let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
+            }
+        }
+    }) {
+        startup::step(&format!("hotkey handler failed ({shortcut_str}): {e}"));
+    } else {
+        startup::step(&format!("hotkey ready: {shortcut_str}"));
+    }
+}
+
+fn build_tray(app: &AppHandle) {
+    let toggle_click = match MenuItem::with_id(app, "toggle_click", "Toggle click-through", true, None::<&str>) {
+        Ok(i) => i,
+        Err(e) => {
+            startup::step(&format!("tray menu item failed: {e}"));
+            return;
+        }
+    };
+    let toggle_wallpaper = match MenuItem::with_id(app, "toggle_wallpaper", "Toggle wallpaper mode", true, None::<&str>) {
+        Ok(i) => i,
+        Err(e) => {
+            startup::step(&format!("tray menu item failed: {e}"));
+            return;
+        }
+    };
+    let quit = match PredefinedMenuItem::quit(app, None) {
+        Ok(i) => i,
+        Err(e) => {
+            startup::step(&format!("tray quit item failed: {e}"));
+            return;
+        }
+    };
+    let menu = match Menu::with_items(app, &[&toggle_click, &toggle_wallpaper, &quit]) {
+        Ok(m) => m,
+        Err(e) => {
+            startup::step(&format!("tray menu failed: {e}"));
+            return;
+        }
+    };
+
+    let Some(icon) = app.default_window_icon().cloned() else {
+        startup::step("tray skipped: no window icon available");
+        return;
+    };
+
+    if let Err(e) = TrayIconBuilder::with_id("main")
+        .icon(icon)
         .menu(&menu)
         .tooltip("LyricGlass Phase 0 spike")
         .on_menu_event({
@@ -197,37 +235,63 @@ fn build_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         })
-        .build(app)?;
-
-    Ok(())
+        .build(app)
+    {
+        startup::step(&format!("tray build failed: {e}"));
+    } else {
+        startup::step("tray ready");
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    startup::install_panic_hook();
+    startup::init_logging();
+    startup::step("LyricGlass run() begin");
+
     let media_state: SharedMediaState = Arc::new(parking_lot::RwLock::new(MediaState::default()));
     let flags: SharedFlags = Arc::new(Mutex::new(AppFlags {
         click_through: false,
     }));
 
-    tauri::Builder::default()
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+    startup::step("creating tauri builder");
+    startup::step("entering tauri event loop");
+    let run_result = tauri::Builder::default()
+        .plugin({
+            startup::step("loading global-shortcut plugin");
+            tauri_plugin_global_shortcut::Builder::new().build()
+        })
         .manage(media_state.clone())
         .manage(flags.clone())
         .invoke_handler(tauri::generate_handler![
             get_media_state,
             get_smoothed_position,
             get_ui_state,
+            get_startup_log_path,
             toggle_click_through,
             set_wallpaper_mode,
             toggle_wallpaper_mode,
         ])
-        .setup(move |app| {
-            build_tray(app.handle())?;
-            register_shortcuts(app.handle())?;
-            start_media_watcher(app.handle().clone(), media_state.clone());
-            let _ = app.handle().emit("ui-state", current_ui_state(&flags));
-            Ok(())
+        .setup({
+            let flags = flags.clone();
+            move |app| {
+                startup::step("tauri setup: window shell");
+                startup::step("tauri setup: building tray (optional)");
+                build_tray(app.handle());
+                startup::step("tauri setup: registering hotkeys (optional)");
+                register_shortcuts(app.handle());
+                startup::step("tauri setup: starting media watcher (optional)");
+                start_media_watcher(app.handle().clone(), media_state.clone());
+                startup::step("tauri setup: emitting initial UI state");
+                let _ = app.handle().emit("ui-state", current_ui_state(&flags));
+                startup::step("tauri setup complete — WebView2 loading");
+                Ok(())
+            }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .run(tauri::generate_context!());
+
+    match run_result {
+        Ok(()) => startup::step("tauri exited normally"),
+        Err(e) => startup::log_fatal_error("tauri run", e),
+    }
 }

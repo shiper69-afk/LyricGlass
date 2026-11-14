@@ -31,13 +31,30 @@ npm run tauri dev
 
 Release: `npm run tauri build` → installer under `src-tauri\target\release\bundle\nsis\`, exe at `src-tauri\target\release\lyricglass.exe`.
 
+### Startup logs & crash diagnostics
+
+Each run writes a timestamped log under:
+
+`%LOCALAPPDATA%\LyricGlass\logs\lyricglass-<unix-time>.log`
+
+The log records startup steps (COM/media watcher, tray, hotkeys, Tauri setup, WebView2). On panic or fatal startup error, Windows shows a message box with the log path; panics also include a backtrace in the log file (release builds use `panic = unwind`).
+
+If the app fails to launch, open the newest file in that folder and attach it to your bug report.
+
 ### CI artifacts
 
 GitHub Actions on `windows-latest` uploads artifact **`lyricglass-windows-<commit-sha>`** (NSIS installer and/or `lyricglass.exe`) on each push/PR. Download from the workflow run **Artifacts** section.
 
 ## Manual test checklist (Windows)
 
-Use Spotify desktop with LyricGlass running.
+Use Spotify desktop with LyricGlass running (Microsoft Store Spotify is supported; session id may look like `SpotifyAB.SpotifyMusic_...!Spotify`).
+
+### 0. Startup & uninstall (regression)
+
+1. Install per-user from the NSIS artifact → launch from Start Menu → **window must appear within a few seconds** (no instant crash).
+2. Confirm `%LOCALAPPDATA%\LyricGlass\logs\` contains a fresh log with lines through `tauri setup complete`.
+3. Quit from tray → uninstall from Settings/Apps while **not running** → uninstall must complete without “Failed to kill LyricGlass”.
+4. Optional: start app, then uninstall → installer may prompt to close/kill; accept and verify clean removal.
 
 ### A. Media session
 

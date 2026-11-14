@@ -1,6 +1,6 @@
 [package]
 name = "lyricglass"
-version = "0.1.0"
+version = "0.1.1"
 description = "LyricGlass Phase 0 spike — transparent lyrics overlay for Spotify on Windows"
 authors = ["LyricGlass"]
 edition = "2021"
@@ -37,5 +37,5 @@ windows = { version = "0.62", features = [
 codegen-units = 1
 lto = true
 opt-level = "s"
-panic = "abort"
+panic = "unwind"
 strip = true
