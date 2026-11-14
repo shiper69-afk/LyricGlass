@@ -17,7 +17,9 @@ static WALLPAPER_STATE: LazyLock<Mutex<WallpaperRestore>> =
 mod imp {
     use super::*;
     use windows::core::w;
-    use windows::Win32::Foundation::{BOOL, HWND, LPARAM, TRUE};
+    use windows::Win32::Foundation::{HWND, LPARAM, TRUE};
+
+    type BoolResult = i32;
     use windows::Win32::UI::WindowsAndMessaging::{
         EnumWindows, FindWindowExW, FindWindowW, GetWindowLongPtrW, SendMessageW, SetParent,
         SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE, GWL_STYLE, SWP_FRAMECHANGED,
@@ -39,7 +41,7 @@ mod imp {
         }
 
         let mut workerw = HWND::default();
-        unsafe extern "system" fn enum_proc(hwnd: HWND, lparam: LPARAM) -> i32 {
+        unsafe extern "system" fn enum_proc(hwnd: HWND, lparam: LPARAM) -> BoolResult {
             if let Ok(shell) =
                 FindWindowExW(Some(hwnd), None, w!("SHELLDLL_DefView"), None)
             {
@@ -58,7 +60,8 @@ mod imp {
         }
 
         unsafe {
-            let _ = EnumWindows(Some(enum_proc), LPARAM(&mut workerw as *mut _ as isize));
+            let callback: unsafe extern "system" fn(HWND, LPARAM) -> BoolResult = enum_proc;
+            let _ = EnumWindows(Some(callback), LPARAM(&mut workerw as *mut _ as isize));
         }
 
         if hwnd_valid(workerw) {

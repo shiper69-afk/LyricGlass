@@ -60,8 +60,8 @@ pub fn smoothed_now(state: &MediaState, at_ms: u64) -> u64 {
 #[cfg(windows)]
 mod imp {
     use super::*;
-    use crate::async_op::block_async;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::Duration;
     use windows::Foundation::TypedEventHandler;
     use windows::Media::Control::{
         GlobalSystemMediaTransportControlsSession,
@@ -104,6 +104,36 @@ mod imp {
         f(&mut state);
     }
 
+    macro_rules! wait_async {
+        ($op:expr) => {{
+            let operation = $op;
+            let mut value = None;
+            for _ in 0..400 {
+                if let Ok(result) = operation.GetResults() {
+                    value = Some(result);
+                    break;
+                }
+                std::thread::sleep(Duration::from_millis(15));
+            }
+            value.or_else(|| operation.GetResults().ok())
+        }};
+    }
+
+    fn read_properties(session: &GlobalSystemMediaTransportControlsSession) -> (String, String, String) {
+        session
+            .TryGetMediaPropertiesAsync()
+            .ok()
+            .and_then(|op| wait_async!(op))
+            .map(|props| {
+                (
+                    props.Title().unwrap_or_default().to_string(),
+                    props.Artist().unwrap_or_default().to_string(),
+                    props.AlbumTitle().unwrap_or_default().to_string(),
+                )
+            })
+            .unwrap_or_default()
+    }
+
     fn read_snapshot(session: &GlobalSystemMediaTransportControlsSession, shared: &SharedMediaState) {
         let source = session
             .SourceAppUserModelId()
@@ -127,18 +157,7 @@ mod imp {
             })
             .unwrap_or((0, 0));
 
-        let (title, artist, album) = session
-            .TryGetMediaPropertiesAsync()
-            .ok()
-            .and_then(|op| block_async(op).ok())
-            .map(|props| {
-                (
-                    props.Title().unwrap_or_default().to_string(),
-                    props.Artist().unwrap_or_default().to_string(),
-                    props.AlbumTitle().unwrap_or_default().to_string(),
-                )
-            })
-            .unwrap_or_default();
+        let (title, artist, album) = read_properties(session);
 
         patch_state(shared, "snapshot", |state| {
             state.spotify_running = true;
@@ -204,10 +223,8 @@ mod imp {
         let app_timeline = app.clone();
         let _ = session.TimelinePropertiesChanged(&TypedEventHandler::new(
             move |sender, _args| {
-                if let Some(sender) = sender {
-                    apply_timeline(&sender, &shared_timeline);
-                    let _ = app_timeline.emit("media-state", shared_timeline.read().clone());
-                }
+                apply_timeline(&sender, &shared_timeline);
+                let _ = app_timeline.emit("media-state", shared_timeline.read().clone());
                 Ok(())
             },
         ));
@@ -216,9 +233,6 @@ mod imp {
         let app_playback = app.clone();
         let _ = session.PlaybackInfoChanged(&TypedEventHandler::new(
             move |sender, _args| {
-                let Some(sender) = sender else {
-                    return Ok(());
-                };
                 let status = sender
                     .GetPlaybackInfo()
                     .ok()
@@ -237,33 +251,24 @@ mod imp {
         let app_props = app.clone();
         let _ = session.MediaPropertiesChanged(&TypedEventHandler::new(
             move |sender, _args| {
-                let Some(sender) = sender else {
-                    return Ok(());
-                };
-                let props = sender
-                    .TryGetMediaPropertiesAsync()
-                    .ok()
-                    .and_then(|op| block_async(op).ok());
-                if let Some(props) = props {
-                    patch_state(&shared_props, "track", |state| {
-                        state.spotify_running = true;
-                        state.title = props.Title().unwrap_or_default().to_string();
-                        state.artist = props.Artist().unwrap_or_default().to_string();
-                        state.album = props.AlbumTitle().unwrap_or_default().to_string();
-                        state.position_reported_ms = 0;
-                        state.position_reported_at_ms = now_unix_ms();
-                    });
-                    let _ = app_props.emit("media-state", shared_props.read().clone());
-                }
+                let (title, artist, album) = read_properties(&sender);
+                patch_state(&shared_props, "track", |state| {
+                    state.spotify_running = true;
+                    state.title = title;
+                    state.artist = artist;
+                    state.album = album;
+                    state.position_reported_ms = 0;
+                    state.position_reported_at_ms = now_unix_ms();
+                });
+                let _ = app_props.emit("media-state", shared_props.read().clone());
                 Ok(())
             },
         ));
     }
 
     fn request_manager() -> Option<GlobalSystemMediaTransportControlsSessionManager> {
-        GlobalSystemMediaTransportControlsSessionManager::RequestAsync()
-            .ok()
-            .and_then(|op| block_async(op).ok())
+        let op = GlobalSystemMediaTransportControlsSessionManager::RequestAsync().ok()?;
+        wait_async!(op)
     }
 
     pub fn start_media_watcher(app: AppHandle, shared: SharedMediaState) {
@@ -311,9 +316,8 @@ mod imp {
                 let _ = app.emit("media-state", shared.read().clone());
             }
 
-            // WinRT event delivery on this thread.
             loop {
-                std::thread::sleep(std::time::Duration::from_secs(3600));
+                std::thread::sleep(Duration::from_secs(3600));
             }
         });
     }
