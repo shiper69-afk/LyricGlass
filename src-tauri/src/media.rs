@@ -60,6 +60,7 @@ pub fn smoothed_now(state: &MediaState, at_ms: u64) -> u64 {
 #[cfg(windows)]
 mod imp {
     use super::*;
+    use crate::async_op::block_async;
     use std::sync::atomic::{AtomicU64, Ordering};
     use windows::Foundation::TypedEventHandler;
     use windows::Media::Control::{
@@ -129,7 +130,7 @@ mod imp {
         let (title, artist, album) = session
             .TryGetMediaPropertiesAsync()
             .ok()
-            .and_then(|op| op.get().ok())
+            .and_then(|op| block_async(op).ok())
             .map(|props| {
                 (
                     props.Title().unwrap_or_default().to_string(),
@@ -203,10 +204,8 @@ mod imp {
         let app_timeline = app.clone();
         let _ = session.TimelinePropertiesChanged(&TypedEventHandler::new(
             move |sender, _args| {
-                if let Some(sender) = sender {
-                    apply_timeline(&sender, &shared_timeline);
-                    let _ = app_timeline.emit("media-state", shared_timeline.read().clone());
-                }
+                apply_timeline(&sender, &shared_timeline);
+                let _ = app_timeline.emit("media-state", shared_timeline.read().clone());
                 Ok(())
             },
         ));
@@ -215,18 +214,16 @@ mod imp {
         let app_playback = app.clone();
         let _ = session.PlaybackInfoChanged(&TypedEventHandler::new(
             move |sender, _args| {
-                if let Some(sender) = sender {
-                    let status = sender
-                        .GetPlaybackInfo()
-                        .ok()
-                        .map(|p| status_label(p.PlaybackStatus().unwrap_or_default()))
-                        .unwrap_or_else(|| "unknown".into());
-                    patch_state(&shared_playback, "playback", |state| {
-                        state.spotify_running = true;
-                        state.playback_status = status;
-                    });
-                    let _ = app_playback.emit("media-state", shared_playback.read().clone());
-                }
+                let status = sender
+                    .GetPlaybackInfo()
+                    .ok()
+                    .map(|p| status_label(p.PlaybackStatus().unwrap_or_default()))
+                    .unwrap_or_else(|| "unknown".into());
+                patch_state(&shared_playback, "playback", |state| {
+                    state.spotify_running = true;
+                    state.playback_status = status;
+                });
+                let _ = app_playback.emit("media-state", shared_playback.read().clone());
                 Ok(())
             },
         ));
@@ -235,22 +232,20 @@ mod imp {
         let app_props = app.clone();
         let _ = session.MediaPropertiesChanged(&TypedEventHandler::new(
             move |sender, _args| {
-                if let Some(sender) = sender {
-                    let props = sender
-                        .TryGetMediaPropertiesAsync()
-                        .ok()
-                        .and_then(|op| op.get().ok());
-                    if let Some(props) = props {
-                        patch_state(&shared_props, "track", |state| {
-                            state.spotify_running = true;
-                            state.title = props.Title().unwrap_or_default().to_string();
-                            state.artist = props.Artist().unwrap_or_default().to_string();
-                            state.album = props.AlbumTitle().unwrap_or_default().to_string();
-                            state.position_reported_ms = 0;
-                            state.position_reported_at_ms = now_unix_ms();
-                        });
-                        let _ = app_props.emit("media-state", shared_props.read().clone());
-                    }
+                let props = sender
+                    .TryGetMediaPropertiesAsync()
+                    .ok()
+                    .and_then(|op| block_async(op).ok());
+                if let Some(props) = props {
+                    patch_state(&shared_props, "track", |state| {
+                        state.spotify_running = true;
+                        state.title = props.Title().unwrap_or_default().to_string();
+                        state.artist = props.Artist().unwrap_or_default().to_string();
+                        state.album = props.AlbumTitle().unwrap_or_default().to_string();
+                        state.position_reported_ms = 0;
+                        state.position_reported_at_ms = now_unix_ms();
+                    });
+                    let _ = app_props.emit("media-state", shared_props.read().clone());
                 }
                 Ok(())
             },
@@ -260,7 +255,7 @@ mod imp {
     fn request_manager() -> Option<GlobalSystemMediaTransportControlsSessionManager> {
         GlobalSystemMediaTransportControlsSessionManager::RequestAsync()
             .ok()
-            .and_then(|op| op.get().ok())
+            .and_then(|op| block_async(op).ok())
     }
 
     pub fn start_media_watcher(app: AppHandle, shared: SharedMediaState) {

@@ -1,3 +1,4 @@
+mod async_op;
 mod clock;
 mod media;
 mod wallpaper;
