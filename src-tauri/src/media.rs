@@ -62,7 +62,6 @@ mod imp {
     use super::*;
     use std::sync::atomic::{AtomicU64, Ordering};
     use windows::Foundation::TypedEventHandler;
-    use windows_future::Future;
     use windows::Media::Control::{
         GlobalSystemMediaTransportControlsSession,
         GlobalSystemMediaTransportControlsSessionManager,
@@ -88,6 +87,10 @@ mod imp {
         }
     }
 
+    fn timespan_ms(value: windows::Foundation::TimeSpan) -> u64 {
+        (value.Duration / 10_000) as u64
+    }
+
     fn patch_state<F>(shared: &SharedMediaState, event_kind: &str, f: F)
     where
         F: FnOnce(&mut MediaState),
@@ -100,44 +103,43 @@ mod imp {
         f(&mut state);
     }
 
-  async fn read_session(session: &GlobalSystemMediaTransportControlsSession, shared: SharedMediaState) {
+    fn read_snapshot(session: &GlobalSystemMediaTransportControlsSession, shared: &SharedMediaState) {
         let source = session
             .SourceAppUserModelId()
             .unwrap_or_default()
             .to_string();
 
-        let playback = session.GetPlaybackInfo().ok();
-        let playback_status = playback
-            .as_ref()
+        let playback_status = session
+            .GetPlaybackInfo()
+            .ok()
             .map(|p| status_label(p.PlaybackStatus().unwrap_or_default()))
             .unwrap_or_else(|| "unknown".into());
 
-        let timeline = session.GetTimelineProperties().ok();
-        let position_ms = timeline
-            .as_ref()
-            .map(|t| t.Position().unwrap_or_default().Duration / 10_000)
-            .unwrap_or(0);
-        let end_ms = timeline
-            .as_ref()
-            .map(|t| t.EndTime().unwrap_or_default().Duration / 10_000)
-            .unwrap_or(0);
+        let (position_ms, end_ms) = session
+            .GetTimelineProperties()
+            .ok()
+            .map(|t| {
+                (
+                    timespan_ms(t.Position().unwrap_or_default()),
+                    timespan_ms(t.EndTime().unwrap_or_default()),
+                )
+            })
+            .unwrap_or((0, 0));
 
-        let props = session.TryGetMediaPropertiesAsync().ok();
-        let (title, artist, album) = if let Some(op) = props {
-            if let Ok(props) = op.await {
+        let (title, artist, album) = session
+            .TryGetMediaPropertiesAsync()
+            .ok()
+            .and_then(|op| op.get().ok())
+            .map(|props| {
                 (
                     props.Title().unwrap_or_default().to_string(),
                     props.Artist().unwrap_or_default().to_string(),
                     props.AlbumTitle().unwrap_or_default().to_string(),
                 )
-            } else {
-                (String::new(), String::new(), String::new())
-            }
-        } else {
-            (String::new(), String::new(), String::new())
-        };
+            })
+            .unwrap_or_default();
 
-        patch_state(&shared, "snapshot", |state| {
+        patch_state(shared, "snapshot", |state| {
             state.spotify_running = true;
             state.source_app_id = source;
             state.title = title;
@@ -151,14 +153,40 @@ mod imp {
         });
     }
 
+    fn apply_timeline(session: &GlobalSystemMediaTransportControlsSession, shared: &SharedMediaState) {
+        let playback_status = session
+            .GetPlaybackInfo()
+            .ok()
+            .map(|p| status_label(p.PlaybackStatus().unwrap_or_default()))
+            .unwrap_or_else(|| "unknown".into());
+
+        let (position_ms, end_ms) = session
+            .GetTimelineProperties()
+            .ok()
+            .map(|t| {
+                (
+                    timespan_ms(t.Position().unwrap_or_default()),
+                    timespan_ms(t.EndTime().unwrap_or_default()),
+                )
+            })
+            .unwrap_or((0, 0));
+
+        patch_state(shared, "timeline", |state| {
+            state.spotify_running = true;
+            state.position_reported_ms = position_ms;
+            state.position_reported_at_ms = now_unix_ms();
+            state.duration_ms = end_ms;
+            state.playback_status = playback_status;
+        });
+    }
+
     fn find_spotify_session(
         manager: &GlobalSystemMediaTransportControlsSessionManager,
     ) -> Option<GlobalSystemMediaTransportControlsSession> {
         let sessions = manager.GetSessions().ok()?;
         for session in sessions {
             if let Ok(id) = session.SourceAppUserModelId() {
-                let id = id.to_string();
-                if id.to_lowercase().contains("spotify") {
+                if id.to_string().to_lowercase().contains("spotify") {
                     return Some(session);
                 }
             }
@@ -173,36 +201,11 @@ mod imp {
     ) {
         let shared_timeline = shared.clone();
         let app_timeline = app.clone();
-        let _ = session.TimelineUpdated(&TypedEventHandler::new(
+        let _ = session.TimelinePropertiesChanged(&TypedEventHandler::new(
             move |sender, _args| {
                 if let Some(sender) = sender {
-                    let shared = shared_timeline.clone();
-                    let app = app_timeline.clone();
-                    tauri::async_runtime::spawn(async move {
-                        let playback = sender.GetPlaybackInfo().ok();
-                        let status = playback
-                            .as_ref()
-                            .map(|p| status_label(p.PlaybackStatus().unwrap_or_default()))
-                            .unwrap_or_else(|| "unknown".into());
-                        let timeline = sender.GetTimelineProperties().ok();
-                        let position_ms = timeline
-                            .as_ref()
-                            .map(|t| t.Position().unwrap_or_default().Duration / 10_000)
-                            .unwrap_or(0);
-                        let end_ms = timeline
-                            .as_ref()
-                            .map(|t| t.EndTime().unwrap_or_default().Duration / 10_000)
-                            .unwrap_or(0);
-
-                        patch_state(&shared, "timeline", |state| {
-                            state.position_reported_ms = position_ms;
-                            state.position_reported_at_ms = now_unix_ms();
-                            state.duration_ms = end_ms;
-                            state.playback_status = status;
-                        });
-                        let payload = shared.read().clone();
-                        let _ = app.emit("media-state", payload);
-                    });
+                    apply_timeline(&sender, &shared_timeline);
+                    let _ = app_timeline.emit("media-state", shared_timeline.read().clone());
                 }
                 Ok(())
             },
@@ -213,19 +216,16 @@ mod imp {
         let _ = session.PlaybackInfoChanged(&TypedEventHandler::new(
             move |sender, _args| {
                 if let Some(sender) = sender {
-                    let shared = shared_playback.clone();
-                    let app = app_playback.clone();
-                    tauri::async_runtime::spawn(async move {
-                        let playback = sender.GetPlaybackInfo().ok();
-                        let status = playback
-                            .as_ref()
-                            .map(|p| status_label(p.PlaybackStatus().unwrap_or_default()))
-                            .unwrap_or_else(|| "unknown".into());
-                        patch_state(&shared, "playback", |state| {
-                            state.playback_status = status;
-                        });
-                        let _ = app.emit("media-state", shared.read().clone());
+                    let status = sender
+                        .GetPlaybackInfo()
+                        .ok()
+                        .map(|p| status_label(p.PlaybackStatus().unwrap_or_default()))
+                        .unwrap_or_else(|| "unknown".into());
+                    patch_state(&shared_playback, "playback", |state| {
+                        state.spotify_running = true;
+                        state.playback_status = status;
                     });
+                    let _ = app_playback.emit("media-state", shared_playback.read().clone());
                 }
                 Ok(())
             },
@@ -236,56 +236,43 @@ mod imp {
         let _ = session.MediaPropertiesChanged(&TypedEventHandler::new(
             move |sender, _args| {
                 if let Some(sender) = sender {
-                    let shared = shared_props.clone();
-                    let app = app_props.clone();
-                    tauri::async_runtime::spawn(async move {
-                        let props = sender.TryGetMediaPropertiesAsync().ok();
-                        let (title, artist, album) = if let Some(op) = props {
-                            if let Ok(props) = op.await {
-                                (
-                                    props.Title().unwrap_or_default().to_string(),
-                                    props.Artist().unwrap_or_default().to_string(),
-                                    props.AlbumTitle().unwrap_or_default().to_string(),
-                                )
-                            } else {
-                                (String::new(), String::new(), String::new())
-                            }
-                        } else {
-                            (String::new(), String::new(), String::new())
-                        };
-                        patch_state(&shared, "track", |state| {
-                            state.title = title;
-                            state.artist = artist;
-                            state.album = album;
+                    let props = sender
+                        .TryGetMediaPropertiesAsync()
+                        .ok()
+                        .and_then(|op| op.get().ok());
+                    if let Some(props) = props {
+                        patch_state(&shared_props, "track", |state| {
+                            state.spotify_running = true;
+                            state.title = props.Title().unwrap_or_default().to_string();
+                            state.artist = props.Artist().unwrap_or_default().to_string();
+                            state.album = props.AlbumTitle().unwrap_or_default().to_string();
                             state.position_reported_ms = 0;
                             state.position_reported_at_ms = now_unix_ms();
                         });
-                        let _ = app.emit("media-state", shared.read().clone());
-                    });
+                        let _ = app_props.emit("media-state", shared_props.read().clone());
+                    }
                 }
                 Ok(())
             },
         ));
     }
 
+    fn request_manager() -> Option<GlobalSystemMediaTransportControlsSessionManager> {
+        GlobalSystemMediaTransportControlsSessionManager::RequestAsync()
+            .ok()
+            .and_then(|op| op.get().ok())
+    }
+
     pub fn start_media_watcher(app: AppHandle, shared: SharedMediaState) {
-        tauri::async_runtime::spawn(async move {
+        std::thread::spawn(move || {
             unsafe {
                 let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
             }
 
-            let manager = match GlobalSystemMediaTransportControlsSessionManager::RequestAsync() {
-                Ok(op) => match op.await {
-                    Ok(m) => m,
-                    Err(e) => {
-                        shared.write().message = format!("GSMTC unavailable: {e}");
-                        return;
-                    }
-                },
-                Err(e) => {
-                    shared.write().message = format!("GSMTC request failed: {e}");
-                    return;
-                }
+            let Some(manager) = request_manager() else {
+                shared.write().message = "GSMTC request failed".into();
+                let _ = app.emit("media-state", shared.read().clone());
+                return;
             };
 
             let shared_mgr = shared.clone();
@@ -294,36 +281,36 @@ mod imp {
                 move |_manager, _args| {
                     let shared = shared_mgr.clone();
                     let app = app_mgr.clone();
-                    tauri::async_runtime::spawn(async move {
-                        if let Ok(m) = GlobalSystemMediaTransportControlsSessionManager::RequestAsync()
-                        {
-                            if let Ok(manager) = m.await {
-                                if let Some(session) = find_spotify_session(&manager) {
-                                    wire_session_events(session.clone(), shared.clone(), app.clone());
-                                    read_session(&session, shared.clone()).await;
-                                    let _ = app.emit("media-state", shared.read().clone());
-                                } else {
-                                    let mut state = shared.write();
-                                    state.spotify_running = false;
-                                    state.message =
-                                        "Spotify not in media sessions (launch Spotify and play)".into();
-                                    let _ = app.emit("media-state", state.clone());
-                                }
-                            }
+                    if let Some(manager) = request_manager() {
+                        if let Some(session) = find_spotify_session(&manager) {
+                            wire_session_events(session.clone(), shared.clone(), app.clone());
+                            read_snapshot(&session, &shared);
+                            let _ = app.emit("media-state", shared.read().clone());
+                        } else {
+                            let mut state = shared.write();
+                            state.spotify_running = false;
+                            state.message =
+                                "Spotify not in media sessions (launch Spotify and play)".into();
+                            let _ = app.emit("media-state", state.clone());
                         }
-                    });
+                    }
                     Ok(())
                 },
             ));
 
             if let Some(session) = find_spotify_session(&manager) {
                 wire_session_events(session.clone(), shared.clone(), app.clone());
-                read_session(&session, shared).await;
+                read_snapshot(&session, &shared);
                 let _ = app.emit("media-state", shared.read().clone());
             } else {
                 shared.write().message =
                     "Spotify not found — start Spotify desktop and play a track".into();
                 let _ = app.emit("media-state", shared.read().clone());
+            }
+
+            // WinRT event delivery on this thread.
+            loop {
+                std::thread::sleep(std::time::Duration::from_secs(3600));
             }
         });
     }
@@ -334,7 +321,7 @@ mod imp {
     use super::*;
 
     pub fn start_media_watcher(app: AppHandle, shared: SharedMediaState) {
-        shared.write().message = "Media controls SPIKE runs on Windows only".into();
+        shared.write().message = "Media controls spike runs on Windows only".into();
         let _ = app.emit("media-state", shared.read().clone());
     }
 }

@@ -60,12 +60,7 @@ fn set_click_through(window: &WebviewWindow, flags: &SharedFlags, enabled: bool)
 fn set_wallpaper_mode_inner(window: &WebviewWindow, enabled: bool) -> Result<(), String> {
     #[cfg(windows)]
     {
-        use windows::Win32::Foundation::HWND;
-        let hwnd = window
-            .hwnd()
-            .map_err(|e| e.to_string())?
-            .0 as isize;
-        let hwnd = HWND(hwnd);
+        let hwnd = window.hwnd().map_err(|e| e.to_string())?;
 
         if enabled {
             wallpaper::attach_wallpaper(hwnd)?;

@@ -24,9 +24,13 @@ mod imp {
         SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW, WM_USER,
     };
 
+    fn hwnd_valid(hwnd: HWND) -> bool {
+        !hwnd.0.is_null()
+    }
+
     fn find_wallpaper_workerw() -> Option<HWND> {
-        let progman = unsafe { FindWindowW(w!("Progman"), None) };
-        if progman.0 == 0 {
+        let progman = unsafe { FindWindowW(w!("Progman"), None).ok()? };
+        if !hwnd_valid(progman) {
             return None;
         }
 
@@ -36,13 +40,17 @@ mod imp {
 
         let mut workerw = HWND::default();
         unsafe extern "system" fn enum_proc(hwnd: HWND, lparam: LPARAM) -> BOOL {
-            let shell = FindWindowExW(hwnd, HWND::default(), w!("SHELLDLL_DefView"), None);
-            if shell.0 != 0 {
-                let behind = FindWindowExW(HWND::default(), hwnd, w!("WorkerW"), None);
-                if behind.0 != 0 {
-                    let target = lparam.0 as *mut HWND;
-                    unsafe {
-                        *target = behind;
+            if let Ok(shell) = FindWindowExW(hwnd, HWND::default(), w!("SHELLDLL_DefView"), None) {
+                if hwnd_valid(shell) {
+                    if let Ok(behind) =
+                        FindWindowExW(HWND::default(), hwnd, w!("WorkerW"), None)
+                    {
+                        if hwnd_valid(behind) {
+                            let target = lparam.0 as *mut HWND;
+                            unsafe {
+                                *target = behind;
+                            }
+                        }
                     }
                 }
             }
@@ -53,7 +61,7 @@ mod imp {
             let _ = EnumWindows(Some(enum_proc), LPARAM(&mut workerw as *mut _ as isize));
         }
 
-        if workerw.0 != 0 {
+        if hwnd_valid(workerw) {
             Some(workerw)
         } else {
             None
@@ -72,11 +80,12 @@ mod imp {
             guard.previous_style = GetWindowLongPtrW(hwnd, GWL_STYLE);
             guard.previous_ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
 
-            SetParent(hwnd, workerw)
-                .map_err(|e| format!("SetParent failed: {e}"))?;
+            SetParent(hwnd, Some(workerw)).map_err(|e| format!("SetParent failed: {e}"))?;
+
             let style = GetWindowLongPtrW(hwnd, GWL_STYLE);
             let style = (style as u64 & !0x00C00000) | 0x10000000;
             SetWindowLongPtrW(hwnd, GWL_STYLE, style as isize);
+
             SetWindowPos(
                 hwnd,
                 HWND::default(),
@@ -84,7 +93,8 @@ mod imp {
                 0,
                 0,
                 0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_SHOWWINDOW,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE
+                    | SWP_SHOWWINDOW,
             )
             .map_err(|e| format!("SetWindowPos failed: {e}"))?;
             let _ = ShowWindow(hwnd, SW_SHOW);
@@ -100,8 +110,7 @@ mod imp {
         }
 
         unsafe {
-            SetParent(hwnd, HWND::default())
-                .map_err(|e| format!("SetParent(desktop) failed: {e}"))?;
+            SetParent(hwnd, None).map_err(|e| format!("SetParent(desktop) failed: {e}"))?;
             SetWindowLongPtrW(hwnd, GWL_STYLE, guard.previous_style);
             SetWindowLongPtrW(hwnd, GWL_EXSTYLE, guard.previous_ex_style);
             let _ = ShowWindow(hwnd, SW_SHOW);

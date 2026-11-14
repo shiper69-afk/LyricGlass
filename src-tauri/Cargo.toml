@@ -21,8 +21,7 @@ parking_lot = "0.12"
 time = { version = "0.3", features = ["formatting"] }
 
 [target.'cfg(windows)'.dependencies]
-windows-future = "0.2"
-windows = { version = "0.58", features = [
+windows = { version = "0.62", features = [
   "Media_Control",
   "Foundation",
   "Foundation_Collections",
