@@ -1,16 +1,16 @@
 #[cfg(windows)]
-pub fn block_async<T: Send>(
-    op: windows::Foundation::IAsyncOperation<T>,
-) -> windows::core::Result<T>
+pub fn block_async<T>(operation: windows::Foundation::IAsyncOperation<T>) -> windows::core::Result<T>
 where
-    windows::Foundation::IAsyncOperation<T>: windows_future::Future,
+    T: windows::core::RuntimeType,
 {
-    use futures::executor::block_on;
-    use windows_future::Future;
-    block_on(op)
-}
-
-#[cfg(not(windows))]
-pub fn block_async<T>(_op: ()) -> Result<T, ()> {
-    Err(())
+    use windows::Foundation::AsyncStatus;
+    for _ in 0..800 {
+        match operation.Status()? {
+            AsyncStatus::Started => {
+                std::thread::sleep(std::time::Duration::from_millis(15));
+            }
+            _ => break,
+        }
+    }
+    operation.GetResults()
 }
