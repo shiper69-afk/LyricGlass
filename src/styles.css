@@ -191,15 +191,21 @@ button.active {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   overflow: hidden;
   padding: 4px 0 8px;
   width: 100%;
   text-align: center;
+  --karaoke-reserve: 30px;
 }
 
 .lyrics-lines.karaoke-stage {
   position: relative;
+}
+
+.lyrics-lines.karaoke-on .lyric-line {
+  padding-top: var(--karaoke-reserve);
+  box-sizing: border-box;
 }
 
 .lyric-line {
