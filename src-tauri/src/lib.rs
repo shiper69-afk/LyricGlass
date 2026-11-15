@@ -35,6 +35,22 @@ struct UiState {
 #[serde(rename_all = "camelCase")]
 struct AppearanceState {
     overlay_opacity: f64,
+    karaoke_ball: bool,
+    karaoke_ball_color: String,
+    sung_highlight_color: String,
+}
+
+fn appearance_from_service(service: &SharedLyricsService) -> AppearanceState {
+    AppearanceState {
+        overlay_opacity: service.get_overlay_opacity(),
+        karaoke_ball: service.get_karaoke_ball(),
+        karaoke_ball_color: service.get_karaoke_ball_color(),
+        sung_highlight_color: service.get_sung_highlight_color(),
+    }
+}
+
+fn emit_appearance(service: &SharedLyricsService, app: &AppHandle) {
+    let _ = app.emit("appearance-state", appearance_from_service(service));
 }
 
 fn apply_topmost(window: &WebviewWindow, flags: &AppFlags) {
@@ -135,9 +151,18 @@ fn set_sync_offset(
 
 #[tauri::command]
 fn get_appearance(service: tauri::State<SharedLyricsService>) -> AppearanceState {
-    AppearanceState {
-        overlay_opacity: service.get_overlay_opacity(),
-    }
+    appearance_from_service(&service)
+}
+
+#[tauri::command]
+fn set_karaoke_ball(
+    service: tauri::State<SharedLyricsService>,
+    enabled: bool,
+    app: AppHandle,
+) -> Result<bool, String> {
+    let value = service.set_karaoke_ball(enabled)?;
+    emit_appearance(&service, &app);
+    Ok(value)
 }
 
 #[tauri::command]
@@ -147,13 +172,40 @@ fn set_overlay_opacity(
     app: AppHandle,
 ) -> Result<f64, String> {
     let value = service.set_overlay_opacity(opacity)?;
-    let _ = app.emit(
-        "appearance-state",
-        AppearanceState {
-            overlay_opacity: value,
-        },
-    );
+    emit_appearance(&service, &app);
     Ok(value)
+}
+
+#[tauri::command]
+fn set_karaoke_ball_color(
+    service: tauri::State<SharedLyricsService>,
+    color: String,
+    app: AppHandle,
+) -> Result<String, String> {
+    let value = service.set_karaoke_ball_color(&color)?;
+    emit_appearance(&service, &app);
+    Ok(value)
+}
+
+#[tauri::command]
+fn set_sung_highlight_color(
+    service: tauri::State<SharedLyricsService>,
+    color: String,
+    app: AppHandle,
+) -> Result<String, String> {
+    let value = service.set_sung_highlight_color(&color)?;
+    emit_appearance(&service, &app);
+    Ok(value)
+}
+
+#[tauri::command]
+fn reset_karaoke_colors(
+    service: tauri::State<SharedLyricsService>,
+    app: AppHandle,
+) -> Result<(), String> {
+    service.reset_karaoke_colors()?;
+    emit_appearance(&service, &app);
+    Ok(())
 }
 
 #[tauri::command]
@@ -442,6 +494,10 @@ pub fn run() {
             set_sync_offset,
             get_appearance,
             set_overlay_opacity,
+            set_karaoke_ball,
+            set_karaoke_ball_color,
+            set_sung_highlight_color,
+            reset_karaoke_colors,
             log_diagnostics,
             log_sync_mark,
             toggle_debug,
@@ -472,12 +528,9 @@ pub fn run() {
                 startup::step("tauri setup: emitting initial UI state");
                 let _ = app.handle().emit("ui-state", current_ui_state(&flags));
                 let appearance = app.state::<SharedLyricsService>();
-                let _ = app.handle().emit(
-                    "appearance-state",
-                    AppearanceState {
-                        overlay_opacity: appearance.get_overlay_opacity(),
-                    },
-                );
+                let _ = app
+                    .handle()
+                    .emit("appearance-state", appearance_from_service(&appearance));
                 startup::step("tauri setup complete — WebView2 loading");
                 if std::env::var("LYRICGLASS_SMOKE_DIAG").is_ok() {
                     let app = app.handle().clone();

@@ -1,6 +1,6 @@
 [package]
 name = "lyricglass"
-version = "0.2.4"
+version = "0.3.2"
 description = "LyricGlass — synced lyrics overlay for Spotify on Windows"
 authors = ["LyricGlass"]
 edition = "2021"
