@@ -179,6 +179,35 @@ impl LyricsCache {
         Ok(enabled)
     }
 
+    pub fn get_wallpaper_mode(&self) -> bool {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return false,
+        };
+        conn.query_row(
+            "SELECT value FROM app_settings WHERE key = 'wallpaper_mode'",
+            [],
+            |row| row.get::<_, String>(0),
+        )
+        .ok()
+        .map(|v| matches!(v.as_str(), "1" | "true" | "yes"))
+        .unwrap_or(false)
+    }
+
+    pub fn set_wallpaper_mode(&self, enabled: bool) -> Result<bool, String> {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(enabled),
+        };
+        let value = if enabled { "1" } else { "0" };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('wallpaper_mode', ?1)",
+            params![value],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(enabled)
+    }
+
     pub fn get_karaoke_ball(&self) -> bool {
         let conn = match &self.conn {
             Some(c) => c,
@@ -408,4 +437,32 @@ fn cache_db_path() -> PathBuf {
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("."));
     base.join("LyricGlass").join("lyrics-cache.sqlite3")
+}
+
+#[cfg(test)]
+mod settings_tests {
+    use super::LyricsCache;
+    use rusqlite::Connection;
+
+    fn open_memory() -> LyricsCache {
+        let conn = Connection::open_in_memory().expect("in-memory db");
+        conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS app_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            );",
+        )
+        .expect("schema");
+        LyricsCache { conn: Some(conn) }
+    }
+
+    #[test]
+    fn wallpaper_mode_defaults_false_and_persists() {
+        let cache = open_memory();
+        assert!(!cache.get_wallpaper_mode());
+        cache.set_wallpaper_mode(true).expect("set");
+        assert!(cache.get_wallpaper_mode());
+        cache.set_wallpaper_mode(false).expect("clear");
+        assert!(!cache.get_wallpaper_mode());
+    }
 }

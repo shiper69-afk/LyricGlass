@@ -6,7 +6,7 @@ import {
 import { playbackClockMs, type PlaybackAnchor } from "./playback-clock";
 import type { LyricsView, LyricsResponse, MediaState } from "./lyrics-view";
 
-const APP_VERSION = "0.5.1";
+const APP_VERSION = "0.6.0";
 
 export interface FullMediaState extends MediaState {
   sourceAppId: string;
@@ -19,11 +19,17 @@ export interface FullMediaState extends MediaState {
   computedPositionMs?: number;
 }
 
+export interface WallpaperDiag {
+  attached: boolean;
+  lastError?: string | null;
+}
+
 export function buildDiagnosticsBlock(
   media: FullMediaState | null,
   lyrics: LyricsResponse | null,
   lyricsView: LyricsView,
   playbackAnchor: PlaybackAnchor | null = null,
+  wallpaper?: WallpaperDiag | null,
 ): string {
   const now = Date.now();
   const computed = media ? playbackClockMs(media, playbackAnchor, now) : 0;
@@ -79,6 +85,10 @@ export function buildDiagnosticsBlock(
     `  backendComputedAtEmit: ${media?.computedPositionMs ?? 0} ms`,
     `  computedClock: ${formatMs(computed)} (${computed} ms)`,
     `  userSyncOffsetMs: ${syncMs}`,
+    "",
+    "Wallpaper",
+    `  attached: ${wallpaper?.attached ?? "—"}`,
+    `  lastError: ${wallpaper?.lastError?.length ? wallpaper.lastError : "—"}`,
     "",
     "Active line",
     `  index: ${line.index}`,

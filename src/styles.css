@@ -34,6 +34,44 @@ body {
   color: rgba(244, 246, 251, 0.96);
 }
 
+body.wallpaper-mode,
+#app.wallpaper-mode {
+  height: 100vh;
+  width: 100vw;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+#app.wallpaper-mode .titlebar,
+#app.wallpaper-mode .hints,
+#app.wallpaper-mode .debug-panel {
+  display: none !important;
+}
+
+#app.wallpaper-mode .lyrics-panel {
+  position: fixed;
+  left: 50%;
+  bottom: min(22vh, 180px);
+  transform: translateX(-50%);
+  width: min(760px, 94vw);
+  max-height: 42vh;
+  padding: 12px 16px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, calc(0.12 * var(--bg-alpha)));
+  background: rgba(8, 10, 16, var(--bg-alpha));
+  backdrop-filter: blur(calc(16px * var(--bg-alpha)));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+#app.wallpaper-mode .lyrics-lines,
+#app.wallpaper-mode .lyrics-plain,
+#app.wallpaper-mode .np-header {
+  pointer-events: none;
+}
+
 .titlebar {
   display: flex;
   align-items: center;

@@ -29,6 +29,15 @@ struct UiState {
     always_on_top: bool,
     wallpaper_mode: bool,
     debug_visible: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    wallpaper_error: Option<String>,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WallpaperStatus {
+    attached: bool,
+    last_error: Option<String>,
 }
 
 #[derive(Clone, Serialize)]
@@ -65,6 +74,7 @@ fn ui_state_from_flags(flags: &AppFlags) -> UiState {
         always_on_top: flags.always_on_top,
         wallpaper_mode: wallpaper::is_attached(),
         debug_visible: flags.debug_visible,
+        wallpaper_error: wallpaper::last_attach_error(),
     }
 }
 
@@ -240,26 +250,85 @@ fn toggle_debug(
     Ok(flags.lock().debug_visible)
 }
 
+fn apply_wallpaper_shell(window: &WebviewWindow, enabled: bool) -> Result<(), String> {
+    use tauri::{LogicalSize, Position, Size};
+
+    if enabled {
+        if let Ok(Some(monitor)) = window.current_monitor() {
+            let size = monitor.size();
+            let pos = monitor.position();
+            window
+                .set_size(Size::Physical(size))
+                .map_err(|e| e.to_string())?;
+            window
+                .set_position(Position::Physical(pos))
+                .map_err(|e| e.to_string())?;
+        }
+        window
+            .set_skip_taskbar(true)
+            .map_err(|e| e.to_string())?;
+        window
+            .set_ignore_cursor_events(true)
+            .map_err(|e| e.to_string())?;
+        let _ = window.set_always_on_top(false);
+        let _ = window.set_focusable(false);
+    } else {
+        window
+            .set_skip_taskbar(false)
+            .map_err(|e| e.to_string())?;
+        window
+            .set_ignore_cursor_events(false)
+            .map_err(|e| e.to_string())?;
+        let _ = window.set_focusable(true);
+        if let Some(geo) = wallpaper::take_overlay_geometry() {
+            use tauri::{PhysicalPosition, PhysicalSize};
+            let _ = window.set_size(Size::Physical(PhysicalSize::new(geo.width, geo.height)));
+            let _ = window.set_position(Position::Physical(PhysicalPosition::new(geo.x, geo.y)));
+        } else {
+            let _ = window.set_size(Size::Logical(LogicalSize::new(520.0, 440.0)));
+        }
+    }
+    Ok(())
+}
+
 fn set_wallpaper_mode_inner(
     window: &WebviewWindow,
     flags: &SharedFlags,
+    service: &SharedLyricsService,
     enabled: bool,
+    persist: bool,
 ) -> Result<(), String> {
     #[cfg(windows)]
     {
-        let hwnd = window.hwnd().map_err(|e| e.to_string())?;
-
         if enabled {
-            wallpaper::attach_wallpaper(hwnd)?;
+            apply_wallpaper_shell(window, true)?;
+            let hwnd = window.hwnd().map_err(|e| e.to_string())?;
+            if let Err(e) = wallpaper::attach_wallpaper(hwnd) {
+                let _ = apply_wallpaper_shell(window, false);
+                if persist {
+                    let _ = service.set_wallpaper_mode(false);
+                }
+                apply_topmost(window, &flags.lock());
+                let _ = window.app_handle().emit("wallpaper-attach-failed", &e);
+                return Err(e);
+            }
+            if persist {
+                service.set_wallpaper_mode(true)?;
+            }
         } else {
+            let hwnd = window.hwnd().map_err(|e| e.to_string())?;
             wallpaper::detach_wallpaper(hwnd)?;
+            apply_wallpaper_shell(window, false)?;
+            if persist {
+                service.set_wallpaper_mode(false)?;
+            }
         }
         apply_topmost(window, &flags.lock());
     }
 
     #[cfg(not(windows))]
     {
-        let _ = (window, flags, enabled);
+        let _ = (window, flags, service, enabled, persist);
         return Err("Wallpaper mode is Windows-only".into());
     }
 
@@ -289,9 +358,10 @@ fn set_wallpaper_mode(
     window: WebviewWindow,
     enabled: bool,
     flags: tauri::State<SharedFlags>,
+    service: tauri::State<SharedLyricsService>,
     app: AppHandle,
 ) -> Result<(), String> {
-    set_wallpaper_mode_inner(&window, flags.inner(), enabled)?;
+    set_wallpaper_mode_inner(&window, flags.inner(), &service, enabled, true)?;
     let _ = app.emit("ui-state", current_ui_state(flags.inner()));
     Ok(())
 }
@@ -300,12 +370,21 @@ fn set_wallpaper_mode(
 fn toggle_wallpaper_mode(
     window: WebviewWindow,
     flags: tauri::State<SharedFlags>,
+    service: tauri::State<SharedLyricsService>,
     app: AppHandle,
 ) -> Result<bool, String> {
     let next = !wallpaper::is_attached();
-    set_wallpaper_mode_inner(&window, flags.inner(), next)?;
+    set_wallpaper_mode_inner(&window, flags.inner(), &service, next, true)?;
     let _ = app.emit("ui-state", current_ui_state(flags.inner()));
     Ok(next)
+}
+
+#[tauri::command]
+fn get_wallpaper_status() -> WallpaperStatus {
+    WallpaperStatus {
+        attached: wallpaper::is_attached(),
+        last_error: wallpaper::last_attach_error(),
+    }
 }
 
 enum ShortcutAction {
@@ -362,10 +441,13 @@ fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, action: ShortcutAc
             ShortcutAction::ToggleWallpaper => {
                 if let Some(window) = app_handle.get_webview_window("main") {
                     let flags = app_handle.state::<SharedFlags>();
+                    let service = app_handle.state::<SharedLyricsService>();
                     if set_wallpaper_mode_inner(
                         &window,
                         flags.inner(),
+                        &service,
                         !wallpaper::is_attached(),
+                        true,
                     )
                     .is_ok()
                     {
@@ -426,10 +508,13 @@ fn build_tray(app: &AppHandle) {
                 "toggle_wallpaper" => {
                     if let Some(window) = app.get_webview_window("main") {
                         let flags = app.state::<SharedFlags>();
+                        let service = app.state::<SharedLyricsService>();
                         if set_wallpaper_mode_inner(
                             &window,
                             flags.inner(),
+                            &service,
                             !wallpaper::is_attached(),
+                            true,
                         )
                         .is_ok()
                         {
@@ -518,6 +603,7 @@ pub fn run() {
             toggle_always_on_top,
             set_wallpaper_mode,
             toggle_wallpaper_mode,
+            get_wallpaper_status,
         ])
         .setup({
             let flags = flags.clone();
@@ -546,6 +632,18 @@ pub fn run() {
                     .handle()
                     .emit("appearance-state", appearance_from_service(&appearance));
                 startup::step("tauri setup complete — WebView2 loading");
+                if service.get_wallpaper_mode() {
+                    if let Some(window) = app.get_webview_window("main") {
+                        let flags = flags.clone();
+                        let service = app.state::<SharedLyricsService>();
+                        let app_h = app.handle().clone();
+                        if set_wallpaper_mode_inner(&window, &flags, &service, true, true).is_err()
+                        {
+                            startup::step("wallpaper: restore on launch failed — overlay mode");
+                        }
+                        let _ = app_h.emit("ui-state", current_ui_state(&flags));
+                    }
+                }
                 if std::env::var("LYRICGLASS_SMOKE_DIAG").is_ok() {
                     let app = app.handle().clone();
                     let flags = flags.clone();

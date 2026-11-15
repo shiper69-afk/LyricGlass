@@ -16,6 +16,7 @@ import {
   type LyricsResponse,
 } from "./lyrics-view";
 import { plainSourceLabel } from "./plain-scroll";
+import { applyWallpaperLayout } from "./wallpaper-ui";
 import { BOUNCER_META, normalizeBouncerId } from "./bouncers/ids";
 import { bouncerSvgMarkup } from "./bouncers/svg-store";
 
@@ -23,6 +24,7 @@ interface UiState {
   alwaysOnTop: boolean;
   wallpaperMode: boolean;
   debugVisible: boolean;
+  wallpaperError?: string | null;
 }
 
 interface AppearanceState {
@@ -66,6 +68,7 @@ const els = {
   timingReset: document.getElementById("timing-reset") as HTMLButtonElement,
   timingReadout: document.getElementById("timing-readout")!,
   karaokeToggle: document.getElementById("karaoke-ball-toggle") as HTMLInputElement,
+  wallpaperToggle: document.getElementById("wallpaper-toggle") as HTMLInputElement,
   ballColor: document.getElementById("ball-color") as HTMLInputElement,
   sungColor: document.getElementById("sung-color") as HTMLInputElement,
   colorsReset: document.getElementById("colors-reset") as HTMLButtonElement,
@@ -79,6 +82,7 @@ let fetchGeneration = 0;
 let debugVisible = false;
 let timingPersistTimer = 0;
 let lastDebugClockRenderMs = 0;
+let lastWallpaperError: string | null = null;
 const DEBUG_PANEL_HZ_MS = 200;
 
 function applyAppearance(backgroundOpacity: number) {
@@ -213,11 +217,23 @@ async function loadSyncOffset(media: FullMediaState) {
 }
 
 async function logDiagnosticsToFile(reason: string) {
+  let wallpaper: { attached: boolean; lastError?: string | null } = {
+    attached: false,
+    lastError: lastWallpaperError,
+  };
+  try {
+    wallpaper = await invoke<{ attached: boolean; lastError?: string | null }>(
+      "get_wallpaper_status",
+    );
+  } catch {
+    /* dev / harness */
+  }
   const block = buildDiagnosticsBlock(
     latestMedia,
     latestLyrics,
     lyricsView,
     playbackAnchor,
+    wallpaper,
   );
   const full = `${reason}\n\n${block}`;
   await invoke("log_diagnostics", { block: full });
@@ -291,6 +307,9 @@ function renderUi(state: UiState) {
   debugVisible = state.debugVisible;
   els.btnAlwaysOnTop.classList.toggle("active", state.alwaysOnTop);
   els.btnWallpaper.classList.toggle("active", state.wallpaperMode);
+  els.wallpaperToggle.checked = state.wallpaperMode;
+  applyWallpaperLayout(appRoot, state.wallpaperMode);
+  lastWallpaperError = state.wallpaperError ?? null;
   els.debugPanel.classList.toggle("hidden", !state.debugVisible);
   els.debugPanel.setAttribute("aria-hidden", state.debugVisible ? "false" : "true");
   renderDebugClock(true);
@@ -322,6 +341,10 @@ els.btnAlwaysOnTop.addEventListener("click", (e) => {
 els.btnWallpaper.addEventListener("click", (e) => {
   e.stopPropagation();
   void invoke("toggle_wallpaper_mode");
+});
+
+els.wallpaperToggle.addEventListener("change", () => {
+  void invoke("set_wallpaper_mode", { enabled: els.wallpaperToggle.checked });
 });
 
 els.btnSettings.addEventListener("click", (e) => {
@@ -426,6 +449,10 @@ async function boot() {
     }
   });
   await listen("sync-mark-request", () => void onSyncMark());
+  await listen<string>("wallpaper-attach-failed", (e) => {
+    lastWallpaperError = e.payload;
+    void logDiagnosticsToFile(`Wallpaper attach failed: ${e.payload}`);
+  });
 
   const media = await invoke<FullMediaState>("get_media_state");
   onMedia(media);

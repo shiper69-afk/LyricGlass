@@ -8,6 +8,7 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(() => ({
   test: {
     include: ["src/**/*.test.ts"],
+    environmentMatchGlobs: [["src/wallpaper-ui.test.ts", "jsdom"]],
   },
 
   build: {
@@ -17,6 +18,7 @@ export default defineConfig(() => ({
         scrollHarness: "scroll-harness.html",
         hebrewHarness: "hebrew-harness.html",
         gapHarness: "gap-harness.html",
+        wallpaperHarness: "wallpaper-harness.html",
       },
     },
   },
