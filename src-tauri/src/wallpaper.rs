@@ -332,7 +332,7 @@ mod imp {
     fn progman_child_sibling_order(progman: HWND) -> Vec<(u64, String, usize)> {
         let mut out = Vec::new();
         unsafe {
-            let mut child = GetWindow(progman, GW_CHILD);
+            let mut child = GetWindow(progman, GW_CHILD).unwrap_or(HWND::default());
             let mut z = 0usize;
             while hwnd_valid(child) {
                 let mut class = [0u16; 64];
@@ -344,7 +344,7 @@ mod imp {
                 };
                 out.push((hwnd_to_u64(child), class_name, z));
                 z += 1;
-                child = GetWindow(child, GW_HWNDNEXT);
+                child = GetWindow(child, GW_HWNDNEXT).unwrap_or(HWND::default());
             }
         }
         out
@@ -649,7 +649,7 @@ mod imp {
             if insert_after_hwnd == 0 && plan.defview_hwnd != 0 {
                 unsafe {
                     let dv = HWND(plan.defview_hwnd as *mut core::ffi::c_void);
-                    let below = GetWindow(dv, GW_HWNDNEXT);
+                    let below = GetWindow(dv, GW_HWNDNEXT).unwrap_or(HWND::default());
                     if hwnd_valid(below) {
                         insert_after_hwnd = hwnd_to_u64(below);
                         diag.push_str(&format!(

@@ -90,7 +90,7 @@ pub fn plan_progman_layered_attach(
         .iter()
         .filter(|w| is_workerw(w) && !w.has_defview_child)
         .min_by_key(|w| w.z_order)
-        .or_else(|| progman_children.iter().find(|w| is_workerw(w)))?;
+        .or_else(|| progman_children.iter().find(|w| is_workerw(w)));
 
     let wallpaper_workerw_hwnd = wallpaper_ww.map(|w| w.hwnd).unwrap_or(0);
     let z_insert_after = if wallpaper_workerw_hwnd != 0 {
