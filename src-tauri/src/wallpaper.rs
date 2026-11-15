@@ -1280,7 +1280,7 @@ mod imp {
                     None,
                 )
                 .map_err(|e| format!("fake content: {e}"))?;
-                let _ = ShowWindow(progman, SHOW_WINDOW_CMD(SW_SHOW));
+                let _ = ShowWindow(progman, SW_SHOW);
                 Ok(FakeDesktop {
                     progman,
                     defview,
