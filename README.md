@@ -11,6 +11,7 @@ Windows app: floating, semi-transparent synced lyrics overlay for Spotify deskto
 | **Display** | Centered lines; `dir="auto"` for RTL; ball follows measured word positions (remeasure on line change/resize only). |
 | **Settings** | Gear popover: **Karaoke ball** toggle (persisted, default ON). Off for plain/untimed lyrics. |
 | **Phase 1** | LRCLIB sync, diagnostics, opacity/timing, always-on-top, wallpaper — unchanged from v0.2.4. |
+| **Installer** | Custom `installer.nsi` skips Tauri Restart Manager check; `taskkill` on exact `lyricglass.exe` only (fixes false “app running” on uninstall). |
 
 ## Stack
 

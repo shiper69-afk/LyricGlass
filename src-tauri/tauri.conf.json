@@ -38,6 +38,7 @@
     "windows": {
       "nsis": {
         "installMode": "currentUser",
+        "template": "windows/installer.nsi",
         "installerHooks": "windows/nsis-hooks.nsh"
       }
     },
