@@ -32,39 +32,40 @@ pub fn run() -> i32 {
         .chain(std::iter::once(0))
         .collect();
 
-    let hinst = GetModuleHandleW(None).unwrap_or_default();
-    let wc = WNDCLASSW {
-        lpfnWndProc: Some(wnd_proc),
-        hInstance: hinst.into(),
-        lpszClassName: PCWSTR(class_name.as_ptr()),
-        style: CS_HREDRAW | CS_VREDRAW,
-        ..Default::default()
+    let hwnd = unsafe {
+        let hinst = GetModuleHandleW(None).unwrap_or_default();
+        let title: Vec<u16> = OsStr::new("LyricGlass Wallpaper Selftest")
+            .encode_wide()
+            .chain(std::iter::once(0))
+            .collect();
+        let wc = WNDCLASSW {
+            lpfnWndProc: Some(wnd_proc),
+            hInstance: hinst.into(),
+            lpszClassName: PCWSTR(class_name.as_ptr()),
+            style: CS_HREDRAW | CS_VREDRAW,
+            ..Default::default()
+        };
+        RegisterClassW(&wc);
+
+        let hwnd = CreateWindowExW(
+            windows::Win32::UI::WindowsAndMessaging::WINDOW_EX_STYLE::default(),
+            PCWSTR(class_name.as_ptr()),
+            PCWSTR(title.as_ptr()),
+            windows::Win32::UI::WindowsAndMessaging::WS_OVERLAPPEDWINDOW,
+            100,
+            100,
+            420,
+            320,
+            None,
+            None,
+            Some(hinst.into()),
+            None,
+        )
+        .expect("CreateWindowExW");
+
+        let _ = ShowWindow(hwnd, SW_SHOW);
+        hwnd
     };
-    RegisterClassW(&wc);
-
-    let hwnd = CreateWindowExW(
-        windows::Win32::UI::WindowsAndMessaging::WINDOW_EX_STYLE::default(),
-        PCWSTR(class_name.as_ptr()),
-        PCWSTR(
-            OsStr::new("LyricGlass Wallpaper Selftest")
-                .encode_wide()
-                .chain(std::iter::once(0))
-                .collect::<Vec<_>>()
-                .as_ptr(),
-        ),
-        windows::Win32::UI::WindowsAndMessaging::WS_OVERLAPPEDWINDOW,
-        100,
-        100,
-        420,
-        320,
-        None,
-        None,
-        Some(hinst.into()),
-        None,
-    )
-    .expect("CreateWindowExW");
-
-    let _ = ShowWindow(hwnd, SW_SHOW);
 
     let outcome = wallpaper::attach_wallpaper(hwnd, "selftest");
     let code = match &outcome {
@@ -75,7 +76,9 @@ pub fn run() -> i32 {
         Err(_) => 1,
     };
 
-    let _ = DestroyWindow(hwnd);
+    unsafe {
+        let _ = DestroyWindow(hwnd);
+    }
     wallpaper_log::append_log_file(&format!(
         "selftest exit code={code} result={}",
         outcome.as_ref().map(|_| "ok").unwrap_or_else(|e| e.as_str())
