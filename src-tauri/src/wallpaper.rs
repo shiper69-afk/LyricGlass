@@ -72,6 +72,7 @@ mod imp {
         GetWindowRect, IsWindow, IsWindowVisible, RegisterClassExW, SendMessageTimeoutW,
         SendMessageW, SetLayeredWindowAttributes, SetParent, SetWindowLongPtrW, SetWindowPos,
         ShowWindow, WNDCLASSEXW, GWL_EXSTYLE, GWL_STYLE, GW_CHILD, GW_HWNDNEXT, HWND_NOTOPMOST,
+        SHOW_WINDOW_CMD,
         LWA_ALPHA, SMTO_ABORTIFHUNG, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOREDRAW,
         SWP_NOSIZE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW, WM_SETREDRAW,
     };
@@ -754,7 +755,7 @@ mod imp {
             force_clear_topmost(hwnd, diag);
             let style = GetWindowLongPtrW(hwnd, GWL_STYLE) as u32 | WS_VISIBLE;
             set_window_long_ptr_logged(hwnd, GWL_STYLE, style as isize, "style show", diag);
-            let _ = ShowWindow(hwnd, SW_SHOWNA);
+            let _ = ShowWindow(hwnd, SHOW_WINDOW_CMD(SW_SHOWNA as u32));
             diag.push_str("ShowWindow(SW_SHOWNA) content\n");
 
             let _ = SetWindowPos(
@@ -1083,15 +1084,17 @@ mod imp {
                 false,
             );
             if attach_result.is_ok() {
-                let _ = SetWindowPos(
-                    hwnd,
-                    None,
-                    0,
-                    0,
-                    0,
-                    0,
-                    SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE,
-                );
+                unsafe {
+                    let _ = SetWindowPos(
+                        hwnd,
+                        None,
+                        0,
+                        0,
+                        0,
+                        0,
+                        SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE,
+                    );
+                }
                 set_redraw(hwnd, true, &mut diag);
             }
         }
