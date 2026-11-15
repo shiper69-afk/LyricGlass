@@ -22,6 +22,10 @@ impl LyricsCache {
                 cache_key TEXT PRIMARY KEY,
                 response_json TEXT NOT NULL,
                 expires_at INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS sync_offset (
+                cache_key TEXT PRIMARY KEY,
+                offset_ms INTEGER NOT NULL
             );",
         )
         .map_err(|e| e.to_string())?;
@@ -67,6 +71,60 @@ impl LyricsCache {
         let mut response: LyricsResponse = serde_json::from_str(&json).ok()?;
         response.from_cache = true;
         Some(response)
+    }
+
+    pub fn get_sync_offset(
+        &self,
+        artist: &str,
+        track: &str,
+        album: &str,
+        duration_ms: u64,
+    ) -> i64 {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return 0,
+        };
+        let key = Self::key(artist, track, album, duration_ms);
+        conn.query_row(
+            "SELECT offset_ms FROM sync_offset WHERE cache_key = ?1",
+            params![key],
+            |row| row.get(0),
+        )
+        .unwrap_or(0)
+    }
+
+    pub fn set_sync_offset(
+        &self,
+        artist: &str,
+        track: &str,
+        album: &str,
+        duration_ms: u64,
+        offset_ms: i64,
+    ) -> Result<(), String> {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(()),
+        };
+        let key = Self::key(artist, track, album, duration_ms);
+        conn.execute(
+            "INSERT OR REPLACE INTO sync_offset (cache_key, offset_ms) VALUES (?1, ?2)",
+            params![key, offset_ms],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    pub fn add_sync_offset(
+        &self,
+        artist: &str,
+        track: &str,
+        album: &str,
+        duration_ms: u64,
+        delta_ms: i64,
+    ) -> Result<i64, String> {
+        let next = self.get_sync_offset(artist, track, album, duration_ms) + delta_ms;
+        self.set_sync_offset(artist, track, album, duration_ms, next)?;
+        Ok(next)
     }
 
     pub fn put(

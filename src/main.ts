@@ -1,6 +1,10 @@
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { formatMs, smoothedPositionMs } from "./clock";
+import {
+  formatMs,
+  mediaClockMs,
+  timelineAnchorAgeMs,
+} from "./clock";
 import { LyricsView, type LyricsResponse, type MediaState } from "./lyrics-view";
 
 interface FullMediaState extends MediaState {
@@ -24,7 +28,9 @@ const els = {
   album: document.getElementById("m-album")!,
   status: document.getElementById("m-status")!,
   posRaw: document.getElementById("m-position-raw")!,
+  posAge: document.getElementById("m-position-age")!,
   posSmooth: document.getElementById("m-position-smooth")!,
+  playbackRate: document.getElementById("m-playback-rate")!,
   timelineCount: document.getElementById("m-timeline-count")!,
   lastEvent: document.getElementById("m-last-event")!,
   btnClick: document.getElementById("btn-click") as HTMLButtonElement,
@@ -35,22 +41,37 @@ const els = {
 
 let latestMedia: FullMediaState | null = null;
 let fetchGeneration = 0;
+let debugVisible = false;
 
-function renderDebug(media: FullMediaState) {
+function renderDebugStatic(media: FullMediaState) {
   els.mediaStatus.textContent = media.message;
   els.album.textContent = media.album || "—";
   els.status.textContent = media.playbackStatus;
   els.posRaw.textContent = formatMs(media.positionReportedMs);
+  els.playbackRate.textContent = (media.playbackRate ?? 1).toFixed(2);
   els.timelineCount.textContent = String(media.timelineUpdates);
   els.lastEvent.textContent = media.lastEventKind;
+}
 
-  const playing = media.playbackStatus.toLowerCase() === "playing";
-  const smooth = smoothedPositionMs(
-    media.positionReportedMs,
-    playing,
-    Date.now() - media.positionReportedAtMs,
-  );
-  els.posSmooth.textContent = formatMs(smooth);
+function renderDebugClock() {
+  if (!latestMedia || !debugVisible) return;
+  const now = Date.now();
+  els.posSmooth.textContent = formatMs(mediaClockMs(latestMedia, now));
+  els.posAge.textContent = `${timelineAnchorAgeMs(latestMedia.positionReportedAtMs, now)} ms`;
+}
+
+async function loadSyncOffset(media: FullMediaState) {
+  try {
+    const off = await invoke<number>("get_sync_offset", {
+      artist: media.artist,
+      track: media.title,
+      album: media.album,
+      durationMs: media.durationMs,
+    });
+    lyricsView.setSyncOffsetAbsolute(off);
+  } catch {
+    lyricsView.setSyncOffsetAbsolute(0);
+  }
 }
 
 async function loadLyrics(media: FullMediaState) {
@@ -91,16 +112,20 @@ function onMedia(state: FullMediaState) {
 
   if (trackChanged) {
     void loadLyrics(state);
+    void loadSyncOffset(state);
   }
 
-  renderDebug(state);
+  renderDebugStatic(state);
+  renderDebugClock();
 }
 
 function renderUi(state: UiState) {
+  debugVisible = state.debugVisible;
   els.btnClick.classList.toggle("active", state.clickThrough);
   els.btnWallpaper.classList.toggle("active", state.wallpaperMode);
   els.debugPanel.classList.toggle("hidden", !state.debugVisible);
   els.debugPanel.setAttribute("aria-hidden", state.debugVisible ? "false" : "true");
+  renderDebugClock();
 }
 
 let rafId = 0;
@@ -108,6 +133,7 @@ let rafId = 0;
 function tick() {
   if (latestMedia) {
     lyricsView.tick(latestMedia);
+    renderDebugClock();
   }
   rafId = requestAnimationFrame(tick);
 }
@@ -122,7 +148,9 @@ els.btnWallpaper.addEventListener("click", () => void invoke("toggle_wallpaper_m
 async function boot() {
   await listen<FullMediaState>("media-state", (e) => onMedia(e.payload));
   await listen<UiState>("ui-state", (e) => renderUi(e.payload));
-  await listen<number>("sync-offset", (e) => lyricsView.setSyncOffset(e.payload));
+  await listen<number>("sync-offset-absolute", (e) =>
+    lyricsView.setSyncOffsetAbsolute(e.payload),
+  );
   await listen("seek-tick", () => {
     lyricsView.onSeek();
     if (latestMedia) lyricsView.tick(latestMedia);

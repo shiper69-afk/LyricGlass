@@ -73,6 +73,17 @@ fn fetch_lyrics(
 }
 
 #[tauri::command]
+fn get_sync_offset(
+    service: tauri::State<SharedLyricsService>,
+    artist: String,
+    track: String,
+    album: String,
+    duration_ms: u64,
+) -> i64 {
+    service.get_sync_offset(&artist, &track, &album, duration_ms)
+}
+
+#[tauri::command]
 fn toggle_debug(
     flags: tauri::State<SharedFlags>,
     app: AppHandle,
@@ -182,8 +193,24 @@ fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, action: ShortcutAc
         }
         match action {
             ShortcutAction::SyncOffset(delta) => {
-                let _ = app_handle.emit("sync-offset", delta);
-                let _ = app_handle.emit("seek-tick", ());
+                let media = app_handle.state::<SharedMediaState>().read().clone();
+                if media.artist.trim().is_empty() && media.title.trim().is_empty() {
+                    return;
+                }
+                let service = app_handle.state::<SharedLyricsService>();
+                match service.add_sync_offset(
+                    &media.artist,
+                    &media.title,
+                    &media.album,
+                    media.duration_ms,
+                    delta,
+                ) {
+                    Ok(total) => {
+                        let _ = app_handle.emit("sync-offset-absolute", total);
+                        let _ = app_handle.emit("seek-tick", ());
+                    }
+                    Err(e) => startup::step(&format!("sync offset save failed: {e}")),
+                }
             }
             ShortcutAction::ToggleClickThrough => {
                 if let Some(window) = app_handle.get_webview_window("main") {
@@ -336,6 +363,7 @@ pub fn run() {
             get_ui_state,
             get_startup_log_path,
             fetch_lyrics,
+            get_sync_offset,
             toggle_debug,
             toggle_click_through,
             set_wallpaper_mode,

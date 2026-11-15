@@ -19,6 +19,29 @@ impl LyricsService {
         })
     }
 
+    pub fn get_sync_offset(
+        &self,
+        artist: &str,
+        track: &str,
+        album: &str,
+        duration_ms: u64,
+    ) -> i64 {
+        self.cache.lock().get_sync_offset(artist, track, album, duration_ms)
+    }
+
+    pub fn add_sync_offset(
+        &self,
+        artist: &str,
+        track: &str,
+        album: &str,
+        duration_ms: u64,
+        delta_ms: i64,
+    ) -> Result<i64, String> {
+        self.cache
+            .lock()
+            .add_sync_offset(artist, track, album, duration_ms, delta_ms)
+    }
+
     pub fn fetch(
         &self,
         artist: &str,

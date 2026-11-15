@@ -2,11 +2,12 @@
 
 Windows app: floating, semi-transparent synced lyrics overlay for Spotify desktop (RTL Hebrew, wallpaper mode, LRCLIB lyrics in **Phase 1**).
 
-## Phase 1 (v0.2.0)
+## Phase 1 (v0.2.1)
 
 | Area | What it does |
 | --- | --- |
-| **LRCLIB** | Rust client: `/api/get` (artist, track, album, duration) then `/api/search` fallback. User-Agent: `LyricGlass/0.2.0` + repo URL. Prefers synced LRC; plain text shown as **untimed** scroll with badge. |
+| **LRCLIB** | Rust client: `/api/get` (artist, track, album, duration) then `/api/search` fallback. User-Agent: `LyricGlass/0.2.1` + repo URL. Prefers synced LRC; plain text shown as **untimed** scroll with badge. |
+| **Playback clock** | Extrapolates from GSMTC `Position` + `LastUpdatedTime` × playback rate; does **not** reset the anchor on idle polls (fixes multi-second lyric lag on Store Spotify). |
 | **Cache** | SQLite at `%LOCALAPPDATA%\LyricGlass\lyrics-cache.sqlite3` (7d hits, 6h for not-found/errors). Offline replay uses cache. |
 | **LRC** | TypeScript parser + Vitest (multi-timestamp lines, `[offset:]`, blanks, enhanced word tags stripped for display). |
 | **Overlay** | Previous / current / next lines, highlight + smooth CSS transitions, smoothed GSMTC clock. Pause freezes line; seek jumps; track change shows loading. `dir="auto"` per line. Subtle now-playing header. |
@@ -49,16 +50,17 @@ Use Spotify desktop (Microsoft Store id `SpotifyAB.SpotifyMusic_...!Spotify` is 
 
 1. Launch LyricGlass; play a mainstream track with synced lyrics on LRCLIB (e.g. well-known English pop).
 2. **Loading** → synced lines appear; **current line highlighted**; window shows previous/next lines.
-3. Let it play ~30s — highlight advances with the song (smoothed clock).
-4. **Pause** — highlight stays on the current line (no drift).
-5. **Seek** backward/forward — correct line within ~1–2 s (GSMTC poll + smoothing).
-6. **Skip track** — brief loading, new lyrics or **No lyrics found**.
-7. Try a track with only plain lyrics on LRCLIB — **Untimed lyrics** badge and scrollable text.
-8. Disconnect network, replay a previously cached track — lyrics load instantly (**cached** in log/status area).
+3. Let it play ~30s — highlight should track the vocal within a few hundred ms (not 2–4 s late).
+4. Tray → **Show diagnostics** — verify **Computed clock** advances smoothly while **Timeline age** may sit at several seconds between GSMTC updates; highlight should still follow audio.
+5. **Pause** — highlight stays on the current line (no drift).
+6. **Seek** backward/forward — line jumps promptly (within ~1 s of GSMTC catching up).
+7. **Skip track** — brief loading, new lyrics or **No lyrics found**.
+8. Try a track with only plain lyrics on LRCLIB — **Untimed lyrics** badge and scrollable text.
+9. Disconnect network, replay a previously cached track — lyrics load instantly (**cached** in log/status area).
 
 ### 2. Sync offset (optional)
 
-- **Ctrl+Alt+]** / **Ctrl+Alt+[** nudge offset ±500 ms; small label under the header shows cumulative offset.
+- **Ctrl+Alt+]** / **Ctrl+Alt+[** nudge offset ±500 ms (saved per track in the lyrics cache DB).
 
 ### 3. Overlay & modes
 

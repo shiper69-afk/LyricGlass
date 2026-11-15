@@ -1,4 +1,4 @@
-import { formatMs, smoothedPositionMs } from "./clock";
+import { formatMs, mediaClockMs } from "./clock";
 import { findActiveLineIndex, parseLrc, type LrcLine, type ParsedLrc } from "./lrc";
 
 export interface MediaState {
@@ -9,6 +9,7 @@ export interface MediaState {
   durationMs: number;
   positionReportedMs: number;
   positionReportedAtMs: number;
+  playbackRate?: number;
   playbackStatus: string;
 }
 
@@ -46,8 +47,8 @@ export class LyricsView {
     this.offsetEl = root.querySelector("#sync-offset-label")!;
   }
 
-  setSyncOffset(deltaMs: number) {
-    this.syncOffsetMs += deltaMs;
+  setSyncOffsetAbsolute(offsetMs: number) {
+    this.syncOffsetMs = offsetMs;
     this.offsetEl.textContent =
       this.syncOffsetMs === 0
         ? ""
@@ -109,7 +110,7 @@ export class LyricsView {
   tick(media: MediaState | null) {
     if (!media) return;
 
-    const signature = `${media.positionReportedMs}|${media.playbackStatus}|${media.positionReportedAtMs}`;
+    const signature = `${media.positionReportedMs}|${media.playbackStatus}|${media.positionReportedAtMs}|${media.playbackRate ?? 1}`;
     if (signature !== this.lastMediaSignature) {
       this.lastMediaSignature = signature;
       if (media.playbackStatus.toLowerCase() !== "playing") {
@@ -119,13 +120,7 @@ export class LyricsView {
 
     if (!this.parsed || this.parsed.lines.length === 0) return;
 
-    const playing = media.playbackStatus.toLowerCase() === "playing";
-    const now = Date.now();
-    const smooth = smoothedPositionMs(
-      media.positionReportedMs,
-      playing,
-      now - media.positionReportedAtMs,
-    );
+    const smooth = mediaClockMs(media, Date.now());
     const timeMs = smooth + this.syncOffsetMs;
 
     const idx = findActiveLineIndex(this.parsed.lines, timeMs);
