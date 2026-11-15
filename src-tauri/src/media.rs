@@ -91,7 +91,7 @@ mod imp {
 
     const WINDOWS_TICK_OFFSET: i64 = 11_644_473_600_000_000;
 
-    fn date_time_offset_to_unix_ms(dto: windows::Foundation::DateTimeOffset) -> Option<u64> {
+    fn date_time_to_unix_ms(dto: windows::Foundation::DateTime) -> Option<u64> {
         let ticks = dto.UniversalTime();
         if ticks <= WINDOWS_TICK_OFFSET {
             return None;
@@ -174,6 +174,7 @@ mod imp {
         let playback_rate = playback_info
             .as_ref()
             .and_then(|p| p.PlaybackRate().ok())
+            .and_then(|reference| reference.Value().ok())
             .filter(|r| r.is_finite() && *r > 0.0)
             .unwrap_or(1.0);
 
@@ -186,7 +187,7 @@ mod imp {
                 let last_updated_ms = t
                     .LastUpdatedTime()
                     .ok()
-                    .and_then(date_time_offset_to_unix_ms)
+                    .and_then(date_time_to_unix_ms)
                     .unwrap_or(0);
                 (position_ms, duration_ms, last_updated_ms)
             })
