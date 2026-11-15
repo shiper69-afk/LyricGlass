@@ -1,1 +1,104 @@
 # LyricGlass
+
+Planned Windows app: a floating, always-on-top, semi-transparent lyrics overlay for the Spotify desktop client (with synced lyrics, RTL Hebrew support, and wallpaper mode in later phases).
+
+This repository's **Phase 0** spike is a small test app that de-risks three integrations on real Windows 10/11 machines.
+
+## What this spike covers
+
+| Area | Purpose |
+| --- | --- |
+| **Windows media controls** | Spotify now-playing via `GlobalSystemMediaTransportControlsSessionManager` (no Spotify login). Polls ~250ms, classifies track/playback/timeline changes, shows raw timeline position and a smoothed interpolated clock between updates. |
+| **Transparent overlay window** | Frameless, always-on-top, transparent WebView2 window; draggable title bar; click-through toggle (UI, tray, **Ctrl+Alt+C**); Hebrew RTL + English sample lines; bouncing-ball `requestAnimationFrame` demo and FPS counter (idle when animation is off). |
+| **WorkerW wallpaper attach** | Re-parent behind desktop icons (Progman `0x052C` / WorkerW) and undo (**Ctrl+Alt+W**, tray, UI). |
+
+**Out of scope:** LRCLIB / Shironet lyrics, real karaoke, settings, installer polish.
+
+## Stack
+
+Tauri 2, Rust (`windows` crate), TypeScript + Vite (WebView2).
+
+## Build locally (Windows)
+
+Prerequisites: https://v2.tauri.app/start/prerequisites/
+
+```powershell
+git clone https://github.com/shiper69-afk/LyricGlass.git
+cd LyricGlass
+npm install
+npm run tauri dev
+```
+
+Release: `npm run tauri build` → installer under `src-tauri\target\release\bundle\nsis\`, exe at `src-tauri\target\release\lyricglass.exe`.
+
+### Startup logs & crash diagnostics
+
+Each run writes a timestamped log under:
+
+`%LOCALAPPDATA%\LyricGlass\logs\lyricglass-<unix-time>.log`
+
+The log records startup steps (COM/media watcher, tray, hotkeys, Tauri setup, WebView2). On panic or fatal startup error, Windows shows a message box with the log path; panics also include a backtrace in the log file (release builds use `panic = unwind`).
+
+If the app fails to launch, open the newest file in that folder and attach it to your bug report.
+
+### CI artifacts
+
+GitHub Actions on `windows-latest` uploads artifact **`lyricglass-windows-<commit-sha>`** (NSIS installer and/or `lyricglass.exe`) on each push/PR. Download from the workflow run **Artifacts** section.
+
+## Manual test checklist (Windows)
+
+Use Spotify desktop with LyricGlass running (Microsoft Store Spotify is supported; session id may look like `SpotifyAB.SpotifyMusic_...!Spotify`).
+
+### 0. Startup & uninstall (regression)
+
+1. Install per-user from the NSIS artifact → launch from Start Menu → **window must appear within a few seconds** (no instant crash).
+2. Confirm `%LOCALAPPDATA%\LyricGlass\logs\` contains a fresh log with lines through `tauri setup complete`.
+3. Quit from tray → uninstall from Settings/Apps while **not running** → uninstall must complete without “Failed to kill LyricGlass”.
+4. Optional: start app, then uninstall → installer may prompt to close/kill; accept and verify clean removal.
+
+### A. Media session
+
+1. Spotify closed → status says Spotify not in sessions; no crash.
+2. Play a track → metadata and `playing` appear.
+3. Pause → smoothed position stops; reported updates on timeline events.
+4. Resume → smoothed clock advances between events.
+5. Seek → reported position jumps; **Timeline events** increments.
+6. Skip track → metadata changes; last event may be `track`.
+
+Report: typical timeline event interval while playing, metadata gaps, smoothed vs reported drift.
+
+### B. Overlay
+
+1. Frameless, semi-transparent, always on top.
+2. Drag title bar.
+3. Animate on → ball moves, FPS ~60.
+4. Animate off → FPS idle, low CPU.
+5. English + Hebrew RTL lines visible.
+6. Click-through on/off (button, tray, **Ctrl+Alt+C**).
+
+Report: WebView2 transparency flash/ghosting, click-through stuck state.
+
+### C. Wallpaper
+
+1. Off → always-on-top overlay.
+2. On → behind desktop icons.
+3. Off again → restored; repeat without Explorer issues.
+
+Report: multi-monitor, window missing, Explorer restart needed.
+
+### D. Tray
+
+Right-click: toggles + Quit. Left-click: show/focus window.
+
+## Hotkeys
+
+| Key | Action |
+| --- | --- |
+| Ctrl+Alt+C | Toggle click-through |
+| Ctrl+Alt+W | Toggle wallpaper attach |
+
+## Layout
+
+`src/` frontend · `src-tauri/` Rust · `.github/workflows/` CI
+
+Do not merge Phase 0 until manual Windows testing passes.
