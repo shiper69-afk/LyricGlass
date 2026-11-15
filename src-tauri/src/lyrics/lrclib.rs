@@ -197,8 +197,8 @@ fn pick_best_record(
             da.partial_cmp(&db)
                 .unwrap_or(std::cmp::Ordering::Equal)
                 .then_with(|| {
-                    album_match_score(b.album_name.as_ref(), target_album)
-                        .cmp(&album_match_score(a.album_name.as_ref(), target_album))
+                    album_match_score(&b.album_name, target_album)
+                        .cmp(&album_match_score(&a.album_name, target_album))
                 })
                 .then_with(|| {
                     has_synced_lyrics(b)
