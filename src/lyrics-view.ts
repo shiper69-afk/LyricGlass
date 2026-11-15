@@ -1,17 +1,12 @@
-import { mediaClockMs } from "./clock";
+import type { PlaybackClockMedia } from "./playback-clock";
 import { findActiveLineIndex, parseLrc, type LrcLine, type ParsedLrc } from "./lrc";
 
-export interface MediaState {
+export interface MediaState extends PlaybackClockMedia {
   spotifyRunning: boolean;
   title: string;
   artist: string;
   album: string;
   durationMs: number;
-  positionReportedMs: number;
-  positionReportedAtMs: number;
-  positionExtrapolationWallMs?: number;
-  playbackRate?: number;
-  playbackStatus: string;
 }
 
 export interface LyricsResponse {
@@ -170,11 +165,10 @@ export class LyricsView {
     return { index: idx, lineTimeMs, nextLineTimeMs, computedMs: timeMs };
   }
 
-  tick(media: MediaState | null) {
-    if (!media || !this.parsed || this.parsed.lines.length === 0) return;
+  tick(playbackMs: number) {
+    if (!this.parsed || this.parsed.lines.length === 0) return;
 
-    const smooth = mediaClockMs(media, Date.now());
-    const timeMs = smooth + this.syncOffsetMs;
+    const timeMs = playbackMs + this.syncOffsetMs;
 
     const idx = findActiveLineIndex(this.parsed.lines, timeMs);
     if (idx === this.lastLineIndex) return;

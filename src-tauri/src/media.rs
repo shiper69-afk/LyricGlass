@@ -25,6 +25,8 @@ pub struct MediaState {
     pub last_updated_raw_ticks: i64,
     /// Host unix ms when this state was published to the UI.
     pub server_time_ms: u64,
+    /// Playback position at `server_time_ms` (dual-anchor extrapolation).
+    pub computed_position_ms: u64,
     pub playback_rate: f64,
     pub playback_status: String,
     pub last_event_kind: String,
@@ -46,6 +48,7 @@ impl Default for MediaState {
             position_extrapolation_wall_ms: 0,
             last_updated_raw_ticks: 0,
             server_time_ms: 0,
+            computed_position_ms: 0,
             playback_rate: 1.0,
             playback_status: "stopped".into(),
             last_event_kind: "init".into(),
@@ -107,7 +110,6 @@ mod imp {
 
     struct ExtrapolationTracker {
         anchor_wall_ms: u64,
-        anchor_position_ms: u64,
     }
 
     fn snapshots_differ(prev: &Snapshot, snap: &Snapshot) -> bool {
@@ -117,6 +119,7 @@ mod imp {
             || prev.duration_ms != snap.duration_ms
             || prev.position_ms != snap.position_ms
             || prev.status != snap.status
+            || prev.last_updated_ms != snap.last_updated_ms
             || (prev.playback_rate - snap.playback_rate).abs() > f64::EPSILON
     }
 
@@ -253,8 +256,9 @@ mod imp {
                     if let Some(session) = find_spotify_session(&manager) {
                         let snap = capture_snapshot(&session);
                         let changed = last.as_ref().map_or(true, |p| snapshots_differ(p, &snap));
+                        let playing_heartbeat = snap.status == "playing";
 
-                        if changed {
+                        if changed || playing_heartbeat {
                             let mut event_kind = "poll";
                             let mut timeline_tick = false;
                             let mut seek_jump = false;
@@ -271,24 +275,26 @@ mod imp {
                                     event_kind = "timeline";
                                     timeline_tick = true;
                                     seek_jump = prev.position_ms.abs_diff(snap.position_ms) > 2000;
+                                } else if !changed {
+                                    event_kind = "heartbeat";
                                 }
                             }
 
                             let host_now = now_unix_ms();
+                            // Reset wall only on track/playback/seek — not on every GSMTC tick
+                            // (Store Spotify advances Position slowly while audio runs ahead).
                             let needs_wall_reset = last.is_none()
                                 || event_kind == "track"
                                 || event_kind == "playback"
-                                || timeline_tick;
+                                || seek_jump;
 
                             if needs_wall_reset {
                                 extrapolation = Some(ExtrapolationTracker {
                                     anchor_wall_ms: host_now,
-                                    anchor_position_ms: snap.position_ms,
                                 });
                             } else if extrapolation.is_none() {
                                 extrapolation = Some(ExtrapolationTracker {
                                     anchor_wall_ms: host_now,
-                                    anchor_position_ms: snap.position_ms,
                                 });
                             }
 
@@ -302,30 +308,36 @@ mod imp {
                                 .map(|e| e.anchor_wall_ms)
                                 .unwrap_or(host_now);
 
+                            let mut published = shared.read().clone();
+                            published.spotify_running = true;
+                            published.source_app_id = snap.source.clone();
+                            published.title = snap.title.clone();
+                            published.artist = snap.artist.clone();
+                            published.album = snap.album.clone();
+                            published.duration_ms = snap.duration_ms;
+                            published.position_reported_ms = snap.position_ms;
+                            published.position_reported_at_ms = gsmtc_anchor;
+                            published.position_extrapolation_wall_ms = wall_anchor;
+                            published.last_updated_raw_ticks = snap.last_updated_raw_ticks;
+                            published.server_time_ms = host_now;
+                            published.playback_rate = snap.playback_rate;
+                            published.playback_status = snap.status.clone();
+                            published.last_event_kind = event_kind.to_string();
+                            published.message = "Spotify session active".into();
+                            published.computed_position_ms =
+                                smoothed_now(&published, host_now);
                             {
                                 let mut state = shared.write();
                                 if timeline_tick {
-                                    state.timeline_updates += 1;
+                                    state.timeline_updates =
+                                        state.timeline_updates.saturating_add(1);
                                 }
-                                state.spotify_running = true;
-                                state.source_app_id = snap.source.clone();
-                                state.title = snap.title.clone();
-                                state.artist = snap.artist.clone();
-                                state.album = snap.album.clone();
-                                state.duration_ms = snap.duration_ms;
-                                state.position_reported_ms = snap.position_ms;
-                                state.position_reported_at_ms = gsmtc_anchor;
-                                state.position_extrapolation_wall_ms = wall_anchor;
-                                state.last_updated_raw_ticks = snap.last_updated_raw_ticks;
-                                state.server_time_ms = host_now;
-                                state.playback_rate = snap.playback_rate;
-                                state.playback_status = snap.status.clone();
-                                state.last_event_kind = event_kind.to_string();
-                                state.message = "Spotify session active".into();
+                                published.timeline_updates = state.timeline_updates;
+                                *state = published.clone();
                             }
 
                             last = Some(snap);
-                            let _ = app.emit("media-state", shared.read().clone());
+                            let _ = app.emit("media-state", published);
                             if seek_jump {
                                 let _ = app.emit("seek-tick", ());
                             }

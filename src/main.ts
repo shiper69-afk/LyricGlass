@@ -1,10 +1,11 @@
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { formatMs, timelineAnchorAgeMs } from "./clock";
 import {
-  formatMs,
-  mediaClockMs,
-  timelineAnchorAgeMs,
-} from "./clock";
+  createPlaybackAnchor,
+  playbackClockMs,
+  type PlaybackAnchor,
+} from "./playback-clock";
 import {
   buildDiagnosticsBlock,
   buildSyncMarkBlock,
@@ -54,6 +55,7 @@ const els = {
 };
 
 let latestMedia: FullMediaState | null = null;
+let playbackAnchor: PlaybackAnchor | null = null;
 let latestLyrics: LyricsResponse | null = null;
 let fetchGeneration = 0;
 let debugVisible = false;
@@ -110,7 +112,7 @@ function renderDebugStatic(media: FullMediaState) {
 function renderDebugClock() {
   if (!latestMedia || !debugVisible) return;
   const now = Date.now();
-  const computed = mediaClockMs(latestMedia, now);
+  const computed = playbackClockMs(latestMedia, playbackAnchor, now);
   const line = lyricsView.getLineDiagnostics(computed);
   els.posSmooth.textContent = formatMs(computed);
   els.posAge.textContent = `${timelineAnchorAgeMs(latestMedia.positionReportedAtMs, now)} ms`;
@@ -138,7 +140,12 @@ async function loadSyncOffset(media: FullMediaState) {
 }
 
 async function logDiagnosticsToFile(reason: string) {
-  const block = buildDiagnosticsBlock(latestMedia, latestLyrics, lyricsView);
+  const block = buildDiagnosticsBlock(
+    latestMedia,
+    latestLyrics,
+    lyricsView,
+    playbackAnchor,
+  );
   const full = `${reason}\n\n${block}`;
   await invoke("log_diagnostics", { block: full });
 }
@@ -181,6 +188,7 @@ function onMedia(state: FullMediaState) {
     trackKey(prev) !== trackKey(state);
 
   latestMedia = state;
+  playbackAnchor = createPlaybackAnchor(state, Date.now());
   lyricsView.onMediaHeader(state);
 
   if (trackChanged) {
@@ -206,7 +214,12 @@ let rafId = 0;
 
 function tick() {
   if (latestMedia) {
-    lyricsView.tick(latestMedia);
+    const playbackMs = playbackClockMs(
+      latestMedia,
+      playbackAnchor,
+      Date.now(),
+    );
+    lyricsView.tick(playbackMs);
     renderDebugClock();
   }
   rafId = requestAnimationFrame(tick);
@@ -237,7 +250,12 @@ els.timingReset.addEventListener("click", () => {
 });
 
 els.btnCopyDiag.addEventListener("click", async () => {
-  const block = buildDiagnosticsBlock(latestMedia, latestLyrics, lyricsView);
+  const block = buildDiagnosticsBlock(
+    latestMedia,
+    latestLyrics,
+    lyricsView,
+    playbackAnchor,
+  );
   try {
     await navigator.clipboard.writeText(block);
   } catch {
@@ -246,7 +264,7 @@ els.btnCopyDiag.addEventListener("click", async () => {
 });
 
 async function onSyncMark() {
-  const block = buildSyncMarkBlock(latestMedia, lyricsView);
+  const block = buildSyncMarkBlock(latestMedia, lyricsView, playbackAnchor);
   await invoke("log_sync_mark", { block });
 }
 
@@ -262,7 +280,12 @@ async function boot() {
   });
   await listen("seek-tick", () => {
     lyricsView.onSeek();
-    if (latestMedia) lyricsView.tick(latestMedia);
+    if (latestMedia) {
+      playbackAnchor = createPlaybackAnchor(latestMedia, Date.now());
+      lyricsView.tick(
+        playbackClockMs(latestMedia, playbackAnchor, Date.now()),
+      );
+    }
   });
   await listen("sync-mark-request", () => void onSyncMark());
 

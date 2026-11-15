@@ -2,7 +2,7 @@ const WINDOWS_TICK_OFFSET: i64 = 11_644_473_600_000_000;
 
 /// WinRT `DateTime.UniversalTime` (100 ns since 1601-01-01 UTC) → Unix ms.
 pub fn winrt_date_time_to_unix_ms(universal_time_100ns: i64) -> Option<u64> {
-    if universal_time_100ns <= WINDOWS_TICK_OFFSET {
+    if universal_time_100ns < WINDOWS_TICK_OFFSET {
         return None;
     }
     let unix_100ns = universal_time_100ns.saturating_sub(WINDOWS_TICK_OFFSET);

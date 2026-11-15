@@ -154,7 +154,33 @@ fn duration_distance(record: &LrcRecord, target: f64) -> f64 {
         .unwrap_or(f64::MAX)
 }
 
-fn pick_best_record(mut records: Vec<LrcRecord>, target_duration_sec: f64) -> Option<LrcRecord> {
+fn album_match_score(record_album: &Option<String>, target_album: &str) -> i32 {
+    let Some(album) = record_album.as_ref() else {
+        return 0;
+    };
+    let a = album.to_lowercase();
+    let t = target_album.to_lowercase();
+    if a == t {
+        return 4;
+    }
+    if a.contains(&t) || t.contains(&a) {
+        return 2;
+    }
+    0
+}
+
+fn has_synced_lyrics(record: &LrcRecord) -> bool {
+    record
+        .synced_lyrics
+        .as_ref()
+        .is_some_and(|s| !s.trim().is_empty())
+}
+
+fn pick_best_record(
+    records: Vec<LrcRecord>,
+    target_duration_sec: f64,
+    target_album: &str,
+) -> Option<LrcRecord> {
     if records.is_empty() {
         return None;
     }
@@ -166,9 +192,18 @@ fn pick_best_record(mut records: Vec<LrcRecord>, target_duration_sec: f64) -> Op
     let pool = if close.is_empty() { records } else { close };
     pool.into_iter()
         .min_by(|a, b| {
-            duration_distance(a, target_duration_sec)
-                .partial_cmp(&duration_distance(b, target_duration_sec))
+            let da = duration_distance(a, target_duration_sec);
+            let db = duration_distance(b, target_duration_sec);
+            da.partial_cmp(&db)
                 .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| {
+                    album_match_score(b.album_name.as_ref(), target_album)
+                        .cmp(&album_match_score(a.album_name.as_ref(), target_album))
+                })
+                .then_with(|| {
+                    has_synced_lyrics(b)
+                        .cmp(&has_synced_lyrics(a))
+                })
         })
 }
 
@@ -232,7 +267,7 @@ pub fn fetch_from_network(
         Err(e) => return LyricsResponse::err(format!("Search JSON error: {e}")),
     };
 
-    if let Some(record) = pick_best_record(records, target) {
+    if let Some(record) = pick_best_record(records, target, album) {
         from_record(record, "LRCLIB search", target)
     } else {
         LyricsResponse::not_found()
@@ -267,8 +302,37 @@ mod tests {
                 album_name: None,
             },
         ];
-        let best = pick_best_record(records, 243.0).unwrap();
+        let best = pick_best_record(records, 243.0, "").unwrap();
         assert_eq!(best.id, 2);
         assert!(duration_distance(&best, 243.0) <= 2.0);
+    }
+
+    #[test]
+    fn legends_never_die_prefers_full_length_over_short_edit() {
+        let records = vec![
+            LrcRecord {
+                id: 11300315,
+                duration: Some(179.0),
+                instrumental: None,
+                synced_lyrics: Some("[00:12.71] short".into()),
+                plain_lyrics: None,
+                track_name: Some("Legends Never Die".into()),
+                artist_name: Some("Against The Current".into()),
+                album_name: Some("Legends Never Die".into()),
+            },
+            LrcRecord {
+                id: 7141512,
+                duration: Some(235.0),
+                instrumental: None,
+                synced_lyrics: Some("[00:12.09] full".into()),
+                plain_lyrics: None,
+                track_name: Some("Legends Never Die".into()),
+                artist_name: Some("Against The Current".into()),
+                album_name: Some("2017 LoL WC".into()),
+            },
+        ];
+        let best = pick_best_record(records, 234.0, "Legends Never Die").unwrap();
+        assert_eq!(best.id, 7141512);
+        assert!((best.duration.unwrap() - 234.0).abs() <= 2.0);
     }
 }

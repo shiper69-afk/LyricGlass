@@ -88,8 +88,9 @@ Report: LRCLIB misses, plain-vs-synced, offset needed, multi-monitor wallpaper q
 | --- | --- |
 | Ctrl+Alt+C | Toggle click-through |
 | Ctrl+Alt+W | Toggle wallpaper attach |
-| Ctrl+Alt+[ | Lyrics sync −500 ms |
-| Ctrl+Alt+] | Lyrics sync +500 ms |
+| Ctrl+Alt+[ | Lyrics sync −100 ms |
+| Ctrl+Alt+] | Lyrics sync +100 ms |
+| Ctrl+Alt+M | Mark line start (logs clock vs LRC) |
 
 ## Layout
 

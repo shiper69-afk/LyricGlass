@@ -1,9 +1,9 @@
 import {
   formatMs,
   formatMsPrecise,
-  mediaClockMs,
   timelineAnchorAgeMs,
 } from "./clock";
+import { playbackClockMs, type PlaybackAnchor } from "./playback-clock";
 import type { LyricsView, LyricsResponse, MediaState } from "./lyrics-view";
 
 const APP_VERSION = "0.2.2";
@@ -16,15 +16,17 @@ export interface FullMediaState extends MediaState {
   positionExtrapolationWallMs?: number;
   lastUpdatedRawTicks?: number;
   serverTimeMs?: number;
+  computedPositionMs?: number;
 }
 
 export function buildDiagnosticsBlock(
   media: FullMediaState | null,
   lyrics: LyricsResponse | null,
   lyricsView: LyricsView,
+  playbackAnchor: PlaybackAnchor | null = null,
 ): string {
   const now = Date.now();
-  const computed = media ? mediaClockMs(media, now) : 0;
+  const computed = media ? playbackClockMs(media, playbackAnchor, now) : 0;
   const line = lyricsView.getLineDiagnostics(computed);
   const syncMs = lyricsView.getSyncOffsetMs();
 
@@ -62,6 +64,7 @@ export function buildDiagnosticsBlock(
     `  extrapolationWallMs: ${media?.positionExtrapolationWallMs ?? 0}`,
     `  timelineAgeMs: ${media ? timelineAnchorAgeMs(media.positionReportedAtMs, now) : 0}`,
     `  serverTimeMs: ${media?.serverTimeMs ?? 0}`,
+    `  backendComputedAtEmit: ${media?.computedPositionMs ?? 0} ms`,
     `  computedClock: ${formatMs(computed)} (${computed} ms)`,
     `  userSyncOffsetMs: ${syncMs}`,
     "",
@@ -76,12 +79,18 @@ export function buildDiagnosticsBlock(
 export function buildSyncMarkBlock(
   media: FullMediaState | null,
   lyricsView: LyricsView,
+  playbackAnchor: PlaybackAnchor | null = null,
 ): string {
   const now = Date.now();
-  const computed = media ? mediaClockMs(media, now) : 0;
+  const computed = media ? playbackClockMs(media, playbackAnchor, now) : 0;
   const line = lyricsView.getLineDiagnostics(computed);
   return [
-    buildDiagnosticsBlock(media, lyricsView.getLastLyrics(), lyricsView),
+    buildDiagnosticsBlock(
+      media,
+      lyricsView.getLastLyrics(),
+      lyricsView,
+      playbackAnchor,
+    ),
     "",
     `MARK computedClock=${computed}ms activeLineStart=${line.lineTimeMs}ms delta=${computed - line.lineTimeMs}ms`,
   ].join("\n");
