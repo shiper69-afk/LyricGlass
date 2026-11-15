@@ -6,14 +6,19 @@ import {
   type LrcLine,
   type ParsedLrc,
 } from "./lrc";
+import { interLineGapRest } from "./lyrics-gap";
 import {
-  SCROLL_LONG_GAP_MS,
   type LineScrollAnimation,
   scrollDurationMs,
   scrollProgress,
   scrollStartTimeMs,
 } from "./lyrics-scroll";
+import { lineVocalEndMs } from "./line-vocal-end";
 import type { TimedWord } from "./word-timing";
+import {
+  plainScrollOffsetPx,
+  textLooksHebrew,
+} from "./plain-scroll";
 
 export interface MediaState extends PlaybackClockMedia {
   spotifyRunning: boolean;
@@ -37,6 +42,12 @@ export interface LyricsResponse {
   lrclibAlbumName?: string | null;
   durationDeltaSec?: number | null;
   durationWarning?: boolean;
+  lyricsSource?: string;
+  shironetWrkid?: number | null;
+  shironetPrfid?: number | null;
+  shironetMatchTitle?: string | null;
+  shironetMatchArtist?: string | null;
+  shironetPageUrl?: string | null;
 }
 
 export interface LineDiagnostics {
@@ -78,8 +89,12 @@ export class LyricsView {
   private readonly linesEl: HTMLElement;
   private readonly scrollInner: HTMLDivElement;
   private readonly plainEl: HTMLElement;
+  private readonly plainScrollInner: HTMLDivElement;
   private readonly offsetEl: HTMLElement;
   private readonly durationWarnEl: HTMLElement | null;
+
+  private plainMode = false;
+  private plainScrollDisplayed = 0;
 
   private snapScroll = true;
   private scrollAnim: LineScrollAnimation | null = null;
@@ -91,6 +106,10 @@ export class LyricsView {
     this.statusEl = root.querySelector("#lyrics-status")!;
     this.linesEl = root.querySelector("#lyrics-lines")!;
     this.plainEl = root.querySelector("#lyrics-plain")!;
+    this.plainScrollInner = document.createElement("div");
+    this.plainScrollInner.className = "plain-scroll-inner";
+    this.plainScrollInner.dataset.testid = "plain-scroll-inner";
+    this.plainEl.appendChild(this.plainScrollInner);
     this.offsetEl = root.querySelector("#sync-offset-label")!;
     this.durationWarnEl = document.getElementById("duration-warn");
     this.scrollInner = document.createElement("div");
@@ -114,6 +133,17 @@ export class LyricsView {
   /** Test hook: bouncer position in lines container (px). */
   getBouncerClientPosition(): { x: number; y: number } | null {
     return this.karaoke.getClientPosition();
+  }
+
+  /** Test hook: plain inner translateY (px). */
+  getPlainScrollTranslateY(): number {
+    const tr = this.plainScrollInner.style.transform;
+    const m = /translate3d\(\s*0(?:px)?,\s*([-\d.]+)px/.exec(tr);
+    return m ? Number(m[1]) : 0;
+  }
+
+  getPlainMode(): boolean {
+    return this.plainMode;
   }
 
   setKaraokeColors(ballColor: string, sungHighlight: string) {
@@ -198,6 +228,9 @@ export class LyricsView {
     this.statusEl.textContent = this.statusMessage;
     this.scrollInner.replaceChildren();
     this.plainEl.classList.add("hidden");
+    this.plainMode = false;
+    this.plainScrollInner.replaceChildren();
+    this.plainScrollInner.style.transform = "";
     this.linesEl.classList.remove("hidden");
     this.parsed = null;
     this.lastLyrics = null;
@@ -223,11 +256,22 @@ export class LyricsView {
       this.statusEl.textContent = res.fromCache ? `${res.message} (cached)` : "";
       this.parsed = parseLrc(res.syncedLrc);
       this.plainEl.classList.add("hidden");
+      this.plainMode = false;
       this.linesEl.classList.remove("hidden");
+      this.linesEl.classList.toggle(
+        "lyrics-hebrew",
+        textLooksHebrew(res.syncedLrc),
+      );
     } else if (res.plainLyrics) {
       this.statusEl.textContent = res.message;
       this.parsed = null;
-      this.plainEl.textContent = res.plainLyrics;
+      this.plainMode = true;
+      this.plainScrollDisplayed = 0;
+      const rtl = textLooksHebrew(res.plainLyrics);
+      this.plainEl.dir = rtl ? "rtl" : "auto";
+      this.plainEl.classList.toggle("plain-rtl", rtl);
+      this.plainScrollInner.textContent = res.plainLyrics;
+      this.plainScrollInner.style.transform = "";
       this.plainEl.classList.remove("hidden");
       this.linesEl.classList.add("hidden");
       this.karaoke.hide();
@@ -435,23 +479,15 @@ export class LyricsView {
         words: lines[0].words,
       };
     }
-    if (idx >= 0 && idx + 1 < lines.length) {
-      const next = lines[idx + 1];
-      if (next.timeMs - lines[idx].timeMs >= SCROLL_LONG_GAP_MS) {
-        const vocalEnd = cappedLineVisualEnd(lines[idx], next.timeMs);
-        if (timeMs >= vocalEnd + 40 && timeMs < next.timeMs) {
-          return {
-            lineIndex: idx + 1,
-            hopAtMs: next.timeMs,
-            words: next.words,
-          };
-        }
-      }
-    }
+    void idx;
     return null;
   }
 
-  tick(playbackMs: number) {
+  tick(playbackMs: number, durationMs = 0) {
+    if (this.plainMode) {
+      this.tickPlainScroll(playbackMs, durationMs);
+      return;
+    }
     if (!this.parsed || this.parsed.lines.length === 0) return;
 
     const timeMs = playbackMs + this.syncOffsetMs;
@@ -524,19 +560,20 @@ export class LyricsView {
       }
     }
 
+    const introHopEnd = lines[0].timeMs + 500;
     if (
-      idle &&
-      timeMs >= idle.hopAtMs &&
-      timeMs < idle.hopAtMs + 500 &&
-      idx < idle.lineIndex
+      karaokeOn &&
+      !this.scrollAnim &&
+      timeMs >= lines[0].timeMs &&
+      timeMs < introHopEnd
     ) {
-      const lineEl = this.lineByIndex(idle.lineIndex);
+      const lineEl = this.lineByIndex(0);
       if (lineEl) {
         this.karaoke.updateIdleHopToFirstWord(
           lineEl,
-          idle.words,
+          lines[0].words,
           timeMs,
-          idle.hopAtMs,
+          lines[0].timeMs,
           scrollY,
         );
         return;
@@ -571,7 +608,7 @@ export class LyricsView {
       idx >= 0 &&
       idx + 1 < lines.length
     ) {
-      const gapRest = shortInstrumentalRest(lines, idx, timeMs);
+      const gapRest = interLineGapRest(lines, idx, timeMs);
       if (gapRest) {
         const lineEl = this.lineByIndex(idx);
         if (lineEl) {
@@ -659,22 +696,18 @@ export class LyricsView {
   private escape(s: string) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
   }
-}
 
-/** End of sung content on a line (ignores LRCLIB “held” last tokens through instrumental). */
-export function lineVocalEndMs(line: LrcLine, nextLineStartMs: number): number {
-  if (line.words.length === 0) {
-    return Math.min(nextLineStartMs, line.timeMs + 400);
+  private tickPlainScroll(playbackMs: number, durationMs: number) {
+    if (durationMs <= 0) return;
+    const timeMs = playbackMs + this.syncOffsetMs;
+    const contentH = this.plainScrollInner.scrollHeight;
+    const viewH = this.plainEl.clientHeight;
+    const target = plainScrollOffsetPx(timeMs, durationMs, contentH, viewH);
+    const alpha = 0.18;
+    this.plainScrollDisplayed +=
+      (target - this.plainScrollDisplayed) * alpha;
+    this.plainScrollInner.style.transform = `translate3d(0, ${-this.plainScrollDisplayed}px, 0)`;
   }
-  const last = line.words[line.words.length - 1]!;
-  const gap = nextLineStartMs - last.startMs;
-  const dur = last.endMs - last.startMs;
-  if (dur > 900 && gap > dur * 0.85) {
-    const prev = line.words[line.words.length - 2];
-    if (prev) return prev.endMs;
-    return last.startMs + 280;
-  }
-  return Math.min(last.endMs, nextLineStartMs);
 }
 
 function cappedLineVisualEnd(line: LrcLine, nextStartMs: number): number {
@@ -692,21 +725,4 @@ function shouldArmScroll(
   const lastEnd = cappedLineVisualEnd(line, next.timeMs);
   const startAt = scrollStartTimeMs(line.timeMs, next.timeMs, lastEnd);
   return timeMs >= startAt && timeMs < next.timeMs;
-}
-
-function shortInstrumentalRest(
-  lines: LrcLine[],
-  idx: number,
-  timeMs: number,
-): boolean {
-  const line = lines[idx];
-  const next = lines[idx + 1];
-  if (!next) return false;
-  const gap = next.timeMs - line.timeMs;
-  if (gap >= SCROLL_LONG_GAP_MS) return false;
-  const lastEnd = cappedLineVisualEnd(line, next.timeMs);
-  const startAt = scrollStartTimeMs(line.timeMs, next.timeMs, lastEnd);
-  if (timeMs < lastEnd) return false;
-  if (timeMs >= startAt) return false;
-  return timeMs >= lastEnd + 80;
 }

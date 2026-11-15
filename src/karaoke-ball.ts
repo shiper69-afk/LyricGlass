@@ -141,6 +141,7 @@ export class KaraokeBall {
   scheduleMeasure(activeLine: HTMLElement) {
     if (this.activeLineEl === activeLine && this.anchors.length > 0) return;
     this.activeLineEl = activeLine;
+    this.anchors = this.measureWords(activeLine);
     const gen = ++this.measureGeneration;
     requestAnimationFrame(() => {
       if (gen !== this.measureGeneration) return;
@@ -375,7 +376,7 @@ export class KaraokeBall {
       if (anchor) {
         this.activeLineEl = line;
         const frag = this.pickFragment(anchor);
-        const hopP = 0.85;
+        const hopP = (timeMs % 900) / 900;
         const restSync: KaraokeSyncState = {
           timeMs,
           activeIndex: lastIdx,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseLrc } from "./lrc";
 import { scrollStartTimeMs } from "./lyrics-scroll";
-import { lineVocalEndMs } from "./lyrics-view";
+import { lineVocalEndMs } from "./line-vocal-end";
 
 describe("lineVocalEndMs", () => {
   it("does not treat a held last token as vocal through instrumental", () => {
