@@ -6,13 +6,14 @@ import {
   type LrcLine,
   type ParsedLrc,
 } from "./lrc";
-import { findActiveWordIndex } from "./word-timing";
 import {
+  SCROLL_LONG_GAP_MS,
   type LineScrollAnimation,
   scrollDurationMs,
   scrollProgress,
   scrollStartTimeMs,
 } from "./lyrics-scroll";
+import type { TimedWord } from "./word-timing";
 
 export interface MediaState extends PlaybackClockMedia {
   spotifyRunning: boolean;
@@ -46,9 +47,17 @@ export interface LineDiagnostics {
 }
 
 interface RenderOptions {
-  /** Extra line indices that get per-word spans (for cross-line scroll). */
   wordLineIndices?: Set<number>;
 }
+
+export interface IdleBounceTarget {
+  lineIndex: number;
+  hopAtMs: number;
+  words: TimedWord[];
+}
+
+/** Playback time jump that triggers scroll snap (ms). */
+export const SEEK_JUMP_MS = 2_000;
 
 export class LyricsView {
   private syncOffsetMs = 0;
@@ -58,6 +67,7 @@ export class LyricsView {
 
   private trackKey = "";
   private lastLineIndex = -2;
+  private lastTickPlaybackMs = -1;
   private karaokeEnabled = true;
   private readonly karaoke: KaraokeBall;
   private resizeObserver: ResizeObserver | null = null;
@@ -73,7 +83,7 @@ export class LyricsView {
 
   private snapScroll = true;
   private scrollAnim: LineScrollAnimation | null = null;
-  private renderedCenterIndex = -1;
+  private renderedCenterIndex = -2;
 
   constructor(root: HTMLElement) {
     this.headerTitle = root.querySelector("#np-title")!;
@@ -85,12 +95,25 @@ export class LyricsView {
     this.durationWarnEl = document.getElementById("duration-warn");
     this.scrollInner = document.createElement("div");
     this.scrollInner.className = "lyrics-scroll-inner";
+    this.scrollInner.dataset.testid = "lyrics-scroll-inner";
     this.linesEl.appendChild(this.scrollInner);
     this.karaoke = new KaraokeBall(this.linesEl);
     if (typeof ResizeObserver !== "undefined") {
       this.resizeObserver = new ResizeObserver(() => this.karaoke.invalidate());
       this.resizeObserver.observe(this.linesEl);
     }
+  }
+
+  /** Test hook: current scroll-inner translateY (px). */
+  getScrollTranslateY(): number {
+    const tr = this.scrollInner.style.transform;
+    const m = /translate3d\(\s*0(?:px)?,\s*([-\d.]+)px/.exec(tr);
+    return m ? Number(m[1]) : 0;
+  }
+
+  /** Test hook: bouncer position in lines container (px). */
+  getBouncerClientPosition(): { x: number; y: number } | null {
+    return this.karaoke.getClientPosition();
   }
 
   setKaraokeColors(ballColor: string, sungHighlight: string) {
@@ -106,6 +129,7 @@ export class LyricsView {
     this.karaoke.setEnabled(enabled);
     this.resetScroll();
     this.lastLineIndex = -2;
+    this.lastTickPlaybackMs = -1;
   }
 
   getSyncOffsetMs() {
@@ -124,6 +148,7 @@ export class LyricsView {
         : `Timing ${this.syncOffsetMs > 0 ? "+" : ""}${(this.syncOffsetMs / 1000).toFixed(1)}s`;
     this.snapScroll = true;
     this.lastLineIndex = -2;
+    this.lastTickPlaybackMs = -1;
     void options;
   }
 
@@ -132,12 +157,40 @@ export class LyricsView {
     this.scrollInner.style.transform = "";
   }
 
+  private applyScrollTransform(timeMs: number) {
+    if (!this.scrollAnim) return;
+    const p = scrollProgress(this.scrollAnim, timeMs);
+    const ty = -this.scrollAnim.deltaY * p;
+    this.scrollInner.style.transform = `translate3d(0, ${ty}px, 0)`;
+  }
+
   private snapToLine(idx: number) {
     this.resetScroll();
-    if (this.parsed) this.renderLines(this.parsed.lines, idx);
+    if (this.parsed) {
+      if (idx < 0) this.renderLines(this.parsed.lines, -1);
+      else this.renderLines(this.parsed.lines, idx);
+    }
     this.renderedCenterIndex = idx;
     this.lastLineIndex = idx;
     this.snapScroll = false;
+  }
+
+  private isSeekLike(playbackMs: number, idx: number): boolean {
+    if (this.snapScroll) return true;
+    if (this.lastTickPlaybackMs < 0) return this.snapScroll;
+    const dt = playbackMs - this.lastTickPlaybackMs;
+    if (dt > SEEK_JUMP_MS || playbackMs < this.lastTickPlaybackMs - 80) {
+      return true;
+    }
+    if (
+      idx >= 0 &&
+      this.lastLineIndex >= 0 &&
+      Math.abs(idx - this.lastLineIndex) > 1
+    ) {
+      return true;
+    }
+    if (idx < this.lastLineIndex && this.lastLineIndex >= 0) return true;
+    return false;
   }
 
   onLyricsLoading() {
@@ -151,6 +204,7 @@ export class LyricsView {
     this.hideDurationWarning();
     this.resetScroll();
     this.lastLineIndex = -2;
+    this.lastTickPlaybackMs = -1;
     this.karaoke.invalidate();
     this.karaoke.hide();
   }
@@ -187,6 +241,7 @@ export class LyricsView {
     }
     this.snapScroll = true;
     this.lastLineIndex = -2;
+    this.lastTickPlaybackMs = -1;
     this.karaoke.invalidate();
   }
 
@@ -208,6 +263,7 @@ export class LyricsView {
     if (key === this.trackKey) return false;
     this.trackKey = key;
     this.snapScroll = true;
+    this.lastTickPlaybackMs = -1;
     return true;
   }
 
@@ -219,6 +275,7 @@ export class LyricsView {
   onSeek() {
     this.snapScroll = true;
     this.lastLineIndex = -2;
+    this.lastTickPlaybackMs = -1;
     this.karaoke.invalidate();
   }
 
@@ -246,34 +303,48 @@ export class LyricsView {
     const fromEl = this.lineByIndex(fromIndex);
     const toEl = this.lineByIndex(toIndex);
     if (!fromEl || !toEl) return 0;
-    return Math.max(0, toEl.offsetTop - fromEl.offsetTop);
+    const dy = toEl.offsetTop - fromEl.offsetTop;
+    if (dy >= 2) return dy;
+    const est = (fromEl.offsetHeight || 28) + 8;
+    return Math.max(est, 24);
   }
 
-  private beginScroll(fromIndex: number, toIndex: number) {
-    if (!this.parsed) return;
+  private beginScroll(fromIndex: number, toIndex: number, timeMs: number) {
+    if (!this.parsed || this.scrollAnim) return;
     const lines = this.parsed.lines;
     const fromLine = lines[fromIndex];
     const toLine = lines[toIndex];
     if (!fromLine || !toLine) return;
 
-    const lastEnd =
-      fromLine.words[fromLine.words.length - 1]?.endMs ??
-      cappedLineVisualEnd(fromLine, toLine.timeMs);
-    const startAt = scrollStartTimeMs(
+    const lastEnd = cappedLineVisualEnd(fromLine, toLine.timeMs);
+    let startAt = scrollStartTimeMs(
       fromLine.timeMs,
       toLine.timeMs,
       lastEnd,
     );
-    const duration = scrollDurationMs(Math.max(40, toLine.timeMs - startAt));
-
-    const wordLines = new Set<number>([fromIndex, toIndex]);
-    this.renderLines(lines, fromIndex, { wordLineIndices: wordLines });
-    const deltaY = this.measureScrollDelta(fromIndex, toIndex);
-    if (deltaY < 2) {
-      this.snapToLine(toIndex);
-      return;
+    let duration = scrollDurationMs(Math.max(40, toLine.timeMs - startAt));
+    if (timeMs >= toLine.timeMs - 40) {
+      startAt = Math.min(timeMs, toLine.timeMs) - duration;
+    } else if (timeMs > startAt) {
+      const remaining = Math.max(40, toLine.timeMs - timeMs);
+      duration = scrollDurationMs(remaining);
+      startAt = Math.max(fromLine.timeMs, timeMs - 40);
     }
 
+    const wordLines = new Set<number>([fromIndex, toIndex]);
+    if (this.karaokeEnabled) {
+      wordLines.add(fromIndex);
+      wordLines.add(toIndex);
+    }
+    const haveBoth =
+      this.lineByIndex(fromIndex) && this.lineByIndex(toIndex);
+    if (!haveBoth) {
+      this.renderLines(lines, fromIndex, { wordLineIndices: wordLines });
+    } else {
+      this.ensureWordSpans(lines, wordLines);
+    }
+
+    const deltaY = this.measureScrollDelta(fromIndex, toIndex);
     this.scrollAnim = {
       fromIndex,
       toIndex,
@@ -282,21 +353,102 @@ export class LyricsView {
       deltaY,
     };
     this.renderedCenterIndex = fromIndex;
+    this.applyScrollTransform(timeMs);
+  }
+
+  private ensureWordSpans(lines: LrcLine[], wordLineIndices: Set<number>) {
+    if (!this.karaokeEnabled) return;
+    for (const i of wordLineIndices) {
+      const el = this.lineByIndex(i);
+      if (!el || lines[i].words.length === 0) continue;
+      if (el.querySelector(".lyric-word")) continue;
+      el.replaceChildren();
+      for (const w of lines[i].words) {
+        const span = document.createElement("span");
+        span.className = "lyric-word";
+        span.textContent = w.text;
+        el.appendChild(span);
+      }
+    }
+    this.karaoke.invalidate();
   }
 
   private finishScrollIfDone(timeMs: number, activeIdx: number) {
     if (!this.scrollAnim) return;
+    this.applyScrollTransform(timeMs);
     const p = scrollProgress(this.scrollAnim, timeMs);
-    const ty = -this.scrollAnim.deltaY * p;
-    this.scrollInner.style.transform = `translate3d(0, ${ty}px, 0)`;
-
     if (p < 1) return;
 
     const target = this.scrollAnim.toIndex;
-    this.resetScroll();
-    this.renderLines(this.parsed!.lines, target);
+    this.scrollInner.style.transform = "";
+    this.scrollAnim = null;
+    this.promoteLineClasses(target, this.parsed!.lines);
     this.renderedCenterIndex = target;
     this.lastLineIndex = activeIdx >= 0 ? activeIdx : target;
+    this.karaoke.invalidate();
+  }
+
+  private promoteLineClasses(active: number, lines: LrcLine[]) {
+    const start = Math.max(0, active - 2);
+    const end = Math.min(lines.length - 1, Math.max(active + 3, active + 1));
+    const karaokeOn = this.karaokeEnabled;
+    const existing = new Set<number>();
+    this.scrollInner.querySelectorAll<HTMLElement>(".lyric-line").forEach((el) => {
+      const i = Number(el.dataset.line);
+      existing.add(i);
+      el.classList.remove("past", "active", "upcoming");
+      if (i < active) el.classList.add("past");
+      else if (i === active) el.classList.add("active");
+      else el.classList.add("upcoming");
+    });
+
+    if (end - start + 1 > existing.size) {
+      this.renderLines(lines, active);
+      return;
+    }
+
+    for (let i = start; i <= end; i += 1) {
+      if (!existing.has(i)) {
+        this.renderLines(lines, active);
+        return;
+      }
+    }
+
+    if (karaokeOn) {
+      const wordLines = new Set<number>([active]);
+      if (active + 1 < lines.length) wordLines.add(active + 1);
+      this.ensureWordSpans(lines, wordLines);
+    }
+  }
+
+  private promoteLineClassesSimple(active: number) {
+    if (!this.parsed) return;
+    this.promoteLineClasses(active, this.parsed.lines);
+  }
+
+  resolveIdleBounce(timeMs: number, lines: LrcLine[], idx: number): IdleBounceTarget | null {
+    if (lines.length === 0) return null;
+    if (timeMs < lines[0].timeMs) {
+      return {
+        lineIndex: 0,
+        hopAtMs: lines[0].timeMs,
+        words: lines[0].words,
+      };
+    }
+    if (idx >= 0 && idx + 1 < lines.length) {
+      const next = lines[idx + 1];
+      if (next.timeMs - lines[idx].timeMs >= SCROLL_LONG_GAP_MS) {
+        const vocalEnd = cappedLineVisualEnd(lines[idx], next.timeMs);
+        if (timeMs >= vocalEnd + 40 && timeMs < next.timeMs) {
+          return {
+            lineIndex: idx + 1,
+            hopAtMs: next.timeMs,
+            words: next.words,
+          };
+        }
+      }
+    }
+    return null;
   }
 
   tick(playbackMs: number) {
@@ -305,86 +457,121 @@ export class LyricsView {
     const timeMs = playbackMs + this.syncOffsetMs;
     const idx = findActiveLineIndex(this.parsed.lines, timeMs);
     const lines = this.parsed.lines;
+    const seek = this.isSeekLike(playbackMs, idx);
 
-    if (this.snapScroll) {
-      if (idx >= 0) this.snapToLine(idx);
-      else if (idx !== this.lastLineIndex) {
-        this.renderLines(lines, idx);
-        this.lastLineIndex = idx;
-        this.renderedCenterIndex = idx;
+    if (seek) {
+      this.snapToLine(idx >= 0 ? idx : -1);
+    } else {
+      if (this.renderedCenterIndex === -2) {
+        if (timeMs < lines[0].timeMs) {
+          this.renderLines(lines, -1, {
+            wordLineIndices: new Set(this.karaokeEnabled ? [0] : []),
+          });
+          this.renderedCenterIndex = -1;
+          this.lastLineIndex = -1;
+        } else if (idx >= 0) {
+          this.renderLines(lines, idx);
+          this.renderedCenterIndex = idx;
+          this.lastLineIndex = idx;
+        }
       }
-    } else if (idx !== this.lastLineIndex) {
-      const jumped = Math.abs(idx - this.lastLineIndex) > 1 || idx < this.lastLineIndex;
-      if (jumped || !this.scrollAnim) {
-        this.snapToLine(idx);
-      } else if (this.scrollAnim) {
-        this.lastLineIndex = idx;
-      }
-    }
 
-    if (!this.snapScroll) {
-      const nextIdx = idx >= 0 ? idx + 1 : -1;
       if (
         !this.scrollAnim &&
         idx >= 0 &&
-        nextIdx < lines.length &&
-        shouldArmScroll(lines, idx, nextIdx, timeMs)
+        idx + 1 < lines.length &&
+        shouldArmScroll(lines, idx, idx + 1, timeMs)
       ) {
-        this.beginScroll(idx, nextIdx);
+        this.beginScroll(idx, idx + 1, timeMs);
+      }
+
+      if (
+        !this.scrollAnim &&
+        this.lastLineIndex >= 0 &&
+        idx === this.lastLineIndex + 1
+      ) {
+        this.beginScroll(this.lastLineIndex, idx, timeMs);
       }
 
       if (this.scrollAnim) {
         this.finishScrollIfDone(timeMs, idx);
-      } else if (this.renderedCenterIndex !== idx && idx >= 0) {
-        const wordLines = new Set<number>();
-        if (this.karaokeEnabled) wordLines.add(idx);
-        this.renderLines(lines, idx, { wordLineIndices: wordLines });
+        const anim = this.scrollAnim;
+        if (anim && (idx === anim.toIndex || idx > anim.fromIndex)) {
+          this.lastLineIndex = Math.max(this.lastLineIndex, idx);
+        }
+      } else if (idx !== this.lastLineIndex && idx >= 0) {
+        this.promoteLineClassesSimple(idx);
+        this.lastLineIndex = idx;
         this.renderedCenterIndex = idx;
       }
     }
 
-    const scrollY = this.scrollAnim
-      ? -this.scrollAnim.deltaY * scrollProgress(this.scrollAnim, timeMs)
-      : 0;
+    this.lastTickPlaybackMs = playbackMs;
+
+    const scrollY = this.getScrollTranslateY();
 
     const karaokeOn = this.karaokeEnabled && this.parsed !== null;
+    const idle = karaokeOn ? this.resolveIdleBounce(timeMs, lines, idx) : null;
+
+    let crossLine: CrossLineHandoff | null = null;
+    let restOnLast: { line: HTMLElement; words: LrcLine["words"] } | null = null;
+
+    if (idle && !this.scrollAnim && timeMs < idle.hopAtMs) {
+      const lineEl = this.lineByIndex(idle.lineIndex);
+      if (lineEl) {
+        this.karaoke.updateIdleCenter(lineEl, timeMs, idle.hopAtMs, scrollY);
+        return;
+      }
+    }
+
+    if (
+      idle &&
+      timeMs >= idle.hopAtMs &&
+      timeMs < idle.hopAtMs + 500 &&
+      idx < idle.lineIndex
+    ) {
+      const lineEl = this.lineByIndex(idle.lineIndex);
+      if (lineEl) {
+        this.karaoke.updateIdleHopToFirstWord(
+          lineEl,
+          idle.words,
+          timeMs,
+          idle.hopAtMs,
+          scrollY,
+        );
+        return;
+      }
+    }
+
     const activeEl = this.lineByIndex(idx);
     const words = idx >= 0 && karaokeOn ? lines[idx].words : [];
 
-    let crossLine: CrossLineHandoff | null = null;
-    let restOnLast: { line: HTMLElement; words: LrcLine["words"] } | null =
-      null;
-
-    const scrollHandoff =
+    if (
       karaokeOn &&
       this.scrollAnim &&
-      !this.snapScroll &&
-      timeMs >= this.scrollAnim.startTimeMs + 40;
-
-    if (scrollHandoff) {
-      const fromEl = this.lineByIndex(this.scrollAnim!.fromIndex);
-      const toEl = this.lineByIndex(this.scrollAnim!.toIndex);
-      if (fromEl && toEl) {
-        const stillOnFrom =
-          idx === this.scrollAnim!.fromIndex &&
-          findActiveWordIndex(lines[idx].words, timeMs) >= 0 &&
-          timeMs < cappedLineVisualEnd(lines[idx], lines[this.scrollAnim!.toIndex].timeMs);
-        if (!stillOnFrom) {
-          crossLine = {
-            fromLine: fromEl,
-            toLine: toEl,
-            scrollTranslateY: scrollY,
-            t: scrollProgress(this.scrollAnim!, timeMs),
-          };
-        }
-      }
-    } else if (
-      karaokeOn &&
-      idx >= 0 &&
-      idx + 1 < lines.length &&
-      !this.scrollAnim
+      !seek &&
+      timeMs >= this.scrollAnim.startTimeMs
     ) {
-      const gapRest = instrumentalRest(lines, idx, timeMs);
+      const fromEl = this.lineByIndex(this.scrollAnim.fromIndex);
+      const toEl = this.lineByIndex(this.scrollAnim.toIndex);
+      if (fromEl && toEl) {
+        crossLine = {
+          fromLine: fromEl,
+          toLine: toEl,
+          scrollTranslateY: scrollY,
+          t: scrollProgress(this.scrollAnim, timeMs),
+        };
+      }
+    }
+
+    if (
+      karaokeOn &&
+      !this.scrollAnim &&
+      !crossLine &&
+      idx >= 0 &&
+      idx + 1 < lines.length
+    ) {
+      const gapRest = shortInstrumentalRest(lines, idx, timeMs);
       if (gapRest) {
         const lineEl = this.lineByIndex(idx);
         if (lineEl) {
@@ -414,11 +601,27 @@ export class LyricsView {
     if (active >= 0) wordLines.add(active);
 
     if (active < 0) {
-      const p = document.createElement("p");
-      p.className = "lyric-line upcoming";
-      p.dataset.line = "0";
-      p.textContent = lines[0]?.text ?? "";
-      frag.appendChild(p);
+      for (let i = 0; i <= Math.min(1, lines.length - 1); i += 1) {
+        const p = document.createElement("p");
+        p.className = "lyric-line";
+        p.dir = "auto";
+        p.dataset.line = String(i);
+        if (i === 0) p.classList.add("upcoming");
+        else p.classList.add("upcoming");
+        const useWords =
+          karaokeOn && i === 0 && lines[0].words.length > 0 && wordLines.has(0);
+        if (useWords) {
+          for (const w of lines[0].words) {
+            const span = document.createElement("span");
+            span.className = "lyric-word";
+            span.textContent = w.text;
+            p.appendChild(span);
+          }
+        } else {
+          p.textContent = lines[i]?.text ?? "";
+        }
+        frag.appendChild(p);
+      }
     } else {
       for (let i = start; i <= end; i += 1) {
         const p = document.createElement("p");
@@ -444,7 +647,11 @@ export class LyricsView {
         frag.appendChild(p);
       }
     }
+    const preserveTransform = this.scrollInner.style.transform;
     this.scrollInner.replaceChildren(frag);
+    if (this.scrollAnim && preserveTransform) {
+      this.scrollInner.style.transform = preserveTransform;
+    }
     this.karaoke.reattach();
     this.karaoke.invalidate();
   }
@@ -454,10 +661,24 @@ export class LyricsView {
   }
 }
 
+/** End of sung content on a line (ignores LRCLIB “held” last tokens through instrumental). */
+export function lineVocalEndMs(line: LrcLine, nextLineStartMs: number): number {
+  if (line.words.length === 0) {
+    return Math.min(nextLineStartMs, line.timeMs + 400);
+  }
+  const last = line.words[line.words.length - 1]!;
+  const gap = nextLineStartMs - last.startMs;
+  const dur = last.endMs - last.startMs;
+  if (dur > 900 && gap > dur * 0.85) {
+    const prev = line.words[line.words.length - 2];
+    if (prev) return prev.endMs;
+    return last.startMs + 280;
+  }
+  return Math.min(last.endMs, nextLineStartMs);
+}
+
 function cappedLineVisualEnd(line: LrcLine, nextStartMs: number): number {
-  const last = line.words[line.words.length - 1]?.endMs;
-  if (last != null) return last;
-  return Math.min(nextStartMs, line.timeMs + 4000);
+  return lineVocalEndMs(line, nextStartMs);
 }
 
 function shouldArmScroll(
@@ -473,7 +694,7 @@ function shouldArmScroll(
   return timeMs >= startAt && timeMs < next.timeMs;
 }
 
-function instrumentalRest(
+function shortInstrumentalRest(
   lines: LrcLine[],
   idx: number,
   timeMs: number,
@@ -481,6 +702,8 @@ function instrumentalRest(
   const line = lines[idx];
   const next = lines[idx + 1];
   if (!next) return false;
+  const gap = next.timeMs - line.timeMs;
+  if (gap >= SCROLL_LONG_GAP_MS) return false;
   const lastEnd = cappedLineVisualEnd(line, next.timeMs);
   const startAt = scrollStartTimeMs(line.timeMs, next.timeMs, lastEnd);
   if (timeMs < lastEnd) return false;

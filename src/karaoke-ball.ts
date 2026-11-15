@@ -471,6 +471,80 @@ export class KaraokeBall {
     this.applyWordHighlights(lineEl, ball);
   }
 
+  getClientPosition(): { x: number; y: number } | null {
+    if (this.hostEl.style.opacity === "0") return null;
+    const r = this.hostEl.getBoundingClientRect();
+    const c = this.container.getBoundingClientRect();
+    return {
+      x: r.left - c.left + r.width / 2,
+      y: r.bottom - c.top,
+    };
+  }
+
+  /** Centered bounce above an upcoming line (intro / long instrumental). */
+  updateIdleCenter(
+    lineEl: HTMLElement,
+    timeMs: number,
+    _hopAtMs: number,
+    scrollY: number,
+  ) {
+    this.activeLineEl = lineEl;
+    const containerRect = this.container.getBoundingClientRect();
+    const lineRect = lineEl.getBoundingClientRect();
+    const x = containerRect.width / 2;
+    const landY = lineRect.top - containerRect.top - KARAOKE_CLEARANCE_PX;
+    const phase = (timeMs % 900) / 900;
+    const sync: KaraokeSyncState = {
+      timeMs,
+      activeIndex: 0,
+      progress: phase,
+      interWordT: 0,
+    };
+    this.applyPose(x, landY + scrollY, sync, []);
+    this.updateWordHighlights(lineEl, [], "none");
+  }
+
+  /** Hop from center onto word 0 at line start. */
+  updateIdleHopToFirstWord(
+    lineEl: HTMLElement,
+    words: TimedWord[],
+    timeMs: number,
+    hopAtMs: number,
+    scrollY: number,
+  ) {
+    this.activeLineEl = lineEl;
+    this.scheduleMeasure(lineEl);
+    const hopDur = Math.max(280, Math.min(450, words[0]?.endMs - hopAtMs || 400));
+    const t = Math.max(0, Math.min(1, (timeMs - hopAtMs) / hopDur));
+    const containerRect = this.container.getBoundingClientRect();
+    const lineRect = lineEl.getBoundingClientRect();
+    const cx = containerRect.width / 2;
+    const landY = lineRect.top - containerRect.top - KARAOKE_CLEARANCE_PX;
+    const anchor = this.anchors[0] ?? this.measureWords(lineEl)[0];
+    if (!anchor) return;
+
+    const endFrag = this.pickFragment(anchor);
+    const eased = t * t * (3 - 2 * t);
+    const x = cx + (endFrag.landX - cx) * eased;
+    const arc = Math.sin(eased * Math.PI) * KARAOKE_ARC_PX;
+    const y = landY + scrollY - arc + (endFrag.landY - landY) * eased;
+
+    const sync: KaraokeSyncState = {
+      timeMs,
+      activeIndex: 0,
+      progress: eased,
+      interWordT: eased < 1 ? 0 : 0,
+    };
+    this.applyPose(x, y, sync, words);
+    const live = computeKaraokeSync(words, timeMs);
+    if (timeMs >= hopAtMs && live) {
+      const ball = deriveBallState(live, words.length);
+      this.applyWordHighlights(lineEl, ball);
+    } else {
+      this.updateWordHighlights(lineEl, [], "none");
+    }
+  }
+
   hide() {
     this.hostEl.style.opacity = "0";
   }

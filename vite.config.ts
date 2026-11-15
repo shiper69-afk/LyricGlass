@@ -10,6 +10,15 @@ export default defineConfig(() => ({
     include: ["src/**/*.test.ts"],
   },
 
+  build: {
+    rollupOptions: {
+      input: {
+        main: "index.html",
+        scrollHarness: "scroll-harness.html",
+      },
+    },
+  },
+
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors

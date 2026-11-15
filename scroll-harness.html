@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LyricGlass scroll e2e harness</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+    <style>
+      #app {
+        width: 420px;
+        height: 320px;
+        margin: 24px auto;
+      }
+      .lyrics-panel {
+        flex: 1;
+        min-height: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <section class="lyrics-panel" id="lyrics-root">
+        <p class="np-header">
+          <span id="np-title" class="np-title">E2E</span>
+          <span id="np-artist" class="np-artist">Harness</span>
+        </p>
+        <p id="duration-warn" class="duration-warn hidden" role="status"></p>
+        <p id="lyrics-status" class="lyrics-status"></p>
+        <p id="sync-offset-label" class="sync-offset"></p>
+        <div id="lyrics-lines" class="lyrics-lines" aria-live="polite"></div>
+        <div id="lyrics-plain" class="lyrics-plain hidden"></div>
+      </section>
+    </div>
+    <script type="module" src="/src/e2e/scroll-harness.ts"></script>
+  </body>
+</html>
