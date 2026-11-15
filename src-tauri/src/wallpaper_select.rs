@@ -168,6 +168,9 @@ pub fn verify_layered_z_order(
     let pos = |hwnd: u64| siblings.iter().find(|(h, _)| *h == hwnd).map(|(_, z)| *z);
     let our = pos(our_hwnd).ok_or("our window missing from progman children")?;
     let defview = pos(defview_hwnd).ok_or("defview missing from progman children")?;
+    if our < defview {
+        return Err("z-order: our window above DefView (would cover icons)");
+    }
     if wallpaper_workerw_hwnd != 0 {
         let ww = pos(wallpaper_workerw_hwnd).ok_or("wallpaper WorkerW missing from progman children")?;
         if !(defview < our && our < ww) {
@@ -302,6 +305,13 @@ mod tests {
         const LYRIC: u64 = 0x0e213a2;
         let siblings = vec![(0xd001, 0), (0xd002, 1), (LYRIC, 2)];
         assert!(verify_layered_z_order(&siblings, LYRIC, 0xd001, 0xd002).is_err());
+    }
+
+    #[test]
+    fn layered_z_order_rejects_above_defview() {
+        const LYRIC: u64 = 0x910690;
+        let siblings = vec![(LYRIC, 0), (0x102ae, 1), (0x1010f6e, 2)];
+        assert!(verify_layered_z_order(&siblings, LYRIC, 0x102ae, 0x1010f6e).is_err());
     }
 
     #[test]

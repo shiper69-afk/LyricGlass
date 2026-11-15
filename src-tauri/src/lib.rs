@@ -352,6 +352,7 @@ fn set_wallpaper_mode_inner(
     #[cfg(windows)]
     {
         if enabled {
+            let _ = window.set_always_on_top(false);
             let hwnd = window.hwnd().map_err(|e| e.to_string())?;
             if let Err(e) = wallpaper::attach_wallpaper(hwnd, trigger) {
                 if persist {
