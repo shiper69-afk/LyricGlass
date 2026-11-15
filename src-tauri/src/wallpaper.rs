@@ -73,8 +73,7 @@ mod imp {
         SetLayeredWindowAttributes, SetParent, SetWindowLongPtrW, SetWindowPos, ShowWindow,
         WNDCLASSW, GWL_EXSTYLE, GWL_STYLE, GW_CHILD, GW_HWNDNEXT, LWA_ALPHA, SMTO_ABORTIFHUNG,
         SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOREDRAW, SWP_NOSIZE, SWP_NOZORDER,
-        SWP_SHOWWINDOW, SW_SHOW,
-        WM_SETREDRAW, WS_VISIBLE, WINDOW_EX_STYLE, WINDOW_STYLE,
+        SWP_SHOWWINDOW, SW_SHOW, WM_SETREDRAW,
     };
 
     const PROGMAN_DESKTOP_MSG: u32 = 0x052C;
@@ -119,7 +118,7 @@ mod imp {
 
     fn set_window_long_ptr_logged(
         hwnd: HWND,
-        index: isize,
+        index: windows::Win32::UI::WindowsAndMessaging::WINDOW_LONG_PTR_INDEX,
         value: isize,
         label: &str,
         diag: &mut String,
@@ -130,7 +129,7 @@ mod imp {
             let err = last_error_code();
             let now = GetWindowLongPtrW(hwnd, index);
             diag.push_str(&format!(
-                "{label}: SetWindowLongPtr({index}) value=0x{value:x} prev=0x{prev:x} now=0x{now:x} lastError={err}\n"
+                "{label}: SetWindowLongPtr({index:?}) value=0x{value:x} prev=0x{prev:x} now=0x{now:x} lastError={err}\n"
             ));
         }
     }
@@ -138,7 +137,7 @@ mod imp {
     fn set_redraw(hwnd: HWND, on: bool, diag: &mut String) {
         unsafe {
             let wp = WPARAM(if on { 1 } else { 0 } as usize);
-            let _ = SendMessageW(Some(hwnd), WM_SETREDRAW, wp, LPARAM(0));
+            let _ = SendMessageW(hwnd, WM_SETREDRAW, wp, LPARAM(0));
             diag.push_str(&format!("WM_SETREDRAW={on} hwnd=0x{:x}\n", hwnd_to_u64(hwnd)));
         }
     }
@@ -520,10 +519,12 @@ mod imp {
             let hinst = GetModuleHandleW(None).unwrap_or_default();
 
             let host = CreateWindowExW(
-                WINDOW_EX_STYLE(WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE),
+                windows::Win32::UI::WindowsAndMessaging::WINDOW_EX_STYLE(
+                    WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+                ),
                 PCWSTR(class_name.as_ptr()),
                 PCWSTR(class_name.as_ptr()),
-                WINDOW_STYLE(WS_CHILD | WS_VISIBLE),
+                windows::Win32::UI::WindowsAndMessaging::WINDOW_STYLE(WS_CHILD | 0x1000_0000),
                 x,
                 y,
                 w,
