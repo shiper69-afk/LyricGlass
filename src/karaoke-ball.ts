@@ -13,10 +13,11 @@ import {
   eqBarScales,
 } from "./bouncers/motion";
 import {
-  findActiveWordIndex,
-  type TimedWord,
-  wordProgress,
-} from "./word-timing";
+  computeKaraokeSync,
+  highlightWordIndex,
+  type KaraokeSyncState,
+} from "./karaoke-sync";
+import type { TimedWord } from "./word-timing";
 
 export const BOUNCER_PX = 24;
 export const KARAOKE_ARC_PX = 16;
@@ -255,14 +256,15 @@ export class KaraokeBall {
   private applyPose(
     x: number,
     y: number,
-    hopProgress: number,
-    wordIndex: number,
+    sync: KaraokeSyncState,
     words: TimedWord[],
-    timeMs: number,
   ) {
-    const idx = findActiveWordIndex(words, timeMs);
-    const w = idx >= 0 ? words[idx] : null;
-    const heldNote = Boolean(w && w.endMs - w.startMs > 700 && hopProgress > 0.25 && hopProgress < 0.92);
+    const hopProgress = sync.progress;
+    const wordIndex = sync.activeIndex;
+    const w = words[wordIndex];
+    const heldNote = Boolean(
+      w && w.endMs - w.startMs > 700 && hopProgress > 0.25 && hopProgress < 0.92,
+    );
 
     const rtl =
       RTL_MIRROR_BOUNCERS.has(this.bouncerId) &&
@@ -311,9 +313,15 @@ export class KaraokeBall {
     const arc = Math.sin(eased * Math.PI) * KARAOKE_ARC_PX;
 
     this.activeLineEl = handoff.toLine;
-    this.applyPose(x, baseY - arc, eased, fromWords - 1, [], handoff.t);
-    this.updateWordHighlights(handoff.fromLine, [], Number.POSITIVE_INFINITY);
-    this.updateWordHighlights(handoff.toLine, [], -1);
+    const crossSync: KaraokeSyncState = {
+      timeMs: 0,
+      activeIndex: fromWords - 1,
+      progress: eased,
+      interWordT: eased,
+    };
+    this.applyPose(x, baseY - arc, crossSync, []);
+    this.updateWordHighlights(handoff.fromLine, [], "all-sung");
+    this.updateWordHighlights(handoff.toLine, [], "none");
   }
 
   update(
@@ -347,8 +355,14 @@ export class KaraokeBall {
         this.activeLineEl = line;
         const frag = this.pickFragment(anchor);
         const hopP = 0.85;
-        this.applyPose(frag.landX, frag.landY + scrollY, hopP, lastIdx, w, timeMs);
-        this.updateWordHighlights(line, w, w[lastIdx]?.endMs ?? timeMs);
+        const restSync: KaraokeSyncState = {
+          timeMs,
+          activeIndex: lastIdx,
+          progress: hopP,
+          interWordT: 0,
+        };
+        this.applyPose(frag.landX, frag.landY + scrollY, restSync, w);
+        this.updateWordHighlights(line, w, restSync);
       }
       return;
     }
@@ -362,46 +376,44 @@ export class KaraokeBall {
     this.scheduleMeasure(activeLine);
     if (this.anchors.length === 0) return;
 
-    const idx = findActiveWordIndex(words, timeMs);
-    if (idx < 0) {
+    const sync = computeKaraokeSync(words, timeMs);
+    if (!sync) {
       this.hide();
       return;
     }
 
+    const idx = sync.activeIndex;
     const anchor = this.anchors[idx];
     if (!anchor) return;
 
-    const nextAnchor = this.anchors[idx + 1];
-    const progress = wordProgress(words, timeMs);
-    const hopProgress = progress;
-
-    const destFrag = nextAnchor ? this.pickFragment(nextAnchor, undefined) : undefined;
-    const startFrag = this.pickFragment(anchor, destFrag?.landX);
+    const startFrag = this.pickFragment(anchor);
 
     let x = startFrag.landX;
     let y = startFrag.landY + scrollY;
 
-    if (nextAnchor && destFrag && progress > 0.5) {
-      const t = (progress - 0.5) / 0.5;
-      const eased = t * t * (3 - 2 * t);
-      const endFrag = this.pickFragment(nextAnchor, startFrag.landX);
-      x = startFrag.landX + (endFrag.landX - startFrag.landX) * eased;
-      const baseY = Math.min(startFrag.landY, endFrag.landY) + scrollY;
-      const arc = Math.sin(eased * Math.PI) * KARAOKE_ARC_PX;
-      y = baseY - arc;
+    if (sync.interWordT > 0) {
+      const nextAnchor = this.anchors[idx + 1];
+      if (nextAnchor) {
+        const endFrag = this.pickFragment(nextAnchor, startFrag.landX);
+        const t = sync.interWordT;
+        x = startFrag.landX + (endFrag.landX - startFrag.landX) * t;
+        const baseY = Math.min(startFrag.landY, endFrag.landY) + scrollY;
+        const arc = Math.sin(t * Math.PI) * KARAOKE_ARC_PX;
+        y = baseY - arc;
+      }
     }
 
-    this.applyPose(x, y, hopProgress, idx, words, timeMs);
-    this.updateWordHighlights(activeLine, words, timeMs);
+    this.applyPose(x, y, sync, words);
+    this.updateWordHighlights(activeLine, words, sync);
   }
 
   private updateWordHighlights(
     lineEl: HTMLElement,
-    words: TimedWord[],
-    timeMs: number,
+    _words: TimedWord[],
+    sync: KaraokeSyncState | "all-sung" | "none",
   ) {
     const spans = lineEl.querySelectorAll<HTMLElement>(".lyric-word");
-    if (!Number.isFinite(timeMs)) {
+    if (sync === "all-sung") {
       spans.forEach((span) => {
         span.classList.add("sung");
         span.classList.remove("singing");
@@ -409,20 +421,21 @@ export class KaraokeBall {
       });
       return;
     }
-    if (timeMs < 0) {
+    if (sync === "none") {
       spans.forEach((span) => {
         span.classList.remove("sung", "singing");
         span.style.removeProperty("--sung-frac");
       });
       return;
     }
-    const activeIdx = findActiveWordIndex(words, timeMs);
+    const activeIdx = highlightWordIndex(sync);
+    const frac = sync.progress;
     spans.forEach((span, i) => {
       span.classList.remove("sung", "singing");
       if (i < activeIdx) span.classList.add("sung");
       else if (i === activeIdx) {
         span.classList.add("singing");
-        span.style.setProperty("--sung-frac", String(wordProgress(words, timeMs)));
+        span.style.setProperty("--sung-frac", String(frac));
       } else {
         span.style.removeProperty("--sung-frac");
       }

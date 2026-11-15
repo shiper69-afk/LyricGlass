@@ -258,6 +258,7 @@ button.active {
 .lyric-word {
   position: relative;
   display: inline;
+  transition: none;
 }
 
 .lyric-word.sung {
