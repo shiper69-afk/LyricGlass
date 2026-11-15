@@ -258,10 +258,10 @@ fn apply_wallpaper_shell(window: &WebviewWindow, enabled: bool) -> Result<(), St
             let size = monitor.size();
             let pos = monitor.position();
             window
-                .set_size(Size::Physical(size))
+                .set_size(Size::Physical(*size))
                 .map_err(|e| e.to_string())?;
             window
-                .set_position(Position::Physical(pos))
+                .set_position(Position::Physical(*pos))
                 .map_err(|e| e.to_string())?;
         }
         window

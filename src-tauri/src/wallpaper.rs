@@ -42,21 +42,22 @@ static WALLPAPER_STATE: LazyLock<Mutex<WallpaperRestore>> =
 mod imp {
     use super::*;
     use windows::core::w;
-    use windows::Win32::Foundation::{BOOL, HWND, LPARAM, RECT};
+    use windows::Win32::Foundation::{HWND, LPARAM, RECT};
+    use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO};
     use windows::Win32::UI::WindowsAndMessaging::{
-        EnumWindows, FindWindowExW, FindWindowW, GetClassNameW, GetMonitorInfoW, GetParent,
-        GetSystemMetrics, GetWindowLongPtrW, GetWindowRect, IsWindow, MonitorFromWindow,
-        SendMessageW, SetParent, SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE,
-        GWL_STYLE, MONITORINFO, MONITOR_DEFAULTTONEAREST, SM_CXSCREEN, SM_CYSCREEN,
-        SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW, WM_USER,
+        EnumWindows, FindWindowExW, FindWindowW, GetClassNameW, GetParent, GetSystemMetrics,
+        GetWindowLongPtrW, GetWindowRect, IsWindow, SendMessageW, SetParent, SetWindowLongPtrW,
+        SetWindowPos, ShowWindow, GWL_EXSTYLE, GWL_STYLE, MONITOR_DEFAULTTONEAREST, SM_CXSCREEN,
+        SM_CYSCREEN, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW, WM_USER,
     };
+    use windows_core::BOOL;
 
     const WS_EX_LAYERED: u32 = 0x0008_0000;
     const WS_EX_TOOLWINDOW: u32 = 0x0000_0080;
     const WS_EX_NOACTIVATE: u32 = 0x0800_0000;
 
     fn hwnd_valid(hwnd: HWND) -> bool {
-        !hwnd.0.is_null() && unsafe { IsWindow(hwnd).as_bool() }
+        !hwnd.0.is_null() && unsafe { IsWindow(Some(hwnd)).as_bool() }
     }
 
     fn progman() -> Option<HWND> {
