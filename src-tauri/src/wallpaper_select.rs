@@ -93,18 +93,9 @@ pub fn plan_progman_layered_attach(
         .or_else(|| progman_children.iter().find(|w| is_workerw(w)));
 
     let wallpaper_workerw_hwnd = wallpaper_ww.map(|w| w.hwnd).unwrap_or(0);
-    let z_insert_after = if wallpaper_workerw_hwnd != 0 {
-        wallpaper_workerw_hwnd
-    } else {
-        // No WorkerW sibling: stack directly under DefView (insert after window below DefView).
-        let defview_z = defview.z_order;
-        progman_children
-            .iter()
-            .filter(|w| w.z_order > defview_z)
-            .min_by_key(|w| w.z_order)
-            .map(|w| w.hwnd)
-            .unwrap_or(0)
-    };
+    // `SetWindowPos` places our window directly *below* `hWndInsertAfter` (one step toward bottom).
+    // Insert after DefView → DefView (top), us, wallpaper WorkerW (bottom).
+    let z_insert_after = defview.hwnd;
 
     Some(WallpaperAttachPlan {
         layout: DesktopLayout::ProgmanLayered,
@@ -138,6 +129,30 @@ pub fn verify_layered_z_order(
 
 pub fn detect_layout(windows: &[DesktopWindowInfo], progman_hwnd: u64) -> Option<DesktopLayout> {
     choose_wallpaper_parent(windows, progman_hwnd).map(|(_, l)| l)
+}
+
+/// Simulate `SetWindowPos` sibling z-order: insert `our_hwnd` directly below `insert_after_hwnd`.
+/// `siblings_top_to_bottom` uses indices 0 = topmost (`GW_CHILD` chain).
+pub fn simulate_insert_below(
+    siblings_top_to_bottom: &[(u64, usize)],
+    our_hwnd: u64,
+    insert_after_hwnd: u64,
+) -> Vec<(u64, usize)> {
+    let mut hwnds: Vec<u64> = siblings_top_to_bottom
+        .iter()
+        .map(|(h, _)| *h)
+        .collect();
+    hwnds.retain(|h| *h != our_hwnd);
+    let pos = hwnds
+        .iter()
+        .position(|h| *h == insert_after_hwnd)
+        .expect("insert_after must be a sibling");
+    hwnds.insert(pos + 1, our_hwnd);
+    hwnds
+        .into_iter()
+        .enumerate()
+        .map(|(z, h)| (h, z))
+        .collect()
 }
 
 #[cfg(test)]
@@ -214,7 +229,7 @@ mod tests {
         assert_eq!(plan.parent_hwnd, progman);
         assert_eq!(plan.defview_hwnd, 0xd001);
         assert_eq!(plan.wallpaper_workerw_hwnd, 0xd002);
-        assert_eq!(plan.z_insert_after_hwnd, 0xd002);
+        assert_eq!(plan.z_insert_after_hwnd, plan.defview_hwnd);
 
         let top_level = vec![
             w(0xcc0dee, "WorkerW", 0, false, 90),
@@ -235,5 +250,24 @@ mod tests {
         const LYRIC: u64 = 0x0e213a2;
         let siblings = vec![(0xd001, 0), (0xd002, 1), (LYRIC, 2)];
         assert!(verify_layered_z_order(&siblings, LYRIC, 0xd001, 0xd002).is_err());
+    }
+
+    #[test]
+    fn progman_layered_setwindowpos_insert_below_defview() {
+        const LYRIC: u64 = 0x0e213a2;
+        let progman = 0x1029e;
+        let children = vec![
+            w(0xd001, "SHELLDLL_DefView", progman, false, 0),
+            w(0xd002, "WorkerW", progman, false, 1),
+        ];
+        let plan = plan_progman_layered_attach(&children, progman).unwrap();
+        assert_eq!(plan.z_insert_after_hwnd, 0xd001);
+
+        let before = vec![(0xd001, 0), (0xd002, 1)];
+        let after = simulate_insert_below(&before, LYRIC, plan.z_insert_after_hwnd);
+        verify_layered_z_order(&after, LYRIC, 0xd001, 0xd002).unwrap();
+
+        let wrong = simulate_insert_below(&before, LYRIC, 0xd002);
+        assert!(verify_layered_z_order(&wrong, LYRIC, 0xd001, 0xd002).is_err());
     }
 }

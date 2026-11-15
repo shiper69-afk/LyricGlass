@@ -645,24 +645,8 @@ mod imp {
 
         if let Some(plan) = layered_plan {
             let parent = HWND(plan.parent_hwnd as *mut core::ffi::c_void);
-            let mut insert_after_hwnd = plan.z_insert_after_hwnd;
-            if insert_after_hwnd == 0 && plan.defview_hwnd != 0 {
-                unsafe {
-                    let dv = HWND(plan.defview_hwnd as *mut core::ffi::c_void);
-                    let below = GetWindow(dv, GW_HWNDNEXT).unwrap_or(HWND::default());
-                    if hwnd_valid(below) {
-                        insert_after_hwnd = hwnd_to_u64(below);
-                        diag.push_str(&format!(
-                            "insert_after from DefView GW_HWNDNEXT=0x{insert_after_hwnd:x}\n"
-                        ));
-                    }
-                }
-            }
-            let insert_after = if insert_after_hwnd != 0 {
-                Some(HWND(insert_after_hwnd as *mut core::ffi::c_void))
-            } else {
-                None
-            };
+            let insert_after_hwnd = plan.z_insert_after_hwnd;
+            let insert_after = Some(HWND(insert_after_hwnd as *mut core::ffi::c_void));
             attach_result = reparent_fullscreen(
                 hwnd,
                 parent,
