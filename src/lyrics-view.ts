@@ -97,6 +97,10 @@ export class LyricsView {
     this.karaoke.setThemeColors(ballColor, sungHighlight);
   }
 
+  setKaraokeBouncer(bouncerId: string) {
+    this.karaoke.setBouncerType(bouncerId);
+  }
+
   setKaraokeEnabled(enabled: boolean) {
     this.karaokeEnabled = enabled;
     this.karaoke.setEnabled(enabled);

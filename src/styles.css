@@ -276,26 +276,97 @@ button.active {
   -webkit-background-clip: text;
 }
 
-.karaoke-ball {
+.karaoke-bouncer {
   position: absolute;
   left: 0;
   top: 0;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  width: 24px;
+  height: 24px;
   pointer-events: none;
   z-index: 5;
   opacity: 0;
+  will-change: transform, opacity;
+  color: var(--karaoke-ball-color, #ffc857);
+}
+
+.karaoke-bouncer-sprite {
+  width: 24px;
+  height: 24px;
+  transform-origin: 50% 85%;
   will-change: transform;
-  background: radial-gradient(
-    circle at 35% 35%,
-    color-mix(in srgb, var(--karaoke-ball-color) 20%, white) 0%,
-    var(--karaoke-ball-color) 55%,
-    color-mix(in srgb, var(--karaoke-ball-color) 75%, #ff6b2b) 100%
-  );
-  box-shadow:
-    0 0 10px color-mix(in srgb, var(--karaoke-ball-color) 90%, white),
-    0 0 18px color-mix(in srgb, var(--karaoke-ball-color) 55%, #ff6b2b);
+}
+
+.karaoke-bouncer-sprite svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+  overflow: visible;
+}
+
+.karaoke-bouncer-shadow {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 14px;
+  height: 4px;
+  margin-left: -7px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.45);
+  transform: scale(1, 1);
+  transform-origin: center;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.karaoke-bouncer.karaoke-flash .karaoke-bouncer-sprite {
+  filter: brightness(1.2);
+}
+
+.bouncer-picker-label {
+  font-size: 11px;
+  opacity: 0.75;
+  margin: 4px 0 2px;
+}
+
+.bouncer-picker {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+  margin-bottom: 4px;
+}
+
+.bouncer-picker-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 2px;
+  font-size: 8px;
+  line-height: 1.1;
+  border-radius: 8px;
+  color: var(--karaoke-ball-color, #ffc857);
+}
+
+.bouncer-picker-btn[aria-pressed="true"] {
+  background: rgba(130, 170, 255, 0.35);
+  border-color: rgba(130, 170, 255, 0.65);
+}
+
+.bouncer-picker-btn .bouncer-thumb {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bouncer-picker-btn svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  overflow: visible;
 }
 
 .setting-row input[type="color"] {

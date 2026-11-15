@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
+     color="#FF3F4C" role="img" aria-label="Glass Drop">
+  <title>LyricGlass Glass Drop</title>
+  <desc>Karaoke bouncer for LyricGlass. Recolor by setting the CSS color property or, when inlined, --lg-bouncer on a parent (the host should also set color: var(--lg-bouncer)). Body uses currentColor; highlights are a white sheen and a dark overlay so any user colour still reads. When used as an image, the color="#FF3F4C" presentation attribute is the default.</desc>
+  <g class="lg-bouncer lg-glass-drop">
+
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g>
+</svg>

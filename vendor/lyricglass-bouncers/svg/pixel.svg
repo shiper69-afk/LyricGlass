@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
+     color="#FF3F4C" role="img" aria-label="Pixel">
+  <title>LyricGlass Pixel</title>
+  <desc>Karaoke bouncer for LyricGlass. Recolor by setting the CSS color property or, when inlined, --lg-bouncer on a parent (the host should also set color: var(--lg-bouncer)). Body uses currentColor; highlights are a white sheen and a dark overlay so any user colour still reads. When used as an image, the color="#FF3F4C" presentation attribute is the default.</desc>
+  <g class="lg-bouncer lg-pixel">
+
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g>
+</svg>

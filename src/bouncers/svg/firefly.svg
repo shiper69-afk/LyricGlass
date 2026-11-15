@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
+     color="#FF3F4C" role="img" aria-label="Firefly">
+  <title>LyricGlass Firefly</title>
+  <desc>Karaoke bouncer for LyricGlass. Recolor by setting the CSS color property or, when inlined, --lg-bouncer on a parent (the host should also set color: var(--lg-bouncer)). Body uses currentColor; highlights are a white sheen and a dark overlay so any user colour still reads. When used as an image, the color="#FF3F4C" presentation attribute is the default.</desc>
+  <g class="lg-bouncer lg-firefly">
+
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g>
+</svg>

@@ -210,6 +210,22 @@ impl LyricsCache {
 
     pub const DEFAULT_KARAOKE_BALL_COLOR: &'static str = "#ffc857";
     pub const DEFAULT_SUNG_HIGHLIGHT_COLOR: &'static str = "#ffdc8c";
+    pub const DEFAULT_KARAOKE_BOUNCER: &'static str = "glow-orb";
+
+    const BOUNCER_IDS: &[&str] = &[
+        "glow-orb",
+        "music-note",
+        "spark",
+        "heart",
+        "glass-drop",
+        "firefly",
+        "comet",
+        "eq-pulse",
+        "mic",
+        "paper-plane",
+        "pixel",
+        "crescent",
+    ];
 
     fn read_setting_string(conn: &Connection, key: &str) -> Option<String> {
         conn.query_row(
@@ -277,6 +293,42 @@ impl LyricsCache {
         };
         conn.execute(
             "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('sung_highlight_color', ?1)",
+            params![normalized],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(normalized)
+    }
+
+    pub fn get_karaoke_bouncer(&self) -> String {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Self::DEFAULT_KARAOKE_BOUNCER.to_string(),
+        };
+        Self::read_setting_string(conn, "karaoke_bouncer")
+            .map(|v| {
+                let id = v.trim().to_lowercase();
+                if Self::BOUNCER_IDS.contains(&id.as_str()) {
+                    id
+                } else {
+                    Self::DEFAULT_KARAOKE_BOUNCER.to_string()
+                }
+            })
+            .unwrap_or_else(|| Self::DEFAULT_KARAOKE_BOUNCER.to_string())
+    }
+
+    pub fn set_karaoke_bouncer(&self, bouncer_id: &str) -> Result<String, String> {
+        let id = bouncer_id.trim().to_lowercase();
+        let normalized = if Self::BOUNCER_IDS.contains(&id.as_str()) {
+            id
+        } else {
+            Self::DEFAULT_KARAOKE_BOUNCER.to_string()
+        };
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(normalized),
+        };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('karaoke_bouncer', ?1)",
             params![normalized],
         )
         .map_err(|e| e.to_string())?;

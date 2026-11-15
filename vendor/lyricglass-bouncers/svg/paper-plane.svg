@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
+     color="#FF3F4C" role="img" aria-label="Paper Plane">
+  <title>LyricGlass Paper Plane</title>
+  <desc>Karaoke bouncer for LyricGlass. Recolor by setting the CSS color property or, when inlined, --lg-bouncer on a parent (the host should also set color: var(--lg-bouncer)). Body uses currentColor; highlights are a white sheen and a dark overlay so any user colour still reads. When used as an image, the color="#FF3F4C" presentation attribute is the default.</desc>
+  <g class="lg-bouncer lg-paper-plane">
+
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g>
+</svg>

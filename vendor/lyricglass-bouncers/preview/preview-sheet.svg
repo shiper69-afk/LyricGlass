@@ -1,0 +1,1815 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="2600" height="3028" viewBox="0 0 2600 3028">
+  <defs>
+    <pattern id="chk-dark" width="12" height="12" patternUnits="userSpaceOnUse">
+    <rect width="12" height="12" fill="#0A1A20"/>
+    <rect width="6" height="6" fill="#12303A"/>
+    <rect x="6" y="6" width="6" height="6" fill="#12303A"/>
+  </pattern>
+    <pattern id="chk-light" width="12" height="12" patternUnits="userSpaceOnUse">
+    <rect width="12" height="12" fill="#E8F4F6"/>
+    <rect width="6" height="6" fill="#F4FFFE"/>
+    <rect x="6" y="6" width="6" height="6" fill="#F4FFFE"/>
+  </pattern>
+  </defs>
+  <rect width="2600" height="4000" fill="#07141B"/>
+<circle cx="240" cy="80" r="1.2" fill="#7EE7F2" opacity="0.25"/>
+    <circle cx="2320" cy="120" r="1.1" fill="#7EE7F2" opacity="0.2"/>
+    <circle cx="2480" cy="40" r="0.9" fill="#FF3F4C" opacity="0.25"/>
+
+    <text x="72" y="56" font-family="Inter" font-size="13" font-weight="600" letter-spacing="2.4" fill="#5ED0E0">LYRICGLASS</text>
+    <text x="72" y="108" font-family="Outfit" font-size="54" font-weight="650" fill="#F4FFFE">Bouncers</text>
+    <text x="72" y="142" font-family="Inter" font-size="16" font-weight="400" fill="#8BB8C4">12 karaoke cursors for the lyrics overlay · Glass Orb style · default coral #FF3F4C</text>
+    <text x="72" y="166" font-family="Inter" font-size="14" font-weight="400" fill="#6A9AAB">Recolor any of them by setting color, or when inlined, color: var(--lg-bouncer). Bodies use currentColor; highlights are a white sheen plus a dark overlay.</text>
+  
+<svg x="2432" y="48" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="72" y="236" font-family="Inter" font-size="13" font-weight="600" letter-spacing="1.8" fill="#5ED0E0">THE SET</text>
+
+      <rect x="72" y="256" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="100" y="280" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+      <text x="212" y="308" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Glow Orb</text>
+      <text x="212" y="336" font-family="Inter" font-size="13" fill="#8BB8C4">The classic karaoke ball: a soft glowing orb that hops along the</text>
+<text x="212" y="353" font-family="Inter" font-size="13" fill="#8BB8C4">sung word.</text>
+    
+<rect x="100" y="392" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="112" y="404" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="124" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="178" y="392" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="194" y="408" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="202" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="256" y="392" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="268" y="404" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="280" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="334" y="392" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="350" y="408" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="358" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="100" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="128" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="104" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) scale(0.90 1.14) translate(-12 -20) translate(0 -3.4)"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></g></svg>
+<text x="128" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="202" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="230" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="206" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="230" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="304" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="332" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="308" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) scale(1.26 0.70) translate(-12 -20)"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></g></svg>
+<text x="332" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="398" y="484" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="398" y="500" font-family="Inter" font-size="11" fill="#8BB8C4">Classic squash-and-stretch. Stretches tall</text>
+<text x="398" y="514.5" font-family="Inter" font-size="11" fill="#8BB8C4">at the top of the hop, flattens on landing,</text>
+<text x="398" y="529" font-family="Inter" font-size="11" fill="#8BB8C4">then settles. A soft glow pulses slightly</text>
+<text x="398" y="543.5" font-family="Inter" font-size="11" fill="#8BB8C4">louder at the apex. Optional contact shadow</text>
+<text x="398" y="558" font-family="Inter" font-size="11" fill="#8BB8C4">scales out as it leaves the word.</text>
+
+      <rect x="691.5" y="256" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="719.5" y="280" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></svg>
+      <text x="831.5" y="308" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Music Note</text>
+      <text x="831.5" y="336" font-family="Inter" font-size="13" fill="#8BB8C4">A chunky eighth note that marks the beat as each word is sung.</text>
+    
+<rect x="719.5" y="392" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="731.5" y="404" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></svg>
+<text x="743.5" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="797.5" y="392" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="813.5" y="408" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></svg>
+<text x="821.5" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="875.5" y="392" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="887.5" y="404" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></svg>
+<text x="899.5" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="953.5" y="392" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="969.5" y="408" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></svg>
+<text x="977.5" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="719.5" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="747.5" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="723.5" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(-16 12 12) scale(0.94 1.10) translate(-12 -20) translate(0 -3.0)"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></g></svg>
+<text x="747.5" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="821.5" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="849.5" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="825.5" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></svg>
+<text x="849.5" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="923.5" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="951.5" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="927.5" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(10 12 12) scale(1.20 0.76) translate(-12 -20)"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></g></svg>
+<text x="951.5" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="1017.5" y="484" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="1017.5" y="500" font-family="Inter" font-size="11" fill="#8BB8C4">Tilts back about 18° while airborne, tips</text>
+<text x="1017.5" y="514.5" font-family="Inter" font-size="11" fill="#8BB8C4">forward on landing, and lightly squashes</text>
+<text x="1017.5" y="529" font-family="Inter" font-size="11" fill="#8BB8C4">through the note head. The flag can give a</text>
+<text x="1017.5" y="543.5" font-family="Inter" font-size="11" fill="#8BB8C4">tiny delayed follow-through (it lags the</text>
+<text x="1017.5" y="558" font-family="Inter" font-size="11" fill="#8BB8C4">stem by a frame or two).</text>
+
+      <rect x="1311" y="256" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="1339" y="280" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+      <text x="1451" y="308" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Spark</text>
+      <text x="1451" y="336" font-family="Inter" font-size="13" fill="#8BB8C4">A four-point sparkle star that twinkles over the active lyric.</text>
+    
+<rect x="1339" y="392" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="1351" y="404" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="1363" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="1417" y="392" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="1433" y="408" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="1441" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="1495" y="392" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="1507" y="404" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="1519" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="1573" y="392" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="1589" y="408" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="1597" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="1339" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1367" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1343" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(20 12 12) scale(1.08 1.08) translate(-12 -20) translate(0 -3.0)"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></g></svg>
+<text x="1367" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="1441" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1469" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1445" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="1469" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="1543" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1571" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1547" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(-8 12 12) scale(1.18 0.78) translate(-12 -20)"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></g></svg>
+<text x="1571" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="1637" y="484" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="1637" y="500" font-family="Inter" font-size="11" fill="#8BB8C4">Slowly rotates (about 20–30° per hop) and</text>
+<text x="1637" y="514.5" font-family="Inter" font-size="11" fill="#8BB8C4">twinkles with a short scale pulse at the</text>
+<text x="1637" y="529" font-family="Inter" font-size="11" fill="#8BB8C4">apex. On landing it squashes slightly along</text>
+<text x="1637" y="543.5" font-family="Inter" font-size="11" fill="#8BB8C4">the vertical points. A one-frame “flash”</text>
+<text x="1637" y="558" font-family="Inter" font-size="11" fill="#8BB8C4">(scale 1.15) can mark the start of each</text>
+<text x="1637" y="572.5" font-family="Inter" font-size="11" fill="#8BB8C4">word.</text>
+
+      <rect x="1930.5" y="256" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="1958.5" y="280" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+      <text x="2070.5" y="308" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Heart</text>
+      <text x="2070.5" y="336" font-family="Inter" font-size="13" fill="#8BB8C4">A bold heart that sits on the sung word — clear even at tray-like</text>
+<text x="2070.5" y="353" font-family="Inter" font-size="13" fill="#8BB8C4">sizes.</text>
+    
+<rect x="1958.5" y="392" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="1970.5" y="404" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="1982.5" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="2036.5" y="392" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="2052.5" y="408" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="2060.5" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="2114.5" y="392" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="2126.5" y="404" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="2138.5" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="2192.5" y="392" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="2208.5" y="408" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="2216.5" y="456" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="1958.5" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1986.5" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1962.5" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) scale(1.06 1.10) translate(-12 -20) translate(0 -2.8)"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></g></svg>
+<text x="1986.5" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="2060.5" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="2088.5" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="2064.5" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="2088.5" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="2162.5" y="476" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="2190.5" cy="525" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="2166.5" y="478" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) scale(1.22 0.78) translate(-12 -20)"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></g></svg>
+<text x="2190.5" y="548" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="2256.5" y="484" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="2256.5" y="500" font-family="Inter" font-size="11" fill="#8BB8C4">Pulses (a quick beat-scale) as it lands,</text>
+<text x="2256.5" y="514.5" font-family="Inter" font-size="11" fill="#8BB8C4">with a mild squash in the lower tip. Slight</text>
+<text x="2256.5" y="529" font-family="Inter" font-size="11" fill="#8BB8C4">sideways tilt in the air, then a spring</text>
+<text x="2256.5" y="543.5" font-family="Inter" font-size="11" fill="#8BB8C4">back to upright. Can double-pulse on a held</text>
+<text x="2256.5" y="558" font-family="Inter" font-size="11" fill="#8BB8C4">note.</text>
+
+      <rect x="72" y="618" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="100" y="642" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+      <text x="212" y="670" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Glass Drop</text>
+      <text x="212" y="698" font-family="Inter" font-size="13" fill="#8BB8C4">A glassy teardrop, like a bead of light resting on the lyric</text>
+<text x="212" y="715" font-family="Inter" font-size="13" fill="#8BB8C4">line.</text>
+    
+<rect x="100" y="754" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="112" y="766" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+<text x="124" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="178" y="754" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="194" y="770" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+<text x="202" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="256" y="754" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="268" y="766" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+<text x="280" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="334" y="754" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="350" y="770" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+<text x="358" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="100" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="128" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="104" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) scale(0.86 1.20) translate(-12 -20) translate(0 -3.2)"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></g></svg>
+<text x="128" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="202" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="230" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="206" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+<text x="230" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="304" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="332" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="308" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) scale(1.34 0.64) translate(-12 -20)"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></g></svg>
+<text x="332" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="398" y="846" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="398" y="862" font-family="Inter" font-size="11" fill="#8BB8C4">Stretches into a taller drop at the apex,</text>
+<text x="398" y="876.5" font-family="Inter" font-size="11" fill="#8BB8C4">then a wet squash on landing (wide and</text>
+<text x="398" y="891" font-family="Inter" font-size="11" fill="#8BB8C4">short) with a short wobble (horizontal</text>
+<text x="398" y="905.5" font-family="Inter" font-size="11" fill="#8BB8C4">shear) as it settles. The highlight can</text>
+<text x="398" y="920" font-family="Inter" font-size="11" fill="#8BB8C4">slide up the left edge during the hop.</text>
+
+      <rect x="691.5" y="618" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="719.5" y="642" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></svg>
+      <text x="831.5" y="670" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Firefly</text>
+      <text x="831.5" y="698" font-family="Inter" font-size="13" fill="#8BB8C4">A tiny lantern bug: glowing abdomen, faint glass wings, and a</text>
+<text x="831.5" y="715" font-family="Inter" font-size="13" fill="#8BB8C4">small head.</text>
+    
+<rect x="719.5" y="754" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="731.5" y="766" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></svg>
+<text x="743.5" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="797.5" y="754" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="813.5" y="770" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></svg>
+<text x="821.5" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="875.5" y="754" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="887.5" y="766" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></svg>
+<text x="899.5" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="953.5" y="754" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="969.5" y="770" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></svg>
+<text x="977.5" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="719.5" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="747.5" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="723.5" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(0 -3.8) scale(1.02 1.04)"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></g></svg>
+<text x="747.5" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="821.5" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="849.5" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="825.5" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></svg>
+<text x="849.5" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="923.5" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="951.5" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="927.5" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) scale(1.12 0.86) translate(-12 -20)"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></g></svg>
+<text x="951.5" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="1017.5" y="846" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="1017.5" y="862" font-family="Inter" font-size="11" fill="#8BB8C4">Hover more than bounce — a softer landing</text>
+<text x="1017.5" y="876.5" font-family="Inter" font-size="11" fill="#8BB8C4">with less squash, a constant idle bob, and</text>
+<text x="1017.5" y="891" font-family="Inter" font-size="11" fill="#8BB8C4">a glow that pulses independently of the</text>
+<text x="1017.5" y="905.5" font-family="Inter" font-size="11" fill="#8BB8C4">hop. Wings flutter with a short</text>
+<text x="1017.5" y="920" font-family="Inter" font-size="11" fill="#8BB8C4">scale/rotate loop. On a held note it can</text>
+<text x="1017.5" y="934.5" font-family="Inter" font-size="11" fill="#8BB8C4">hover in place and pulse.</text>
+
+      <rect x="1311" y="618" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="1339" y="642" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+      <text x="1451" y="670" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Comet</text>
+      <text x="1451" y="698" font-family="Inter" font-size="13" fill="#8BB8C4">A bright nucleus with a trailing tail that streams behind the</text>
+<text x="1451" y="715" font-family="Inter" font-size="13" fill="#8BB8C4">hop.</text>
+    
+<rect x="1339" y="754" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="1351" y="766" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1363" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="1417" y="754" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="1433" y="770" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1441" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="1495" y="754" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="1507" y="766" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1519" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="1573" y="754" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="1589" y="770" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1597" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="1339" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1367" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1343" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(-7 12 12) scale(0.94 1.10) translate(-12 -20) translate(-0.6 -3.2)"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></g></svg>
+<text x="1367" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="1441" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1469" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1445" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1469" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="1543" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1571" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1547" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) scale(1.18 0.76) translate(-12 -20)"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></g></svg>
+<text x="1571" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="1637" y="846" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="1637" y="862" font-family="Inter" font-size="11" fill="#8BB8C4">The nucleus uses the same</text>
+<text x="1637" y="876.5" font-family="Inter" font-size="11" fill="#8BB8C4">squash-and-stretch as Glow Orb. The tail</text>
+<text x="1637" y="891" font-family="Inter" font-size="11" fill="#8BB8C4">always streams opposite the hop direction:</text>
+<text x="1637" y="905.5" font-family="Inter" font-size="11" fill="#8BB8C4">long and loose in the air, compressed or</text>
+<text x="1637" y="920" font-family="Inter" font-size="11" fill="#8BB8C4">tucked on landing. In RTL lyrics, flip the</text>
+<text x="1637" y="934.5" font-family="Inter" font-size="11" fill="#8BB8C4">tail with scaleX(-1) so it still…</text>
+
+      <rect x="1930.5" y="618" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="1958.5" y="642" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></svg>
+      <text x="2070.5" y="670" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">EQ Pulse</text>
+      <text x="2070.5" y="698" font-family="Inter" font-size="13" fill="#8BB8C4">Three rounded equalizer bars that bounce as a little meter on the</text>
+<text x="2070.5" y="715" font-family="Inter" font-size="13" fill="#8BB8C4">word.</text>
+    
+<rect x="1958.5" y="754" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="1970.5" y="766" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></svg>
+<text x="1982.5" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="2036.5" y="754" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="2052.5" y="770" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></svg>
+<text x="2060.5" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="2114.5" y="754" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="2126.5" y="766" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></svg>
+<text x="2138.5" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="2192.5" y="754" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="2208.5" y="770" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></svg>
+<text x="2216.5" y="818" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="1958.5" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1986.5" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1962.5" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(0 -3.2) scale(1 1.06)"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></g></svg>
+<text x="1986.5" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="2060.5" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="2088.5" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="2064.5" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></svg>
+<text x="2088.5" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="2162.5" y="838" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="2190.5" cy="887" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="2166.5" y="840" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) scale(1.16 0.72) translate(-12 -20)"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></g></svg>
+<text x="2190.5" y="910" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="2256.5" y="846" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="2256.5" y="862" font-family="Inter" font-size="11" fill="#8BB8C4">The group hops as one, but each bar</text>
+<text x="2256.5" y="876.5" font-family="Inter" font-size="11" fill="#8BB8C4">independently scales in height</text>
+<text x="2256.5" y="891" font-family="Inter" font-size="11" fill="#8BB8C4">(transform-origin at the bottom) on the</text>
+<text x="2256.5" y="905.5" font-family="Inter" font-size="11" fill="#8BB8C4">beat. On landing the whole meter squashes</text>
+<text x="2256.5" y="920" font-family="Inter" font-size="11" fill="#8BB8C4">flatter. On a held note the bars can keep</text>
+<text x="2256.5" y="934.5" font-family="Inter" font-size="11" fill="#8BB8C4">pulsing in place without hopping.</text>
+
+      <rect x="72" y="980" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="100" y="1004" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></svg>
+      <text x="212" y="1032" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Mic</text>
+      <text x="212" y="1060" font-family="Inter" font-size="13" fill="#8BB8C4">A tiny handheld microphone — the karaoke object itself, hopping</text>
+<text x="212" y="1077" font-family="Inter" font-size="13" fill="#8BB8C4">the line.</text>
+    
+<rect x="100" y="1116" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="112" y="1128" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></svg>
+<text x="124" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="178" y="1116" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="194" y="1132" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></svg>
+<text x="202" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="256" y="1116" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="268" y="1128" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></svg>
+<text x="280" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="334" y="1116" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="350" y="1132" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></svg>
+<text x="358" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="100" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="128" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="104" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(-14 12 12) translate(-12 -20) translate(0 -3.2)"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></g></svg>
+<text x="128" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="202" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="230" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="206" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></svg>
+<text x="230" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="304" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="332" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="308" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(8 12 12) scale(1.16 0.78) translate(-12 -20)"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></g></svg>
+<text x="332" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="398" y="1208" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="398" y="1224" font-family="Inter" font-size="11" fill="#8BB8C4">Swings like a short pendulum (about ±16°)</text>
+<text x="398" y="1238.5" font-family="Inter" font-size="11" fill="#8BB8C4">while airborne, then squashes through the</text>
+<text x="398" y="1253" font-family="Inter" font-size="11" fill="#8BB8C4">capsule on landing. A very small “sound</text>
+<text x="398" y="1267.5" font-family="Inter" font-size="11" fill="#8BB8C4">ring” can flash around the grille at the</text>
+<text x="398" y="1282" font-family="Inter" font-size="11" fill="#8BB8C4">start of a word.</text>
+
+      <rect x="691.5" y="980" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="719.5" y="1004" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></svg>
+      <text x="831.5" y="1032" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Paper Plane</text>
+      <text x="831.5" y="1060" font-family="Inter" font-size="13" fill="#8BB8C4">A folded paper dart that banks from word to word like a short</text>
+<text x="831.5" y="1077" font-family="Inter" font-size="13" fill="#8BB8C4">flight.</text>
+    
+<rect x="719.5" y="1116" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="731.5" y="1128" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></svg>
+<text x="743.5" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="797.5" y="1116" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="813.5" y="1132" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></svg>
+<text x="821.5" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="875.5" y="1116" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="887.5" y="1128" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></svg>
+<text x="899.5" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="953.5" y="1116" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="969.5" y="1132" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></svg>
+<text x="977.5" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="719.5" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="747.5" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="723.5" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(-18 12 12) translate(-12 -20) translate(0 -3.4)"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></g></svg>
+<text x="747.5" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="821.5" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="849.5" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="825.5" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></svg>
+<text x="849.5" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="923.5" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="951.5" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="927.5" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(10 12 12) scale(1.12 0.82) translate(-12 -20)"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></g></svg>
+<text x="951.5" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="1017.5" y="1208" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="1017.5" y="1224" font-family="Inter" font-size="11" fill="#8BB8C4">Banks (rolls) into the hop, glides with the</text>
+<text x="1017.5" y="1238.5" font-family="Inter" font-size="11" fill="#8BB8C4">nose slightly up, then dips the nose and</text>
+<text x="1017.5" y="1253" font-family="Inter" font-size="11" fill="#8BB8C4">flattens on landing. Travel between words</text>
+<text x="1017.5" y="1267.5" font-family="Inter" font-size="11" fill="#8BB8C4">can include a short horizontal glide, not</text>
+<text x="1017.5" y="1282" font-family="Inter" font-size="11" fill="#8BB8C4">only a vertical bounce. In RTL, flip with</text>
+<text x="1017.5" y="1296.5" font-family="Inter" font-size="11" fill="#8BB8C4">scaleX(-1).</text>
+
+      <rect x="1311" y="980" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="1339" y="1004" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+      <text x="1451" y="1032" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Pixel</text>
+      <text x="1451" y="1060" font-family="Inter" font-size="13" fill="#8BB8C4">A chunky square pixel with a 1-bit highlight — like a cursor on</text>
+<text x="1451" y="1077" font-family="Inter" font-size="13" fill="#8BB8C4">the lyric.</text>
+    
+<rect x="1339" y="1116" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="1351" y="1128" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1363" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="1417" y="1116" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="1433" y="1132" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1441" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="1495" y="1116" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="1507" y="1128" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1519" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="1573" y="1116" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="1589" y="1132" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1597" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="1339" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1367" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1343" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(0 -4)"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></g></svg>
+<text x="1367" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="1441" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1469" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1445" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1469" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="1543" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1571" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1547" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) scale(1.28 0.68) translate(-12 -20)"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></g></svg>
+<text x="1571" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="1637" y="1208" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="1637" y="1224" font-family="Inter" font-size="11" fill="#8BB8C4">Snappy, not fluid. The hop can be stepped</text>
+<text x="1637" y="1238.5" font-family="Inter" font-size="11" fill="#8BB8C4">(a few discrete frames) rather than eased.</text>
+<text x="1637" y="1253" font-family="Inter" font-size="11" fill="#8BB8C4">On landing it flattens into a wider</text>
+<text x="1637" y="1267.5" font-family="Inter" font-size="11" fill="#8BB8C4">rectangle for one frame, then pops back.</text>
+<text x="1637" y="1282" font-family="Inter" font-size="11" fill="#8BB8C4">Optional 1-frame “blink” (the highlight</text>
+<text x="1637" y="1296.5" font-family="Inter" font-size="11" fill="#8BB8C4">flashes) at the start of each word.</text>
+
+      <rect x="1930.5" y="980" width="597.5" height="340" rx="22" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+      <svg x="1958.5" y="1004" width="96" height="96" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+      <text x="2070.5" y="1032" font-family="Outfit" font-size="24" font-weight="600" fill="#F4FFFE">Crescent</text>
+      <text x="2070.5" y="1060" font-family="Inter" font-size="13" fill="#8BB8C4">A thick crescent moon that rocks gently over the sung word.</text>
+    
+<rect x="1958.5" y="1116" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="1970.5" y="1128" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+<text x="1982.5" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">24</text>
+<rect x="2036.5" y="1116" width="48" height="48" rx="8" fill="#07141B"/>
+<svg x="2052.5" y="1132" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+<text x="2060.5" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#6A9AAB">16</text>
+<rect x="2114.5" y="1116" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="2126.5" y="1128" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+<text x="2138.5" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">24 light</text>
+<rect x="2192.5" y="1116" width="48" height="48" rx="8" fill="#E8F4F6"/>
+<svg x="2208.5" y="1132" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+<text x="2216.5" y="1180" text-anchor="middle" font-family="Inter" font-size="10" fill="#3A6A78">16 light</text>
+<rect x="1958.5" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="1986.5" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="1962.5" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(-16 12 12) translate(-12 -20) translate(0 -3.0)"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></g></svg>
+<text x="1986.5" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">AIR</text>
+<rect x="2060.5" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="2088.5" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="2064.5" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+<text x="2088.5" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">LAND</text>
+<rect x="2162.5" y="1200" width="56" height="56" rx="10" fill="#07141B"/>
+<ellipse cx="2190.5" cy="1249" rx="14" ry="2.4" fill="#041218" opacity="0.45"/>
+<svg x="2166.5" y="1202" width="48" height="48" viewBox="-3 -5 30 32" color="#FF3F4C" overflow="visible"><g transform="translate(12 20) rotate(12 12 12) scale(1.14 0.80) translate(-12 -20)"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></g></svg>
+<text x="2190.5" y="1272" text-anchor="middle" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#6A9AAB">SQUASH</text>
+<text x="2256.5" y="1208" font-family="Inter" font-size="10" font-weight="600" letter-spacing="0.8" fill="#5ED0E0">MOTION</text>
+<text x="2256.5" y="1224" font-family="Inter" font-size="11" fill="#8BB8C4">Rocks like a little hammock: tilts back</text>
+<text x="2256.5" y="1238.5" font-family="Inter" font-size="11" fill="#8BB8C4">about 16° in the air, then tips forward on</text>
+<text x="2256.5" y="1253" font-family="Inter" font-size="11" fill="#8BB8C4">landing with a mild squash. A soft glow on</text>
+<text x="2256.5" y="1267.5" font-family="Inter" font-size="11" fill="#8BB8C4">the inner edge can breathe slowly,</text>
+<text x="2256.5" y="1282" font-family="Inter" font-size="11" fill="#8BB8C4">independent of the hop, for a quieter</text>
+<text x="2256.5" y="1296.5" font-family="Inter" font-size="11" fill="#8BB8C4">“night” feel on slow songs.</text>
+<text x="72" y="1376" font-family="Inter" font-size="13" font-weight="600" letter-spacing="1.8" fill="#5ED0E0">ON LYRICS — DARK GLASS</text>
+
+    <rect x="72" y="1394" width="2456" height="310" rx="28" fill="#0A1E26"/>
+    <rect x="72" y="1394" width="2456" height="310" rx="28" fill="#7EE7F2" opacity="0.04"/>
+    <rect x="73.5" y="1395.5" width="2453" height="307" rx="26.5" fill="none" stroke="#7EE7F2" stroke-opacity="0.28" stroke-width="1.4"/>
+    <path d="M112 1412 C 272 1400, 472 1404, 632 1416" fill="none" stroke="#FFFFFF" stroke-opacity="0.10" stroke-width="8" stroke-linecap="round"/>
+  
+<text x="112" y="1438" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.2" fill="#5ED0E0">24 PX</text>
+<text x="169.6" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#FFFFFF">Dance</text>
+<svg x="157.6" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="314.64" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#F4FFFE">through</text>
+<svg x="302.64" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></svg>
+<text x="439.84" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#F4FFFE">the</text>
+<svg x="427.84" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="545.1999999999999" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#FFFFFF">glass</text>
+<svg x="533.1999999999999" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="690.24" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#F4FFFE">tonight</text>
+<svg x="678.24" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+<text x="805.52" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#F4FFFE">we</text>
+<svg x="793.52" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></svg>
+<text x="900.9599999999999" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#FFFFFF">light</text>
+<svg x="888.9599999999999" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1026.1599999999999" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#F4FFFE">every</text>
+<svg x="1014.1599999999999" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></svg>
+<text x="1141.44" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#F4FFFE">word</text>
+<svg x="1129.44" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></svg>
+<text x="1236.8799999999999" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#FFFFFF">you</text>
+<svg x="1224.8799999999999" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></svg>
+<text x="1332.32" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#F4FFFE">sing</text>
+<svg x="1320.32" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1427.7599999999998" y="1522" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#F4FFFE">now</text>
+<svg x="1415.7599999999998" y="1436" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+<text x="112" y="1582" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.2" fill="#5ED0E0">16 PX</text>
+<text x="154.1" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#F4FFFE">Dance</text>
+<svg x="146.1" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="261.94" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#C5E0E6">through</text>
+<svg x="253.94" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></svg>
+<text x="356.14" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#C5E0E6">the</text>
+<svg x="348.14" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="436.70000000000005" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#F4FFFE">glass</text>
+<svg x="428.70000000000005" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="544.54" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#C5E0E6">tonight</text>
+<svg x="536.54" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+<text x="631.92" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#C5E0E6">we</text>
+<svg x="623.92" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></svg>
+<text x="705.66" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#F4FFFE">light</text>
+<svg x="697.66" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="799.86" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#C5E0E6">every</text>
+<svg x="791.86" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></svg>
+<text x="887.24" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#C5E0E6">word</text>
+<svg x="879.24" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></svg>
+<text x="960.98" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#F4FFFE">you</text>
+<svg x="952.98" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></svg>
+<text x="1034.72" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#C5E0E6">sing</text>
+<svg x="1026.72" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1108.46" y="1656" text-anchor="middle" font-family="Inter" font-size="22" font-weight="500" fill="#C5E0E6">now</text>
+<svg x="1100.46" y="1588" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+<text x="72" y="1760" font-family="Inter" font-size="13" font-weight="600" letter-spacing="1.8" fill="#5ED0E0">ON LYRICS — LIGHT / FROSTED GLASS</text>
+<rect x="72" y="1778" width="2456" height="330" rx="28" fill="#D5ECEF"/>
+
+    <rect x="108" y="1802" width="2384" height="290" rx="22" fill="#F4FFFE" fill-opacity="0.72"/>
+    <rect x="108" y="1802" width="2384" height="290" rx="22" fill="#7EE7F2" fill-opacity="0.10"/>
+    <rect x="109.2" y="1803.2" width="2381.6" height="287.6" rx="20.8" fill="none" stroke="#2EABC0" stroke-opacity="0.35" stroke-width="1.3"/>
+    <path d="M140 1818 C 288 1808, 448 1810, 588 1820" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="7" stroke-linecap="round"/>
+  
+<text x="140" y="1844" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.2" fill="#1A86A0">24 PX</text>
+<text x="197.6" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#08384A">Dance</text>
+<svg x="185.6" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="342.64" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#0C4F68">through</text>
+<svg x="330.64" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></svg>
+<text x="467.84" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#0C4F68">the</text>
+<svg x="455.84" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="573.1999999999999" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#08384A">glass</text>
+<svg x="561.1999999999999" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="718.24" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#0C4F68">tonight</text>
+<svg x="706.24" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+<text x="833.52" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#0C4F68">we</text>
+<svg x="821.52" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></svg>
+<text x="928.9599999999999" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#08384A">light</text>
+<svg x="916.9599999999999" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1054.1599999999999" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#0C4F68">every</text>
+<svg x="1042.1599999999999" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></svg>
+<text x="1169.44" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#0C4F68">word</text>
+<svg x="1157.44" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></svg>
+<text x="1264.8799999999999" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#08384A">you</text>
+<svg x="1252.8799999999999" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></svg>
+<text x="1360.32" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#0C4F68">sing</text>
+<svg x="1348.32" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1455.7599999999998" y="1920" text-anchor="middle" font-family="Inter" font-size="32" font-weight="550" fill="#0C4F68">now</text>
+<svg x="1443.7599999999998" y="1834" width="24" height="24" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+<text x="140" y="1976" font-family="Inter" font-size="11" font-weight="600" letter-spacing="1.2" fill="#1A86A0">16 PX · HEBREW</text>
+<text x="2419.7599999999998" y="2052" text-anchor="middle" font-family="IBM Plex Sans Hebrew" font-size="26" font-weight="500" fill="#08384A" direction="rtl">שרים</text>
+<svg x="2411.7599999999998" y="1980" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="2329.2799999999997" y="2052" text-anchor="middle" font-family="IBM Plex Sans Hebrew" font-size="26" font-weight="500" fill="#0C4F68" direction="rtl">באור</text>
+<svg x="2321.2799999999997" y="1980" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="2214.62" y="2052" text-anchor="middle" font-family="IBM Plex Sans Hebrew" font-size="26" font-weight="500" fill="#0C4F68" direction="rtl">הזכוכית</text>
+<svg x="2206.62" y="1980" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+<text x="2091.9" y="2052" text-anchor="middle" font-family="IBM Plex Sans Hebrew" font-size="26" font-weight="500" fill="#08384A" direction="rtl">הלילה</text>
+<svg x="2083.9" y="1980" width="16" height="16" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+<text x="72" y="2164" font-family="Inter" font-size="13" font-weight="600" letter-spacing="1.8" fill="#5ED0E0">USER COLOUR</text>
+    <text x="212" y="2164" font-family="Inter" font-size="13" font-weight="400" fill="#8BB8C4">All 12 in violet #8B6CFF, plus Glow Orb in six swatches to show a single fill taking any hue</text>
+<rect x="72" y="2184" width="2456" height="280" rx="28" fill="#0C232D" stroke="#1A4A58" stroke-width="1.2"/>
+<svg x="175" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="211" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Glow Orb</text>
+<svg x="373" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-music-note">
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g></svg>
+<text x="409" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Music Note</text>
+<svg x="571" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-spark">
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="607" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Spark</text>
+<svg x="769" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-heart">
+    <circle class="lg-glow" cx="12" cy="13" r="9.0" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 20.55 C12 20.55 3.45 14.7 3.45 9.2 C3.45 6.15 5.75 4.15 8.55 4.15 C10.25 4.15 11.45 5.05 12 6.4 C12.55 5.05 13.75 4.15 15.45 4.15 C18.25 4.15 20.55 6.15 20.55 9.2 C20.55 14.7 12 20.55 12 20.55 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.2" d="M12 20.55 C12 20.55 16.8 16.4 19.2 12.2 C18.7 16.2 15.6 18.9 12 20.55 Z"/>
+    <ellipse class="lg-highlight" cx="8.7" cy="8.05" rx="2.45" ry="1.85" fill="#FFFFFF" opacity="0.48"/>
+    <ellipse class="lg-highlight-core" cx="8.05" cy="7.35" rx="0.95" ry="0.7" fill="#FFFFFF" opacity="0.8"/>
+  </g></svg>
+<text x="805" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Heart</text>
+<svg x="967" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-glass-drop">
+    <ellipse class="lg-glow" cx="12" cy="14.4" rx="8.6" ry="7.6" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" fill="currentColor" d="M12 3.05 C13.35 5.7 20.05 11.55 20.05 15.85 C20.05 20.25 16.55 22.05 12 22.05 C7.45 22.05 3.95 20.25 3.95 15.85 C3.95 11.55 10.65 5.7 12 3.05 Z"/>
+    <path class="lg-shade" fill="#041218" opacity="0.22" d="M14.8 13.6 C17.6 15.6 17.9 18.6 15.4 20.5 C18.6 19.2 19.6 16.2 18.2 13.8 C17.2 13.1 15.8 13.1 14.8 13.6 Z"/>
+    <path class="lg-highlight" fill="#FFFFFF" opacity="0.5" d="M9.0 8.2 C8.15 10.5 7.55 13.2 7.85 15.3 C8.05 13.0 8.7 10.3 10.35 7.7 C10.0 7.7 9.45 7.85 9.0 8.2 Z"/>
+    <ellipse class="lg-highlight-core" cx="9.35" cy="9.55" rx="1.25" ry="1.7" fill="#FFFFFF" opacity="0.8" transform="rotate(-18 9.35 9.55)"/>
+  </g></svg>
+<text x="1003" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Glass Drop</text>
+<svg x="1165" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-firefly">
+    <circle class="lg-glow" cx="12" cy="13.6" r="8.2" fill="currentColor" opacity="0.14"/>
+    <ellipse class="lg-wing lg-wing-l" cx="4.15" cy="8.85" rx="6.0" ry="2.55" transform="rotate(-32 4.15 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-l-sheen" cx="4.15" cy="8.85" rx="3.6" ry="1.15" transform="rotate(-32 4.15 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <ellipse class="lg-wing lg-wing-r" cx="19.85" cy="8.85" rx="6.0" ry="2.55" transform="rotate(32 19.85 8.85)" fill="currentColor" opacity="0.75"/>
+    <ellipse class="lg-wing lg-wing-r-sheen" cx="19.85" cy="8.85" rx="3.6" ry="1.15" transform="rotate(32 19.85 8.85)" fill="#FFFFFF" opacity="0.38"/>
+    <circle class="lg-body" cx="12" cy="14.05" r="6.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="12.9" cy="16.0" rx="4.0" ry="3.1" fill="#041218" opacity="0.22"/>
+    <ellipse class="lg-highlight" cx="10.05" cy="12.05" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.55"/>
+    <ellipse class="lg-head" cx="12" cy="7.15" rx="2.35" ry="2.15" fill="currentColor"/>
+    <ellipse cx="12" cy="6.7" rx="1.05" ry="0.8" fill="#FFFFFF" opacity="0.42"/>
+  </g></svg>
+<text x="1201" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Firefly</text>
+<svg x="1363" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-comet">
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="1399" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Comet</text>
+<svg x="1561" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-eq-pulse">
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g></svg>
+<text x="1597" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">EQ Pulse</text>
+<svg x="1759" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-mic">
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g></svg>
+<text x="1795" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Mic</text>
+<svg x="1957" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-paper-plane">
+    <path class="lg-glow" d="M1.6 11.2 L22.2 3.5 L9.2 22.2 Z" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M2.85 11.15 L21.4 4.45 L11.15 13.55 Z" fill="currentColor"/>
+    <path class="lg-wing" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="currentColor"/>
+    <path class="lg-shade" d="M11.15 13.55 L21.4 4.45 L9.8 21.2 Z" fill="#041218" opacity="0.24"/>
+    <path class="lg-highlight" d="M5.15 10.9 L16.7 6.55 L11.15 13.55 Z" fill="#FFFFFF" opacity="0.3"/>
+  </g></svg>
+<text x="1993" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Paper Plane</text>
+<svg x="2155" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-pixel">
+    <rect class="lg-glow" x="3.5" y="3.5" width="17.0" height="17.0" rx="2.4" fill="currentColor" opacity="0.14"/>
+    <rect class="lg-body" x="4.5" y="4.5" width="15" height="15" rx="1.7" fill="currentColor"/>
+    <rect class="lg-shade" x="4.5" y="16.2" width="15" height="3.3" fill="#041218" opacity="0.24"/>
+    <rect x="16.3" y="4.5" width="3.2" height="15" fill="#041218" opacity="0.12"/>
+    <rect class="lg-highlight" x="6.5" y="6.5" width="5.1" height="5.1" rx="0.55" fill="#FFFFFF" opacity="0.5"/>
+    <rect class="lg-highlight-core" x="6.5" y="6.5" width="2.3" height="2.3" rx="0.3" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="2191" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Pixel</text>
+<svg x="2353" y="2220" width="72" height="72" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-crescent">
+    <g transform="translate(28.4 0) scale(-1 1)">
+      <path class="lg-glow" fill="currentColor" opacity="0.16" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-body" fill="currentColor" d="M15.26 19.35 A8.70 8.70 0 1 0 12.19 3.45 A8.20 8.20 0 0 1 15.26 19.35 Z"/>
+      <path class="lg-highlight" fill="#FFFFFF" opacity="0.45" d="M18.6 8.4 C20.2 10.5 20.6 13.2 19.7 15.7 C20.8 13.3 20.6 10.6 18.9 8.3 C18.8 8.3 18.7 8.35 18.6 8.4 Z"/>
+    </g>
+  </g></svg>
+<text x="2389" y="2316" text-anchor="middle" font-family="Inter" font-size="11" font-weight="500" fill="#C8B8FF">Crescent</text>
+<rect x="112" y="2352" width="140" height="88" rx="16" fill="#07141B"/>
+<svg x="128" y="2368" width="56" height="56" viewBox="0 0 24 24" color="#FF3F4C" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="192" y="2392" font-family="Inter" font-size="13" font-weight="600" fill="#F4FFFE">Coral</text>
+<text x="192" y="2410" font-family="Inter" font-size="11" fill="#8BB8C4">#FF3F4C</text>
+<text x="192" y="2426" font-family="Inter" font-size="10" fill="#5ED0E0">default</text>
+<rect x="272" y="2352" width="140" height="88" rx="16" fill="#07141B"/>
+<svg x="288" y="2368" width="56" height="56" viewBox="0 0 24 24" color="#8B6CFF" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="352" y="2392" font-family="Inter" font-size="13" font-weight="600" fill="#F4FFFE">Violet</text>
+<text x="352" y="2410" font-family="Inter" font-size="11" fill="#8BB8C4">#8B6CFF</text>
+<text x="352" y="2426" font-family="Inter" font-size="10" fill="#5ED0E0">user colour</text>
+<rect x="432" y="2352" width="140" height="88" rx="16" fill="#07141B"/>
+<svg x="448" y="2368" width="56" height="56" viewBox="0 0 24 24" color="#F0B429" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="512" y="2392" font-family="Inter" font-size="13" font-weight="600" fill="#F4FFFE">Gold</text>
+<text x="512" y="2410" font-family="Inter" font-size="11" fill="#8BB8C4">#F0B429</text>
+<rect x="592" y="2352" width="140" height="88" rx="16" fill="#07141B"/>
+<svg x="608" y="2368" width="56" height="56" viewBox="0 0 24 24" color="#3DDC97" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="672" y="2392" font-family="Inter" font-size="13" font-weight="600" fill="#F4FFFE">Mint</text>
+<text x="672" y="2410" font-family="Inter" font-size="11" fill="#8BB8C4">#3DDC97</text>
+<rect x="752" y="2352" width="140" height="88" rx="16" fill="#07141B"/>
+<svg x="768" y="2368" width="56" height="56" viewBox="0 0 24 24" color="#3DB8FF" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="832" y="2392" font-family="Inter" font-size="13" font-weight="600" fill="#F4FFFE">Sky</text>
+<text x="832" y="2410" font-family="Inter" font-size="11" fill="#8BB8C4">#3DB8FF</text>
+<rect x="912" y="2352" width="140" height="88" rx="16" fill="#07141B"/>
+<svg x="928" y="2368" width="56" height="56" viewBox="0 0 24 24" color="#FF6BA8" overflow="visible"><g class="lg-bouncer lg-glow-orb">
+    <circle class="lg-glow" cx="12" cy="12.1" r="8.8" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="12" cy="12.1" r="7.15" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="13.2" cy="14.55" rx="5.15" ry="4.2" fill="#041218" opacity="0.28"/>
+    <ellipse class="lg-highlight" cx="9.55" cy="9.55" rx="3.15" ry="2.25" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="8.7" cy="8.8" rx="1.15" ry="0.8" fill="#FFFFFF" opacity="0.85"/>
+  </g></svg>
+<text x="992" y="2392" font-family="Inter" font-size="13" font-weight="600" fill="#F4FFFE">Rose</text>
+<text x="992" y="2410" font-family="Inter" font-size="11" fill="#8BB8C4">#FF6BA8</text>
+<text x="72" y="2520" font-family="Inter" font-size="13" font-weight="600" letter-spacing="1.8" fill="#5ED0E0">16 PX STRESS TEST</text>
+    <text x="272" y="2520" font-family="Inter" font-size="13" font-weight="400" fill="#8BB8C4">Nearest-neighbour ×8 of the true 16 px render, on dark and on light — how it will look over lyrics in the tray-adjacent size</text>
+<rect id="zoom-slot" x="72" y="2536" width="2456" height="404" rx="20" fill="#0A1A20"/>
+
+    <text x="72" y="2988" font-family="Inter" font-size="12" fill="#6A9AAB">LyricGlass bouncers  ·  24×24 SVG  ·  currentColor  ·  /workspace/lyricglass-bouncers/</text>
+  
+</svg>

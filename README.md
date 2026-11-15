@@ -2,14 +2,15 @@
 
 Windows app: floating, semi-transparent synced lyrics overlay for Spotify desktop (RTL Hebrew, wallpaper mode, LRCLIB lyrics).
 
-## Phase 2 (v0.3.2) — karaoke ball
+## Phase 2 (v0.4.0) — karaoke bouncers
 
 | Area | What it does |
 | --- | --- |
-| **Karaoke ball** | Bounces **above** each word; smooth `translate3d` line scroll + continuous inter-line arc (seeks snap). |
+| **Bouncers** | Twelve SVG karaoke cursors (`src/bouncers/svg`, Jack specs); per-type squash/stretch motion; **comet** + **paper plane** mirror in RTL. Default **Glow Orb**. |
+| **Karaoke** | Bounces **above** each word; smooth `translate3d` line scroll + inter-line arc (seeks snap). `currentColor` follows ball colour picker. |
 | **Word timing** | Enhanced LRC `<mm:ss.xx>` tags when present; else estimate from line start → capped next-line window, weighted by syllable length (English + Hebrew). |
-| **Display** | Centered lines; `dir="auto"` for RTL; ball follows measured word positions (remeasure on line change/resize only). |
-| **Settings** | Gear: karaoke toggle, ball/sung color pickers + reset (persisted); off for plain lyrics. |
+| **Display** | Centered lines; `dir="auto"` for RTL; bouncer tracks measured word rects (wrap + bidi). |
+| **Settings** | Gear: karaoke toggle, **bouncer grid** (12), ball/sung colours + reset (persisted). |
 | **Phase 1** | LRCLIB sync, diagnostics, opacity/timing, always-on-top, wallpaper — unchanged from v0.2.4. |
 | **Installer** | Custom `installer.nsi` skips Tauri Restart Manager check; `taskkill` on exact `lyricglass.exe` only (fixes false “app running” on uninstall). |
 

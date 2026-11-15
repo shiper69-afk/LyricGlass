@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
+     color="#FF3F4C" role="img" aria-label="Comet">
+  <title>LyricGlass Comet</title>
+  <desc>Karaoke bouncer for LyricGlass. Recolor by setting the CSS color property or, when inlined, --lg-bouncer on a parent (the host should also set color: var(--lg-bouncer)). Body uses currentColor; highlights are a white sheen and a dark overlay so any user colour still reads. When used as an image, the color="#FF3F4C" presentation attribute is the default.</desc>
+  <g class="lg-bouncer lg-comet">
+
+    <path class="lg-tail lg-tail-3" d="M11.6 10.8 L1.5 2.0 L6.8 7.6 L12.6 12.6 Z" fill="currentColor" opacity="0.34"/>
+    <path class="lg-tail lg-tail-2" d="M11.4 13.6 L1.9 5.4 L7.4 9.0 L12.8 14.0 Z" fill="currentColor" opacity="0.55"/>
+    <path class="lg-tail lg-tail-1" d="M12.8 12.0 L2.8 3.0 L8.0 8.5 L13.6 13.8 Z" fill="currentColor" opacity="0.9"/>
+    <circle class="lg-glow" cx="14.35" cy="14.5" r="7.2" fill="currentColor" opacity="0.16"/>
+    <circle class="lg-body" cx="14.35" cy="14.5" r="6.35" fill="currentColor"/>
+    <ellipse class="lg-shade" cx="15.5" cy="16.55" rx="4.2" ry="3.4" fill="#041218" opacity="0.25"/>
+    <ellipse class="lg-highlight" cx="12.3" cy="12.4" rx="2.55" ry="1.85" fill="#FFFFFF" opacity="0.58"/>
+    <ellipse class="lg-highlight-core" cx="11.65" cy="11.8" rx="0.9" ry="0.65" fill="#FFFFFF" opacity="0.85"/>
+  </g>
+</svg>

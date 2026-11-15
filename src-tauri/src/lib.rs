@@ -38,6 +38,7 @@ struct AppearanceState {
     karaoke_ball: bool,
     karaoke_ball_color: String,
     sung_highlight_color: String,
+    karaoke_bouncer: String,
 }
 
 fn appearance_from_service(service: &SharedLyricsService) -> AppearanceState {
@@ -46,6 +47,7 @@ fn appearance_from_service(service: &SharedLyricsService) -> AppearanceState {
         karaoke_ball: service.get_karaoke_ball(),
         karaoke_ball_color: service.get_karaoke_ball_color(),
         sung_highlight_color: service.get_sung_highlight_color(),
+        karaoke_bouncer: service.get_karaoke_bouncer(),
     }
 }
 
@@ -206,6 +208,17 @@ fn reset_karaoke_colors(
     service.reset_karaoke_colors()?;
     emit_appearance(&service, &app);
     Ok(())
+}
+
+#[tauri::command]
+fn set_karaoke_bouncer(
+    service: tauri::State<SharedLyricsService>,
+    bouncer_id: String,
+    app: AppHandle,
+) -> Result<String, String> {
+    let value = service.set_karaoke_bouncer(&bouncer_id)?;
+    emit_appearance(&service, &app);
+    Ok(value)
 }
 
 #[tauri::command]
@@ -498,6 +511,7 @@ pub fn run() {
             set_karaoke_ball_color,
             set_sung_highlight_color,
             reset_karaoke_colors,
+            set_karaoke_bouncer,
             log_diagnostics,
             log_sync_mark,
             toggle_debug,
