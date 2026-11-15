@@ -2,14 +2,14 @@
 
 Windows app: floating, semi-transparent synced lyrics overlay for Spotify desktop (RTL Hebrew, wallpaper mode, LRCLIB lyrics in **Phase 1**).
 
-## Phase 1 (v0.2.3)
+## Phase 1 (v0.2.4)
 
 | Area | What it does |
 | --- | --- |
-| **LRCLIB** | Rust client with duration-aware match (prefer ±2s; warn if Δ>3s). User-Agent: `LyricGlass/0.2.3` + repo URL. |
+| **LRCLIB** | Rust client with duration-aware match (prefer ±2s; warn if Δ>3s). User-Agent: `LyricGlass/0.2.4` + repo URL. |
 | **Playback clock** | Dual extrapolation: `LastUpdatedTime` **and** a monotonic wall anchor (Store Spotify often refreshes time while `Position` stays stale). |
 | **Self-diagnostics** | Tray → diagnostics; **Copy diagnostics**; auto log on track change; **Ctrl+Alt+M** sync mark when a line starts. |
-| **Quick settings** | Title bar **⚙** opens a pinned popover: **opacity** (persisted) and **timing** ±10s per track (syncs with Ctrl+Alt+[ / ]). |
+| **Quick settings** | Title bar **⚙** opens a pinned popover: **background opacity** 0–100% (text unchanged; strong shadow at 0%) and **timing** ±10s per track. |
 | **Window** | **Always on top** (📌, default ON, persisted). Wallpaper mode (🖼 / Ctrl+Alt+W) temporarily disables top-most. |
 | **Cache** | SQLite at `%LOCALAPPDATA%\LyricGlass\lyrics-cache.sqlite3` (7d hits, 6h for not-found/errors). Offline replay uses cache. |
 | **LRC** | TypeScript parser + Vitest (multi-timestamp lines, `[offset:]`, blanks, enhanced word tags stripped for display). |

@@ -118,20 +118,36 @@ impl LyricsCache {
         Ok(())
     }
 
-    pub fn get_overlay_opacity(&self) -> f64 {
-        let conn = match &self.conn {
-            Some(c) => c,
-            None => return 0.62,
-        };
+    fn read_setting_f64(conn: &Connection, key: &str) -> Option<f64> {
         conn.query_row(
-            "SELECT value FROM app_settings WHERE key = 'overlay_opacity'",
-            [],
+            "SELECT value FROM app_settings WHERE key = ?1",
+            params![key],
             |row| row.get::<_, String>(0),
         )
         .ok()
         .and_then(|v| v.parse().ok())
-        .filter(|o: &f64| (0.30..=1.0).contains(o))
-        .unwrap_or(0.62)
+    }
+
+    /// Background fill opacity 0.0 (transparent) .. 1.0 (solid). Text is not dimmed.
+    pub fn get_overlay_opacity(&self) -> f64 {
+        const DEFAULT_BG: f64 = 0.38;
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return DEFAULT_BG,
+        };
+        if let Some(v) = Self::read_setting_f64(conn, "background_opacity") {
+            return v.clamp(0.0, 1.0);
+        }
+        if let Some(legacy) = Self::read_setting_f64(conn, "overlay_opacity") {
+            // Pre–v0.2.4 stored UI "panel" strength (0.30–1.0); rendered as panel * 0.62.
+            let mapped = if (0.30..=1.0).contains(&legacy) {
+                legacy * 0.62
+            } else {
+                legacy
+            };
+            return mapped.clamp(0.0, 1.0);
+        }
+        DEFAULT_BG
     }
 
     pub fn get_always_on_top(&self) -> bool {
@@ -164,13 +180,13 @@ impl LyricsCache {
     }
 
     pub fn set_overlay_opacity(&self, opacity: f64) -> Result<f64, String> {
-        let clamped = opacity.clamp(0.30, 1.0);
+        let clamped = opacity.clamp(0.0, 1.0);
         let conn = match &self.conn {
             Some(c) => c,
             None => return Ok(clamped),
         };
         conn.execute(
-            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('overlay_opacity', ?1)",
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('background_opacity', ?1)",
             params![clamped.to_string()],
         )
         .map_err(|e| e.to_string())?;

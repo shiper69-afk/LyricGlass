@@ -66,12 +66,10 @@ let timingPersistTimer = 0;
 let lastDebugClockRenderMs = 0;
 const DEBUG_PANEL_HZ_MS = 200;
 
-function applyAppearance(opacity: number) {
-  const panel = Math.max(0.3, Math.min(1, opacity));
-  const text = 0.45 + panel * 0.55;
-  appRoot.style.setProperty("--panel-alpha", String(panel * 0.62));
-  appRoot.style.setProperty("--text-alpha", String(text));
-  els.opacitySlider.value = String(Math.round(panel * 100));
+function applyAppearance(backgroundOpacity: number) {
+  const bg = Math.max(0, Math.min(1, backgroundOpacity));
+  appRoot.style.setProperty("--bg-alpha", String(bg));
+  els.opacitySlider.value = String(Math.round(bg * 100));
 }
 
 function updateTimingReadout(ms: number) {
@@ -277,9 +275,9 @@ document.addEventListener("keydown", (e) => {
 });
 
 els.opacitySlider.addEventListener("input", () => {
-  const opacity = Number(els.opacitySlider.value) / 100;
-  applyAppearance(opacity);
-  void invoke("set_overlay_opacity", { opacity });
+  const bg = Number(els.opacitySlider.value) / 100;
+  applyAppearance(bg);
+  void invoke("set_overlay_opacity", { opacity: bg });
 });
 
 els.timingSlider.addEventListener("input", () => {

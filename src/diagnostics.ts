@@ -6,7 +6,7 @@ import {
 import { playbackClockMs, type PlaybackAnchor } from "./playback-clock";
 import type { LyricsView, LyricsResponse, MediaState } from "./lyrics-view";
 
-const APP_VERSION = "0.2.3";
+const APP_VERSION = "0.2.4";
 
 export interface FullMediaState extends MediaState {
   sourceAppId: string;
