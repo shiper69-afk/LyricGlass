@@ -1,8 +1,9 @@
 use crate::startup;
 use crate::wallpaper_log;
 use crate::wallpaper_select::{
-    choose_wallpaper_parent, plan_progman_layered_attach, verify_layered_z_order, DesktopLayout,
-    DesktopWindowInfo, WallpaperAttachPlan,
+    choose_wallpaper_parent, plan_progman_layered_attach, verify_progman_layered_state,
+    DesktopLayout, DesktopWindowInfo,
+    ProgmanAttachPath, ProgmanAttachVerifyInput, WallpaperAttachPlan,
 };
 use parking_lot::Mutex;
 use std::sync::LazyLock;
@@ -45,6 +46,10 @@ struct WallpaperRestore {
     previous_style: isize,
     #[cfg(windows)]
     previous_ex_style: isize,
+    #[cfg(windows)]
+    host_hwnd: u64,
+    #[cfg(windows)]
+    attach_path: Option<ProgmanAttachPath>,
 }
 
 static WALLPAPER_STATE: LazyLock<Mutex<WallpaperRestore>> =
@@ -54,17 +59,22 @@ static WALLPAPER_STATE: LazyLock<Mutex<WallpaperRestore>> =
 mod imp {
     use super::*;
     use windows::core::{w, BOOL};
-    use windows::Win32::Foundation::{GetLastError, HWND, LPARAM, RECT, WPARAM};
+    use std::sync::Once;
+    use windows::Win32::Foundation::{GetLastError, HWND, LPARAM, RECT, SetLastError, WPARAM};
     use windows::Win32::Graphics::Gdi::{
         GetMonitorInfoW, MonitorFromWindow, MONITOR_DEFAULTTOPRIMARY, MONITORINFO,
     };
     use windows::Win32::UI::HiDpi::GetDpiForWindow;
+    use windows::Win32::System::LibraryLoader::GetModuleHandleW;
     use windows::Win32::UI::WindowsAndMessaging::{
-        EnumChildWindows, EnumWindows, FindWindowExW, FindWindowW, GetClassNameW, GetParent,
-        GetWindow, GetWindowLongPtrW, GetWindowRect, IsWindow, SendMessageTimeoutW,
+        CreateWindowExW, DefWindowProcW, DestroyWindow, EnumChildWindows, EnumWindows,
+        FindWindowExW, FindWindowW, GetClassNameW, GetParent, GetWindow, GetWindowLongPtrW,
+        GetWindowRect, IsWindow, IsWindowVisible, RegisterClassW, SendMessageTimeoutW, SendMessageW,
         SetLayeredWindowAttributes, SetParent, SetWindowLongPtrW, SetWindowPos, ShowWindow,
-        GWL_EXSTYLE, GWL_STYLE, GW_CHILD, GW_HWNDNEXT, LWA_ALPHA, SMTO_ABORTIFHUNG,
-        SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW,
+        WNDCLASSW, GWL_EXSTYLE, GWL_STYLE, GW_CHILD, GW_HWNDNEXT, LWA_ALPHA, SMTO_ABORTIFHUNG,
+        SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOREDRAW, SWP_NOSIZE, SWP_NOZORDER,
+        SWP_SHOWWINDOW, SW_SHOW,
+        WM_SETREDRAW, WS_VISIBLE, WINDOW_EX_STYLE, WINDOW_STYLE,
     };
 
     const PROGMAN_DESKTOP_MSG: u32 = 0x052C;
@@ -100,6 +110,41 @@ mod imp {
     fn last_error_code() -> u32 {
         unsafe { GetLastError().0 }
     }
+
+    fn clear_last_error() {
+        unsafe {
+            let _ = SetLastError(windows::Win32::Foundation::WIN32_ERROR(0));
+        }
+    }
+
+    fn set_window_long_ptr_logged(
+        hwnd: HWND,
+        index: isize,
+        value: isize,
+        label: &str,
+        diag: &mut String,
+    ) {
+        unsafe {
+            clear_last_error();
+            let prev = SetWindowLongPtrW(hwnd, index, value);
+            let err = last_error_code();
+            let now = GetWindowLongPtrW(hwnd, index);
+            diag.push_str(&format!(
+                "{label}: SetWindowLongPtr({index}) value=0x{value:x} prev=0x{prev:x} now=0x{now:x} lastError={err}\n"
+            ));
+        }
+    }
+
+    fn set_redraw(hwnd: HWND, on: bool, diag: &mut String) {
+        unsafe {
+            let wp = WPARAM(if on { 1 } else { 0 } as usize);
+            let _ = SendMessageW(Some(hwnd), WM_SETREDRAW, wp, LPARAM(0));
+            diag.push_str(&format!("WM_SETREDRAW={on} hwnd=0x{:x}\n", hwnd_to_u64(hwnd)));
+        }
+    }
+
+    static HOST_CLASS_ONCE: Once = Once::new();
+    const HOST_CLASS: &str = "LyricGlassWallpaperHost";
 
     #[repr(C)]
     struct RtlOsVersionInfo {
@@ -380,7 +425,7 @@ mod imp {
         hwnd: HWND,
         snapshot: &WallpaperRestore,
         diag: &mut String,
-        force_layered: bool,
+        preserve_noredirection: bool,
     ) -> Result<(), String> {
         unsafe {
             let style_before = GetWindowLongPtrW(hwnd, GWL_STYLE);
@@ -399,30 +444,122 @@ mod imp {
                 | WS_BORDER
                 | WS_DLGFRAME;
             let style = (style & !strip) | WS_CHILD;
-            SetWindowLongPtrW(hwnd, GWL_STYLE, style as isize);
+            set_window_long_ptr_logged(hwnd, GWL_STYLE, style as isize, "style", diag);
 
             let mut ex = ex_before as u32;
             ex &= !WS_EX_TOPMOST;
             ex &= !WS_EX_APPWINDOW;
-            ex |= WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_NOREDIRECTIONBITMAP;
-            if force_layered || (snapshot.previous_ex_style as u32) & WS_EX_LAYERED != 0 {
-                ex |= WS_EX_LAYERED;
+            ex &= !WS_EX_LAYERED;
+            ex |= WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
+            if preserve_noredirection {
+                ex |= WS_EX_NOREDIRECTIONBITMAP;
             }
-            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex as isize);
+            set_window_long_ptr_logged(hwnd, GWL_EXSTYLE, ex as isize, "exstyle", diag);
 
             let style_after = GetWindowLongPtrW(hwnd, GWL_STYLE);
             let ex_after = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
             diag.push_str(&format!(
-                "style_after=0x{style_after:x} ex_after=0x{ex_after:x} layered={}\n",
-                (ex_after as u32) & WS_EX_LAYERED != 0
+                "style_after=0x{style_after:x} ex_after=0x{ex_after:x} layered=false (path A)\n"
             ));
-            if (ex_after as u32) & WS_EX_LAYERED != 0 {
-                SetLayeredWindowAttributes(hwnd, windows::Win32::Foundation::COLORREF(0), 255, LWA_ALPHA)
-                    .map_err(|e| format!("SetLayeredWindowAttributes: {e}"))?;
-                diag.push_str("SetLayeredWindowAttributes alpha=255\n");
-            }
+            let _ = snapshot;
         }
         Ok(())
+    }
+
+    fn register_host_class(diag: &mut String) {
+        HOST_CLASS_ONCE.call_once(|| unsafe {
+            use std::ffi::OsStr;
+            use std::os::windows::ffi::OsStrExt;
+            use windows::core::PCWSTR;
+            use windows::Win32::Foundation::HINSTANCE;
+            let class_name: Vec<u16> = OsStr::new(HOST_CLASS)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+            let hinst = GetModuleHandleW(None).unwrap_or_default();
+            let wc = WNDCLASSW {
+                lpfnWndProc: Some(host_wnd_proc),
+                hInstance: hinst.into(),
+                lpszClassName: PCWSTR(class_name.as_ptr()),
+                ..Default::default()
+            };
+            let _ = RegisterClassW(&wc);
+        });
+        diag.push_str("host class registered\n");
+    }
+
+    unsafe extern "system" fn host_wnd_proc(
+        hwnd: HWND,
+        msg: u32,
+        wparam: WPARAM,
+        lparam: LPARAM,
+    ) -> windows::Win32::Foundation::LRESULT {
+        DefWindowProcW(hwnd, msg, wparam, lparam)
+    }
+
+    fn create_layered_host(
+        progman: HWND,
+        plan: &WallpaperAttachPlan,
+        x: i32,
+        y: i32,
+        w: i32,
+        h: i32,
+        defer_show: bool,
+        diag: &mut String,
+    ) -> Result<HWND, String> {
+        register_host_class(diag);
+        unsafe {
+            use std::ffi::OsStr;
+            use std::os::windows::ffi::OsStrExt;
+            use windows::core::PCWSTR;
+
+            let class_name: Vec<u16> = OsStr::new(HOST_CLASS)
+                .encode_wide()
+                .chain(std::iter::once(0))
+                .collect();
+            let hinst = GetModuleHandleW(None).unwrap_or_default();
+
+            let host = CreateWindowExW(
+                WINDOW_EX_STYLE(WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE),
+                PCWSTR(class_name.as_ptr()),
+                PCWSTR(class_name.as_ptr()),
+                WINDOW_STYLE(WS_CHILD | WS_VISIBLE),
+                x,
+                y,
+                w,
+                h,
+                Some(progman),
+                None,
+                Some(hinst.into()),
+                None,
+            )
+            .map_err(|e| format!("CreateWindowExW(host): {e}"))?;
+
+            diag.push_str(&format!("path B: host hwnd=0x{:x}\n", hwnd_to_u64(host)));
+
+            let layered_r = SetLayeredWindowAttributes(
+                host,
+                windows::Win32::Foundation::COLORREF(0),
+                255,
+                LWA_ALPHA,
+            );
+            diag.push_str(&format!(
+                "SetLayeredWindowAttributes(host) ret={layered_r:?} lastError={}\n",
+                last_error_code()
+            ));
+            layered_r.map_err(|e| format!("SetLayeredWindowAttributes(host): {e}"))?;
+
+            let insert_after = HWND(plan.z_insert_after_hwnd as *mut core::ffi::c_void);
+            let flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOREDRAW;
+            let flags = if defer_show {
+                flags
+            } else {
+                flags | SWP_SHOWWINDOW
+            };
+            SetWindowPos(host, Some(insert_after), x, y, w, h, flags)
+                .map_err(|e| format!("SetWindowPos(host): {e}"))?;
+            Ok(host)
+        }
     }
 
     fn monitor_rect_for_window(hwnd: HWND) -> (RECT, u32) {
@@ -462,11 +599,31 @@ mod imp {
         (x, y, width, height)
     }
 
-    fn rollback_attach(hwnd: HWND, restore: &WallpaperRestore) {
+    fn rollback_attach(hwnd: HWND, restore: &WallpaperRestore, diag: &mut String) {
         unsafe {
-            let _ = SetParent(hwnd, None);
-            SetWindowLongPtrW(hwnd, GWL_STYLE, restore.previous_style);
-            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, restore.previous_ex_style);
+            set_redraw(hwnd, false, diag);
+            if restore.host_hwnd != 0 {
+                let _ = SetParent(hwnd, None);
+                let host = HWND(restore.host_hwnd as *mut core::ffi::c_void);
+                let _ = DestroyWindow(host);
+                diag.push_str(&format!("destroyed host 0x{:x}\n", restore.host_hwnd));
+            } else {
+                let _ = SetParent(hwnd, None);
+            }
+            set_window_long_ptr_logged(
+                hwnd,
+                GWL_STYLE,
+                restore.previous_style,
+                "rollback style",
+                diag,
+            );
+            set_window_long_ptr_logged(
+                hwnd,
+                GWL_EXSTYLE,
+                restore.previous_ex_style,
+                "rollback exstyle",
+                diag,
+            );
             let geo = &restore.overlay;
             let _ = SetWindowPos(
                 hwnd,
@@ -477,7 +634,27 @@ mod imp {
                 geo.height as i32,
                 SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW,
             );
-            let _ = ShowWindow(hwnd, SW_SHOW);
+            set_redraw(hwnd, true, diag);
+        }
+    }
+
+    fn reveal_after_attach(hwnd: HWND, host: Option<HWND>, diag: &mut String) {
+        unsafe {
+            if let Some(host) = host {
+                let _ = SetWindowPos(host, None, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE);
+                diag.push_str(&format!("final show host 0x{:x}\n", hwnd_to_u64(host)));
+            }
+            let _ = SetWindowPos(
+                hwnd,
+                None,
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE,
+            );
+            set_redraw(hwnd, true, diag);
+            diag.push_str("final show content hwnd\n");
         }
     }
 
@@ -489,7 +666,8 @@ mod imp {
         snapshot: &WallpaperRestore,
         diag: &mut String,
         z_insert_after: Option<HWND>,
-        force_layered: bool,
+        defer_show: bool,
+        fill_parent: bool,
     ) -> Result<(), String> {
         unsafe {
             let sp = SetParent(hwnd, Some(parent));
@@ -499,28 +677,29 @@ mod imp {
             ));
             sp.map_err(|e| format!("SetParent({host_label}): {e}"))?;
 
-            apply_wallpaper_styles(hwnd, snapshot, diag, force_layered)?;
+            apply_wallpaper_styles(hwnd, snapshot, diag, true)?;
 
-            let (x, y, w, h) = child_screen_rect(parent, hwnd);
+            let full = child_screen_rect(parent, hwnd);
+            let (x, y, w, h) = if fill_parent {
+                (0, 0, full.2, full.3)
+            } else {
+                full
+            };
             let (_, dpi) = monitor_rect_for_window(hwnd);
             let z_label = z_insert_after
                 .map(|z| format!("0x{:x}", hwnd_to_u64(z)))
                 .unwrap_or_else(|| "unchanged".into());
             diag.push_str(&format!(
-                "host={host_label} layout={layout:?} parent_hwnd=0x{:x} dpi={dpi}\nsetpos x={x} y={y} w={w} h={h} insert_after={z_label}\n",
+                "host={host_label} layout={layout:?} parent_hwnd=0x{:x} dpi={dpi}\nsetpos x={x} y={y} w={w} h={h} insert_after={z_label} defer_show={defer_show}\n",
                 hwnd_to_u64(parent)
             ));
 
-            SetWindowPos(
-                hwnd,
-                z_insert_after,
-                x,
-                y,
-                w,
-                h,
-                SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_SHOWWINDOW,
-            )
-            .map_err(|e| format!("SetWindowPos({host_label}): {e} (lastError={})", last_error_code()))?;
+            let mut flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOREDRAW;
+            if !defer_show {
+                flags |= SWP_SHOWWINDOW;
+            }
+            SetWindowPos(hwnd, z_insert_after, x, y, w, h, flags)
+                .map_err(|e| format!("SetWindowPos({host_label}): {e} (lastError={})", last_error_code()))?;
 
             let got_parent = GetParent(hwnd).unwrap_or(HWND::default());
             diag.push_str(&format!(
@@ -540,47 +719,130 @@ mod imp {
         Ok(())
     }
 
+    fn collect_verify_input(
+        hwnd: HWND,
+        plan: &WallpaperAttachPlan,
+        path: ProgmanAttachPath,
+        host_hwnd: u64,
+        diag: &mut String,
+    ) -> ProgmanAttachVerifyInput {
+        unsafe {
+            let progman = HWND(plan.parent_hwnd as *mut core::ffi::c_void);
+            let mut rect = RECT::default();
+            let _ = GetWindowRect(hwnd, &mut rect);
+            let rect_w = rect.right - rect.left;
+            let rect_h = rect.bottom - rect.top;
+            let our_parent = GetParent(hwnd).unwrap_or(HWND::default());
+            let (z_order_hwnd, our_parent_expected) = match path {
+                ProgmanAttachPath::A => (hwnd_to_u64(hwnd), plan.parent_hwnd),
+                ProgmanAttachPath::B => (host_hwnd, host_hwnd),
+            };
+            let z_order_parent_hwnd = GetParent(HWND(z_order_hwnd as *mut core::ffi::c_void))
+                .map(hwnd_to_u64)
+                .unwrap_or(0);
+            let siblings = progman_child_sibling_order(progman);
+            for (h, class, z) in &siblings {
+                diag.push_str(&format!(
+                    "  final sibling hwnd=0x{h:x} class={class} z={z}\n"
+                ));
+            }
+            let visible = IsWindowVisible(hwnd).as_bool()
+                || (host_hwnd != 0
+                    && IsWindowVisible(HWND(host_hwnd as *mut core::ffi::c_void)).as_bool());
+            ProgmanAttachVerifyInput {
+                progman_hwnd: plan.parent_hwnd,
+                our_hwnd: hwnd_to_u64(hwnd),
+                our_parent: hwnd_to_u64(our_parent),
+                our_parent_expected,
+                defview_hwnd: plan.defview_hwnd,
+                wallpaper_workerw_hwnd: plan.wallpaper_workerw_hwnd,
+                rect_w,
+                rect_h,
+                visible,
+                siblings_top_to_bottom: siblings.iter().map(|(h, _, z)| (*h, *z)).collect(),
+                z_order_hwnd,
+                z_order_parent: z_order_parent_hwnd,
+            }
+        }
+    }
+
     fn verify_attach(
         hwnd: HWND,
         plan: &WallpaperAttachPlan,
+        path: ProgmanAttachPath,
+        host_hwnd: u64,
         diag: &mut String,
     ) -> Result<(), String> {
-        unsafe {
-            let mut rect = RECT::default();
-            if GetWindowRect(hwnd, &mut rect).is_err() {
-                return Err("GetWindowRect failed after attach".into());
-            }
-            let w = rect.right - rect.left;
-            let h = rect.bottom - rect.top;
-            diag.push_str(&format!("verify rect={w}x{h} at ({},{})\n", rect.left, rect.top));
-            if w <= 0 || h <= 0 {
-                return Err("attached window has empty rect".into());
-            }
+        let input = collect_verify_input(hwnd, plan, path, host_hwnd, diag);
+        verify_progman_layered_state(&input).map_err(|e| e.to_string())
+    }
 
-            let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
-            if plan.layout == DesktopLayout::ProgmanLayered && ex & WS_EX_LAYERED == 0 {
-                return Err("WS_EX_LAYERED missing after Progman layered attach".into());
-            }
+    fn attach_progman_layered(
+        hwnd: HWND,
+        plan: WallpaperAttachPlan,
+        snapshot: WallpaperRestore,
+        diag: &mut String,
+    ) -> Result<(ProgmanAttachPath, u64), String> {
+        let parent = HWND(plan.parent_hwnd as *mut core::ffi::c_void);
+        let insert_after = HWND(plan.z_insert_after_hwnd as *mut core::ffi::c_void);
+        let (x, y, w, h) = child_screen_rect(parent, hwnd);
 
-            if plan.layout == DesktopLayout::ProgmanLayered {
-                let parent = HWND(plan.parent_hwnd as *mut core::ffi::c_void);
-                let siblings = progman_child_sibling_order(parent);
-                for (h, class, z) in &siblings {
-                    diag.push_str(&format!(
-                        "  post-attach sibling hwnd=0x{h:x} class={class} z={z}\n"
-                    ));
+        set_redraw(hwnd, false, diag);
+        diag.push_str("attach path A: direct Progman child (no WS_EX_LAYERED)\n");
+        let path_a_result = reparent_fullscreen(
+            hwnd,
+            parent,
+            "Progman",
+            Some(DesktopLayout::ProgmanLayered),
+            &snapshot,
+            diag,
+            Some(insert_after),
+            true,
+            false,
+        );
+        if let Err(e) = path_a_result {
+            diag.push_str(&format!("path A attach failed: {e} — trying path B\n"));
+        } else {
+            let verify = verify_attach(hwnd, &plan, ProgmanAttachPath::A, 0, diag);
+            match verify {
+                Ok(()) => {
+                    reveal_after_attach(hwnd, None, diag);
+                    diag.push_str("path A: success\n");
+                    return Ok((ProgmanAttachPath::A, 0));
                 }
-                let idx: Vec<(u64, usize)> = siblings.iter().map(|(h, _, z)| (*h, *z)).collect();
-                verify_layered_z_order(
-                    &idx,
-                    hwnd_to_u64(hwnd),
-                    plan.defview_hwnd,
-                    plan.wallpaper_workerw_hwnd,
-                )
-                .map_err(|e| e.to_string())?;
+                Err(e) => {
+                    diag.push_str(&format!("path A verify failed: {e} — trying path B\n"));
+                }
             }
         }
-        Ok(())
+
+        let mut snap = snapshot.clone();
+        rollback_attach(hwnd, &snap, diag);
+
+        diag.push_str("attach path B: layered host + reparent content\n");
+        set_redraw(hwnd, false, diag);
+        let host = create_layered_host(parent, &plan, x, y, w, h, true, diag)?;
+        let host_id = hwnd_to_u64(host);
+        reparent_fullscreen(
+            hwnd,
+            host,
+            "LyricGlassHost",
+            Some(DesktopLayout::ProgmanLayered),
+            &snapshot,
+            diag,
+            None,
+            true,
+            true,
+        )?;
+        let verify = verify_attach(hwnd, &plan, ProgmanAttachPath::B, host_id, diag);
+        if verify.is_err() {
+            snap.host_hwnd = host_id;
+            rollback_attach(hwnd, &snap, diag);
+            return Err(format!("path B verify: {}", verify.err().unwrap_or_default()));
+        }
+        reveal_after_attach(hwnd, Some(host), diag);
+        diag.push_str("path B: success\n");
+        Ok((ProgmanAttachPath::B, host_id))
     }
 
     pub fn attach_wallpaper(hwnd: HWND, trigger: &str) -> Result<(), String> {
@@ -641,27 +903,21 @@ mod imp {
         }
 
         let mut attach_result: Result<(), String> = Err("no host".into());
-        let mut verify_plan: Option<WallpaperAttachPlan> = None;
+        let mut chosen_path: Option<ProgmanAttachPath> = None;
+        let mut host_hwnd: u64 = 0;
 
         if let Some(plan) = layered_plan {
-            let parent = HWND(plan.parent_hwnd as *mut core::ffi::c_void);
-            let insert_after_hwnd = plan.z_insert_after_hwnd;
-            let insert_after = Some(HWND(insert_after_hwnd as *mut core::ffi::c_void));
-            attach_result = reparent_fullscreen(
-                hwnd,
-                parent,
-                "Progman",
-                Some(DesktopLayout::ProgmanLayered),
-                &snapshot,
-                &mut diag,
-                insert_after,
-                true,
-            );
-            if attach_result.is_ok() {
-                verify_plan = Some(plan);
+            match attach_progman_layered(hwnd, plan, snapshot.clone(), &mut diag) {
+                Ok((path, host)) => {
+                    attach_result = Ok(());
+                    chosen_path = Some(path);
+                    host_hwnd = host;
+                }
+                Err(e) => attach_result = Err(e),
             }
         } else if let Ok((workerw, layout)) = host_result {
             diag.push_str(&format!("chosen_host=WorkerW 0x{:x}\n", hwnd_to_u64(workerw)));
+            set_redraw(hwnd, false, &mut diag);
             attach_result = reparent_fullscreen(
                 hwnd,
                 workerw,
@@ -670,15 +926,11 @@ mod imp {
                 &snapshot,
                 &mut diag,
                 None,
+                true,
                 false,
             );
-        }
-
-        if attach_result.is_ok() {
-            if let Some(ref plan) = verify_plan {
-                if let Err(e) = verify_attach(hwnd, plan, &mut diag) {
-                    attach_result = Err(format!("post-attach verify: {e}"));
-                }
+            if attach_result.is_ok() {
+                reveal_after_attach(hwnd, None, &mut diag);
             }
         }
 
@@ -686,13 +938,23 @@ mod imp {
         match attach_result {
             Ok(()) => {
                 guard.attached = true;
-                diag.push_str("outcome: success\n");
+                guard.host_hwnd = host_hwnd;
+                guard.attach_path = chosen_path;
+                if let Some(ref p) = chosen_path {
+                    diag.push_str(&format!("outcome: success path={p:?}\n"));
+                } else {
+                    diag.push_str("outcome: success legacy\n");
+                }
                 finish_attempt(trigger, "success", true, None, diag);
                 Ok(())
             }
             Err(ref e) => {
-                rollback_attach(hwnd, &snapshot);
+                let mut snap = snapshot;
+                snap.host_hwnd = host_hwnd;
+                rollback_attach(hwnd, &snap, &mut diag);
                 guard.attached = false;
+                guard.host_hwnd = 0;
+                guard.attach_path = None;
                 diag.push_str(&format!("outcome: failure ({e}) — rolled back overlay\n"));
                 finish_attempt(trigger, "failure", false, Some(e.clone()), diag);
                 Err(e.clone())
@@ -706,26 +968,19 @@ mod imp {
             return Ok(());
         }
 
-        unsafe {
-            SetParent(hwnd, None).map_err(|e| format!("SetParent(desktop) failed: {e}"))?;
-            SetWindowLongPtrW(hwnd, GWL_STYLE, guard.previous_style);
-            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, guard.previous_ex_style);
-
-            let geo = guard.overlay.clone();
-            SetWindowPos(
-                hwnd,
-                None,
-                geo.x,
-                geo.y,
-                geo.width as i32,
-                geo.height as i32,
-                SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW,
-            )
-            .map_err(|e| format!("SetWindowPos (restore) failed: {e}"))?;
-            let _ = ShowWindow(hwnd, SW_SHOW);
-        }
+        let mut trace = format!(
+            "detach trigger={trigger} path={:?} host=0x{:x} restored_geometry={:?}\n",
+            guard.attach_path,
+            guard.host_hwnd,
+            guard.overlay
+        );
+        let snap = guard.clone();
         guard.attached = false;
-        let trace = format!("detach trigger={trigger} restored_geometry={:?}", guard.overlay);
+        guard.host_hwnd = 0;
+        guard.attach_path = None;
+        drop(guard);
+
+        rollback_attach(hwnd, &snap, &mut trace);
         finish_attempt(trigger, "detached", false, None, trace);
         Ok(())
     }

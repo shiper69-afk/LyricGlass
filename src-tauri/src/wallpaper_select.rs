@@ -21,6 +21,58 @@ pub struct DesktopWindowInfo {
     pub z_order: usize,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ProgmanAttachPath {
+    /// Tauri window directly under Progman (no `WS_EX_LAYERED`).
+    A,
+    /// Layered host window under Progman; Tauri reparented into host.
+    B,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ProgmanAttachVerifyInput {
+    pub progman_hwnd: u64,
+    pub our_hwnd: u64,
+    pub our_parent: u64,
+    pub our_parent_expected: u64,
+    pub defview_hwnd: u64,
+    pub wallpaper_workerw_hwnd: u64,
+    pub rect_w: i32,
+    pub rect_h: i32,
+    pub visible: bool,
+    /// Progman children top → bottom as `(hwnd, z_index)`.
+    pub siblings_top_to_bottom: Vec<(u64, usize)>,
+    /// HWND used for Progman sibling z-order (direct child or layered host).
+    pub z_order_hwnd: u64,
+    pub z_order_parent: u64,
+}
+
+/// Post-attach checks for ProgmanLayered (does not require `WS_EX_LAYERED`).
+pub fn verify_progman_layered_state(input: &ProgmanAttachVerifyInput) -> Result<(), &'static str> {
+    if input.our_parent != input.our_parent_expected {
+        return Err("unexpected parent for content window");
+    }
+    if input.z_order_parent != input.progman_hwnd {
+        return Err("z-order window is not a Progman child");
+    }
+    if input.rect_w <= 0 || input.rect_h <= 0 {
+        return Err("attached window has empty rect");
+    }
+    if !input.visible {
+        return Err("window not visible after attach");
+    }
+    verify_layered_z_order(
+        &input.siblings_top_to_bottom,
+        input.z_order_hwnd,
+        input.defview_hwnd,
+        input.wallpaper_workerw_hwnd,
+    )
+}
+
+pub fn should_try_path_b(path_a: Result<(), &'static str>) -> bool {
+    path_a.is_err()
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WallpaperAttachPlan {
     pub layout: DesktopLayout,
@@ -250,6 +302,59 @@ mod tests {
         const LYRIC: u64 = 0x0e213a2;
         let siblings = vec![(0xd001, 0), (0xd002, 1), (LYRIC, 2)];
         assert!(verify_layered_z_order(&siblings, LYRIC, 0xd001, 0xd002).is_err());
+    }
+
+    #[test]
+    fn path_a_verify_passes_without_layered_flag() {
+        const LYRIC: u64 = 0x421306;
+        let progman = 0x1029e;
+        let input = ProgmanAttachVerifyInput {
+            progman_hwnd: progman,
+            our_hwnd: LYRIC,
+            our_parent: progman,
+            our_parent_expected: progman,
+            defview_hwnd: 0x102ae,
+            wallpaper_workerw_hwnd: 0xfa0f6e,
+            rect_w: 1920,
+            rect_h: 1080,
+            visible: true,
+            siblings_top_to_bottom: vec![(0x102ae, 0), (LYRIC, 1), (0xfa0f6e, 2)],
+            z_order_hwnd: LYRIC,
+            z_order_parent: progman,
+        };
+        verify_progman_layered_state(&input).unwrap();
+    }
+
+    #[test]
+    fn path_b_fallback_when_path_a_z_order_fails() {
+        const LYRIC: u64 = 0x421306;
+        const HOST: u64 = 0xbeef;
+        let progman = 0x1029e;
+        let bad = ProgmanAttachVerifyInput {
+            progman_hwnd: progman,
+            our_hwnd: LYRIC,
+            our_parent: progman,
+            our_parent_expected: progman,
+            defview_hwnd: 0x102ae,
+            wallpaper_workerw_hwnd: 0xfa0f6e,
+            rect_w: 1920,
+            rect_h: 1080,
+            visible: true,
+            siblings_top_to_bottom: vec![(0x102ae, 0), (0xfa0f6e, 1), (LYRIC, 2)],
+            z_order_hwnd: LYRIC,
+            z_order_parent: progman,
+        };
+        assert!(verify_progman_layered_state(&bad).is_err());
+        assert!(should_try_path_b(verify_progman_layered_state(&bad)));
+
+        let good_host = ProgmanAttachVerifyInput {
+            our_parent: HOST,
+            our_parent_expected: HOST,
+            z_order_hwnd: HOST,
+            siblings_top_to_bottom: vec![(0x102ae, 0), (HOST, 1), (0xfa0f6e, 2)],
+            ..bad
+        };
+        verify_progman_layered_state(&good_host).unwrap();
     }
 
     #[test]
