@@ -24,6 +24,7 @@ interface UiState {
 
 interface AppearanceState {
   overlayOpacity: number;
+  karaokeBall: boolean;
 }
 
 const lyricsRoot = document.getElementById("lyrics-root")!;
@@ -55,6 +56,7 @@ const els = {
   timingSlider: document.getElementById("timing-slider") as HTMLInputElement,
   timingReset: document.getElementById("timing-reset") as HTMLButtonElement,
   timingReadout: document.getElementById("timing-readout")!,
+  karaokeToggle: document.getElementById("karaoke-ball-toggle") as HTMLInputElement,
 };
 
 let latestMedia: FullMediaState | null = null;
@@ -70,6 +72,12 @@ function applyAppearance(backgroundOpacity: number) {
   const bg = Math.max(0, Math.min(1, backgroundOpacity));
   appRoot.style.setProperty("--bg-alpha", String(bg));
   els.opacitySlider.value = String(Math.round(bg * 100));
+}
+
+function applyAppearanceSettings(state: AppearanceState) {
+  applyAppearance(state.overlayOpacity);
+  els.karaokeToggle.checked = state.karaokeBall;
+  lyricsView.setKaraokeEnabled(state.karaokeBall);
 }
 
 function updateTimingReadout(ms: number) {
@@ -291,6 +299,10 @@ els.timingReset.addEventListener("click", () => {
   void persistSyncOffset(0);
 });
 
+els.karaokeToggle.addEventListener("change", () => {
+  void invoke("set_karaoke_ball", { enabled: els.karaokeToggle.checked });
+});
+
 els.btnCopyDiag.addEventListener("click", async () => {
   const block = buildDiagnosticsBlock(
     latestMedia,
@@ -314,7 +326,7 @@ async function boot() {
   await listen<FullMediaState>("media-state", (e) => onMedia(e.payload));
   await listen<UiState>("ui-state", (e) => renderUi(e.payload));
   await listen<AppearanceState>("appearance-state", (e) =>
-    applyAppearance(e.payload.overlayOpacity),
+    applyAppearanceSettings(e.payload),
   );
   await listen<number>("sync-offset-absolute", (e) => {
     lyricsView.setSyncOffsetAbsolute(e.payload);
@@ -334,7 +346,7 @@ async function boot() {
   const media = await invoke<FullMediaState>("get_media_state");
   onMedia(media);
   renderUi(await invoke<UiState>("get_ui_state"));
-  applyAppearance((await invoke<AppearanceState>("get_appearance")).overlayOpacity);
+  applyAppearanceSettings(await invoke<AppearanceState>("get_appearance"));
 
   startTicker();
 

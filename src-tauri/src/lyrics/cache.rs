@@ -179,6 +179,35 @@ impl LyricsCache {
         Ok(enabled)
     }
 
+    pub fn get_karaoke_ball(&self) -> bool {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return true,
+        };
+        conn.query_row(
+            "SELECT value FROM app_settings WHERE key = 'karaoke_ball'",
+            [],
+            |row| row.get::<_, String>(0),
+        )
+        .ok()
+        .map(|v| !matches!(v.as_str(), "0" | "false" | "no"))
+        .unwrap_or(true)
+    }
+
+    pub fn set_karaoke_ball(&self, enabled: bool) -> Result<bool, String> {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(enabled),
+        };
+        let value = if enabled { "1" } else { "0" };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('karaoke_ball', ?1)",
+            params![value],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(enabled)
+    }
+
     pub fn set_overlay_opacity(&self, opacity: f64) -> Result<f64, String> {
         let clamped = opacity.clamp(0.0, 1.0);
         let conn = match &self.conn {

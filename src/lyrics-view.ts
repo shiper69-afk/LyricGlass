@@ -1,4 +1,5 @@
 import type { PlaybackClockMedia } from "./playback-clock";
+import { KaraokeBall } from "./karaoke-ball";
 import { findActiveLineIndex, parseLrc, type LrcLine, type ParsedLrc } from "./lrc";
 
 export interface MediaState extends PlaybackClockMedia {
@@ -40,6 +41,9 @@ export class LyricsView {
 
   private trackKey = "";
   private lastLineIndex = -2;
+  private karaokeEnabled = true;
+  private readonly karaoke: KaraokeBall;
+  private resizeObserver: ResizeObserver | null = null;
 
   private readonly headerTitle: HTMLElement;
   private readonly headerArtist: HTMLElement;
@@ -57,6 +61,17 @@ export class LyricsView {
     this.plainEl = root.querySelector("#lyrics-plain")!;
     this.offsetEl = root.querySelector("#sync-offset-label")!;
     this.durationWarnEl = document.getElementById("duration-warn");
+    this.karaoke = new KaraokeBall(this.linesEl);
+    if (typeof ResizeObserver !== "undefined") {
+      this.resizeObserver = new ResizeObserver(() => this.karaoke.invalidate());
+      this.resizeObserver.observe(this.linesEl);
+    }
+  }
+
+  setKaraokeEnabled(enabled: boolean) {
+    this.karaokeEnabled = enabled;
+    this.karaoke.setEnabled(enabled);
+    this.lastLineIndex = -2;
   }
 
   getSyncOffsetMs() {
@@ -87,6 +102,8 @@ export class LyricsView {
     this.lastLyrics = null;
     this.hideDurationWarning();
     this.lastLineIndex = -2;
+    this.karaoke.invalidate();
+    this.karaoke.hide();
   }
 
   onLyricsResponse(res: LyricsResponse) {
@@ -110,24 +127,25 @@ export class LyricsView {
       this.plainEl.textContent = res.plainLyrics;
       this.plainEl.classList.remove("hidden");
       this.linesEl.classList.add("hidden");
+      this.karaoke.hide();
     } else {
       this.statusEl.textContent = res.message;
       this.parsed = null;
       this.plainEl.classList.add("hidden");
       this.linesEl.classList.remove("hidden");
       this.linesEl.innerHTML = `<p class="lyrics-empty">${this.escape(res.message)}</p>`;
+      this.karaoke.hide();
     }
     this.lastLineIndex = -2;
+    this.karaoke.invalidate();
   }
 
   private showDurationWarning(res: LyricsResponse) {
     if (!this.durationWarnEl) return;
-    const gsmtc = res.durationDeltaSec != null && this.lastLyrics;
     const lrclib = res.lrclibDurationSec?.toFixed(1) ?? "?";
     const delta = res.durationDeltaSec?.toFixed(1) ?? "?";
     this.durationWarnEl.textContent = `Duration mismatch: LRCLIB ${lrclib}s vs Spotify (Δ ${delta}s) — timing may be off`;
     this.durationWarnEl.classList.remove("hidden");
-    void gsmtc;
   }
 
   private hideDurationWarning() {
@@ -149,6 +167,7 @@ export class LyricsView {
 
   onSeek() {
     this.lastLineIndex = -2;
+    this.karaoke.invalidate();
   }
 
   getLineDiagnostics(computedMs: number): LineDiagnostics {
@@ -169,17 +188,26 @@ export class LyricsView {
     if (!this.parsed || this.parsed.lines.length === 0) return;
 
     const timeMs = playbackMs + this.syncOffsetMs;
-
     const idx = findActiveLineIndex(this.parsed.lines, timeMs);
-    if (idx === this.lastLineIndex) return;
-    this.lastLineIndex = idx;
-    this.renderLines(this.parsed.lines, idx);
+
+    if (idx !== this.lastLineIndex) {
+      this.lastLineIndex = idx;
+      this.renderLines(this.parsed.lines, idx);
+      this.karaoke.invalidate();
+    }
+
+    const karaokeOn = this.karaokeEnabled && this.parsed !== null;
+    const activeEl = this.linesEl.querySelector<HTMLElement>(".lyric-line.active");
+    const words =
+      idx >= 0 && karaokeOn ? this.parsed.lines[idx].words : [];
+    this.karaoke.update(words, timeMs, karaokeOn, activeEl);
   }
 
   private renderLines(lines: LrcLine[], active: number) {
     const start = Math.max(0, active - 2);
     const end = Math.min(lines.length - 1, Math.max(active + 3, active + 1));
     const frag = document.createDocumentFragment();
+    const karaokeOn = this.karaokeEnabled;
 
     if (active < 0) {
       const p = document.createElement("p");
@@ -194,11 +222,22 @@ export class LyricsView {
         if (i < active) p.classList.add("past");
         else if (i === active) p.classList.add("active");
         else p.classList.add("upcoming");
-        p.textContent = lines[i].text;
+
+        if (i === active && karaokeOn && lines[i].words.length > 0) {
+          for (const w of lines[i].words) {
+            const span = document.createElement("span");
+            span.className = "lyric-word";
+            span.textContent = w.text;
+            p.appendChild(span);
+          }
+        } else {
+          p.textContent = lines[i].text;
+        }
         frag.appendChild(p);
       }
     }
     this.linesEl.replaceChildren(frag);
+    this.karaoke.reattach();
   }
 
   private escape(s: string) {

@@ -1,6 +1,10 @@
+import { buildLineWordTimings, type TimedWord } from "./word-timing";
+
 export interface LrcLine {
   timeMs: number;
   text: string;
+  rawText: string;
+  words: TimedWord[];
 }
 
 export interface ParsedLrc {
@@ -55,16 +59,31 @@ export function parseLrc(content: string): ParsedLrc {
 
     if (tags.length === 0) continue;
 
-    let text = line.replace(TAG_RE, "").trim();
-    text = stripEnhancedTags(text);
+    const rawText = line.replace(TAG_RE, "").trim();
+    const text = stripEnhancedTags(rawText);
     if (!text) continue;
 
     for (const timeMs of tags) {
-      lines.push({ timeMs: timeMs + offsetMs, text });
+      lines.push({
+        timeMs: timeMs + offsetMs,
+        text,
+        rawText,
+        words: [],
+      });
     }
   }
 
   lines.sort((a, b) => a.timeMs - b.timeMs);
+  for (let i = 0; i < lines.length; i += 1) {
+    const next =
+      i + 1 < lines.length ? lines[i + 1].timeMs : lines[i].timeMs + 4000;
+    lines[i].words = buildLineWordTimings(
+      lines[i].rawText,
+      lines[i].text,
+      lines[i].timeMs,
+      next,
+    );
+  }
   return { offsetMs, lines };
 }
 

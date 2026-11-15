@@ -35,6 +35,7 @@ struct UiState {
 #[serde(rename_all = "camelCase")]
 struct AppearanceState {
     overlay_opacity: f64,
+    karaoke_ball: bool,
 }
 
 fn apply_topmost(window: &WebviewWindow, flags: &AppFlags) {
@@ -137,7 +138,25 @@ fn set_sync_offset(
 fn get_appearance(service: tauri::State<SharedLyricsService>) -> AppearanceState {
     AppearanceState {
         overlay_opacity: service.get_overlay_opacity(),
+        karaoke_ball: service.get_karaoke_ball(),
     }
+}
+
+#[tauri::command]
+fn set_karaoke_ball(
+    service: tauri::State<SharedLyricsService>,
+    enabled: bool,
+    app: AppHandle,
+) -> Result<bool, String> {
+    let value = service.set_karaoke_ball(enabled)?;
+    let _ = app.emit(
+        "appearance-state",
+        AppearanceState {
+            overlay_opacity: service.get_overlay_opacity(),
+            karaoke_ball: value,
+        },
+    );
+    Ok(value)
 }
 
 #[tauri::command]
@@ -151,6 +170,7 @@ fn set_overlay_opacity(
         "appearance-state",
         AppearanceState {
             overlay_opacity: value,
+            karaoke_ball: service.get_karaoke_ball(),
         },
     );
     Ok(value)
@@ -442,6 +462,7 @@ pub fn run() {
             set_sync_offset,
             get_appearance,
             set_overlay_opacity,
+            set_karaoke_ball,
             log_diagnostics,
             log_sync_mark,
             toggle_debug,
@@ -476,6 +497,7 @@ pub fn run() {
                     "appearance-state",
                     AppearanceState {
                         overlay_opacity: appearance.get_overlay_opacity(),
+                        karaoke_ball: appearance.get_karaoke_ball(),
                     },
                 );
                 startup::step("tauri setup complete — WebView2 loading");

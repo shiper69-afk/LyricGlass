@@ -42,9 +42,9 @@ describe("parseLrc", () => {
 
 describe("findActiveLineIndex", () => {
   const lines = [
-    { timeMs: 0, text: "a" },
-    { timeMs: 5000, text: "b" },
-    { timeMs: 10000, text: "c" },
+    { timeMs: 0, text: "a", rawText: "a", words: [] },
+    { timeMs: 5000, text: "b", rawText: "b", words: [] },
+    { timeMs: 10000, text: "c", rawText: "c", words: [] },
   ];
 
   it("returns last line at or before time", () => {
