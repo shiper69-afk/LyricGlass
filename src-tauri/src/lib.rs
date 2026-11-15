@@ -754,7 +754,12 @@ pub fn run() {
                         if set_wallpaper_mode_inner(&window, &flags, &service, true, true, "startup")
                             .is_err()
                         {
-                            startup::step("wallpaper: restore on launch failed — overlay mode");
+                            startup::step(
+                                "wallpaper: startup attach failed — clearing persisted flag, overlay mode",
+                            );
+                            let _ = service.set_wallpaper_mode(false);
+                            let _ = apply_wallpaper_shell(&window, false);
+                            apply_topmost(&window, &flags.lock());
                         }
                         let _ = app_h.emit("ui-state", current_ui_state(&flags));
                     }
