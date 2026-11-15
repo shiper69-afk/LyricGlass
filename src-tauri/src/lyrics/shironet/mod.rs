@@ -26,7 +26,7 @@ fn decode_body(bytes: &[u8], content_type: Option<&str>) -> String {
         .map(|c| c.to_ascii_lowercase().contains("1255"))
         .unwrap_or(false)
     {
-        if let Some((_, enc, _)) = encoding_rs::Encoding::for_label(b"windows-1255") {
+        if let Some(enc) = encoding_rs::Encoding::for_label(b"windows-1255") {
             let (cow, _, _) = enc.decode(bytes);
             return cow.into_owned();
         }
