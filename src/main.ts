@@ -15,6 +15,8 @@ import {
   LyricsView,
   type LyricsResponse,
 } from "./lyrics-view";
+import { BOUNCER_META, normalizeBouncerId } from "./bouncers/ids";
+import { bouncerSvgMarkup } from "./bouncers/svg-store";
 
 interface UiState {
   alwaysOnTop: boolean;
@@ -27,6 +29,7 @@ interface AppearanceState {
   karaokeBall: boolean;
   karaokeBallColor: string;
   sungHighlightColor: string;
+  karaokeBouncer: string;
 }
 
 const DEFAULT_BALL_COLOR = "#ffc857";
@@ -65,6 +68,7 @@ const els = {
   ballColor: document.getElementById("ball-color") as HTMLInputElement,
   sungColor: document.getElementById("sung-color") as HTMLInputElement,
   colorsReset: document.getElementById("colors-reset") as HTMLButtonElement,
+  bouncerPicker: document.getElementById("bouncer-picker") as HTMLDivElement,
 };
 
 let latestMedia: FullMediaState | null = null;
@@ -90,11 +94,48 @@ function applyKaraokeColors(ball: string, sung: string) {
   lyricsView.setKaraokeColors(ballHex, sungHex);
 }
 
+function applyBouncerSelection(id: string) {
+  const norm = normalizeBouncerId(id);
+  els.bouncerPicker
+    .querySelectorAll<HTMLButtonElement>(".bouncer-picker-btn")
+    .forEach((btn) => {
+      const on = btn.dataset.bouncer === norm;
+      btn.setAttribute("aria-pressed", String(on));
+      btn.setAttribute("aria-selected", String(on));
+    });
+  lyricsView.setKaraokeBouncer(norm);
+}
+
+function buildBouncerPicker() {
+  els.bouncerPicker.replaceChildren();
+  for (const meta of BOUNCER_META) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "bouncer-picker-btn";
+    btn.dataset.bouncer = meta.id;
+    btn.setAttribute("role", "option");
+    btn.setAttribute("aria-pressed", "false");
+    btn.title = meta.name;
+    const thumb = document.createElement("span");
+    thumb.className = "bouncer-thumb";
+    thumb.innerHTML = bouncerSvgMarkup(meta.id);
+    const label = document.createElement("span");
+    label.textContent = meta.name.split(" ")[0];
+    btn.append(thumb, label);
+    btn.addEventListener("click", () => {
+      applyBouncerSelection(meta.id);
+      void invoke("set_karaoke_bouncer", { bouncerId: meta.id });
+    });
+    els.bouncerPicker.appendChild(btn);
+  }
+}
+
 function applyAppearanceSettings(state: AppearanceState) {
   applyAppearance(state.overlayOpacity);
   els.karaokeToggle.checked = state.karaokeBall;
   lyricsView.setKaraokeEnabled(state.karaokeBall);
   applyKaraokeColors(state.karaokeBallColor, state.sungHighlightColor);
+  applyBouncerSelection(state.karaokeBouncer ?? "glow-orb");
 }
 
 function updateTimingReadout(ms: number) {
@@ -322,6 +363,11 @@ els.karaokeToggle.addEventListener("change", () => {
 
 els.ballColor.addEventListener("input", () => {
   applyKaraokeColors(els.ballColor.value, els.sungColor.value);
+  els.bouncerPicker
+    .querySelectorAll<HTMLElement>(".bouncer-picker-btn")
+    .forEach((node) => {
+      node.style.color = els.ballColor.value;
+    });
   void invoke("set_karaoke_ball_color", { color: els.ballColor.value });
 });
 
@@ -355,6 +401,7 @@ async function onSyncMark() {
 }
 
 async function boot() {
+  buildBouncerPicker();
   await listen<FullMediaState>("media-state", (e) => onMedia(e.payload));
   await listen<UiState>("ui-state", (e) => renderUi(e.payload));
   await listen<AppearanceState>("appearance-state", (e) =>

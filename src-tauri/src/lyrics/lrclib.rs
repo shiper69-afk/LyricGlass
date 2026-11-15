@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-const USER_AGENT: &str = "LyricGlass/0.3.2 https://github.com/shiper69-afk/LyricGlass";
+const USER_AGENT: &str = "LyricGlass/0.4.3 https://github.com/shiper69-afk/LyricGlass";
 const BASE: &str = "https://lrclib.net";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

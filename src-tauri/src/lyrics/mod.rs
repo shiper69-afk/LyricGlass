@@ -88,6 +88,14 @@ impl LyricsService {
         self.cache.lock().reset_karaoke_colors()
     }
 
+    pub fn get_karaoke_bouncer(&self) -> String {
+        self.cache.lock().get_karaoke_bouncer()
+    }
+
+    pub fn set_karaoke_bouncer(&self, bouncer_id: &str) -> Result<String, String> {
+        self.cache.lock().set_karaoke_bouncer(bouncer_id)
+    }
+
     pub fn add_sync_offset(
         &self,
         artist: &str,

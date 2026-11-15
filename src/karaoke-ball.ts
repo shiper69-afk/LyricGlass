@@ -1,18 +1,34 @@
 import {
-  findActiveWordIndex,
-  type TimedWord,
-  wordProgress,
-} from "./word-timing";
+  bouncerSvgMarkup,
+} from "./bouncers/svg-store";
+import {
+  type BouncerId,
+  DEFAULT_BOUNCER_ID,
+  normalizeBouncerId,
+  RTL_MIRROR_BOUNCERS,
+} from "./bouncers/ids";
+import {
+  cometTailOpacity,
+  computeBouncerMotion,
+  eqBarScales,
+} from "./bouncers/motion";
+import {
+  computeKaraokeSync,
+  deriveBallState,
+  highlightedWordIndex,
+  type KaraokeBallState,
+  type KaraokeSyncState,
+} from "./karaoke-sync";
+import type { TimedWord } from "./word-timing";
 
-/** Ball visual size (px) — keep in sync with `.karaoke-ball` width/height. */
-export const KARAOKE_BALL_PX = 10;
-/** Peak arc lift between words (px). */
-export const KARAOKE_ARC_PX = 14;
-/** Gap between glyph top and ball bottom (px). */
+export const BOUNCER_PX = 24;
+export const KARAOKE_ARC_PX = 16;
 export const KARAOKE_CLEARANCE_PX = 4;
-/** Reserved lane above every line so the arc never overlaps the line above. */
 export const KARAOKE_LANE_PX =
-  KARAOKE_BALL_PX + KARAOKE_ARC_PX + KARAOKE_CLEARANCE_PX + 6;
+  BOUNCER_PX + KARAOKE_ARC_PX + KARAOKE_CLEARANCE_PX + 8;
+
+/** @deprecated use BOUNCER_PX */
+export const KARAOKE_BALL_PX = BOUNCER_PX;
 
 export const DEFAULT_BALL_COLOR = "#ffc857";
 export const DEFAULT_SUNG_HIGHLIGHT = "#ffdc8c";
@@ -25,9 +41,7 @@ interface RectAnchor {
 export interface WordAnchor {
   index: number;
   landX: number;
-  /** Y where the ball's bottom should sit (just above word top). */
   landY: number;
-  /** Wrapped / bidi fragments (e.g. multi-line word). */
   fragments: RectAnchor[];
 }
 
@@ -35,27 +49,39 @@ export interface CrossLineHandoff {
   fromLine: HTMLElement;
   toLine: HTMLElement;
   scrollTranslateY: number;
-  /** 0..1 eased progress along the inter-line arc. */
   t: number;
 }
 
 export class KaraokeBall {
   private readonly container: HTMLElement;
-  private readonly ballEl: HTMLDivElement;
+  private readonly hostEl: HTMLDivElement;
+  private readonly shadowEl: HTMLDivElement;
+  private readonly spriteEl: HTMLDivElement;
   private anchors: WordAnchor[] = [];
   private measureGeneration = 0;
   private activeLineEl: HTMLElement | null = null;
   private visible = false;
   private ballColor = DEFAULT_BALL_COLOR;
   private sungHighlight = DEFAULT_SUNG_HIGHLIGHT;
-
+  private bouncerId: BouncerId = DEFAULT_BOUNCER_ID;
   constructor(linesContainer: HTMLElement) {
     this.container = linesContainer;
     this.container.classList.add("karaoke-stage");
-    this.ballEl = document.createElement("div");
-    this.ballEl.className = "karaoke-ball";
-    this.ballEl.setAttribute("aria-hidden", "true");
-    this.container.appendChild(this.ballEl);
+
+    this.hostEl = document.createElement("div");
+    this.hostEl.className = "karaoke-bouncer";
+    this.hostEl.dataset.bouncer = DEFAULT_BOUNCER_ID;
+    this.hostEl.setAttribute("aria-hidden", "true");
+
+    this.shadowEl = document.createElement("div");
+    this.shadowEl.className = "karaoke-bouncer-shadow";
+
+    this.spriteEl = document.createElement("div");
+    this.spriteEl.className = "karaoke-bouncer-sprite";
+    this.spriteEl.innerHTML = bouncerSvgMarkup(DEFAULT_BOUNCER_ID);
+
+    this.hostEl.append(this.shadowEl, this.spriteEl);
+    this.container.appendChild(this.hostEl);
     this.applyLaneCss();
     this.applyThemeColors();
     this.hide();
@@ -66,10 +92,20 @@ export class KaraokeBall {
       "--karaoke-reserve",
       `${KARAOKE_LANE_PX}px`,
     );
-    this.container.style.setProperty(
-      "--karaoke-arc",
-      `${KARAOKE_ARC_PX}px`,
-    );
+    this.container.style.setProperty("--karaoke-arc", `${KARAOKE_ARC_PX}px`);
+  }
+
+  setBouncerType(id: string) {
+    const next = normalizeBouncerId(id);
+    if (next === this.bouncerId) return;
+    this.bouncerId = next;
+    this.hostEl.dataset.bouncer = next;
+    this.spriteEl.innerHTML = bouncerSvgMarkup(next);
+    this.invalidate();
+  }
+
+  getBouncerType(): BouncerId {
+    return this.bouncerId;
   }
 
   setThemeColors(ballColor: string, sungHighlight: string) {
@@ -81,12 +117,9 @@ export class KaraokeBall {
   private applyThemeColors() {
     this.container.style.setProperty("--karaoke-ball-color", this.ballColor);
     this.container.style.setProperty("--sung-highlight", this.sungHighlight);
-    this.container.style.setProperty(
-      "--sung-highlight-solid",
-      this.sungHighlight,
-    );
     const sungMuted = `color-mix(in srgb, ${this.sungHighlight} 72%, #fff8e7)`;
     this.container.style.setProperty("--sung-color", sungMuted);
+    this.hostEl.style.color = this.ballColor;
   }
 
   setEnabled(enabled: boolean) {
@@ -145,7 +178,6 @@ export class KaraokeBall {
 
       const landX = wSum > 0 ? cxWeighted / wSum : fragments[0].landX;
       const landY = minTop - KARAOKE_CLEARANCE_PX;
-
       anchors.push({ index, landX, landY, fragments });
     });
 
@@ -153,9 +185,7 @@ export class KaraokeBall {
   }
 
   measureWordByIndex(lineEl: HTMLElement, wordIndex: number): WordAnchor | null {
-    const anchors = this.measureWords(lineEl);
-    const hit = anchors.find((a) => a.index === wordIndex);
-    return hit ?? null;
+    return this.measureWords(lineEl).find((a) => a.index === wordIndex) ?? null;
   }
 
   private pickFragment(anchor: WordAnchor, towardX?: number): RectAnchor {
@@ -163,9 +193,7 @@ export class KaraokeBall {
       return { landX: anchor.landX, landY: anchor.landY };
     }
     if (towardX == null) {
-      return anchor.fragments.reduce((a, b) =>
-        a.landY <= b.landY ? a : b,
-      );
+      return anchor.fragments.reduce((a, b) => (a.landY <= b.landY ? a : b));
     }
     return anchor.fragments.reduce((best, cur) => {
       const bd = Math.abs(cur.landX - towardX);
@@ -174,9 +202,91 @@ export class KaraokeBall {
     });
   }
 
-  private applyBallAt(x: number, y: number) {
-    this.ballEl.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;
-    this.ballEl.style.opacity = "1";
+  private lineIsRtl(lineEl: HTMLElement | null): boolean {
+    if (!lineEl) return false;
+    const dir = lineEl.getAttribute("dir");
+    if (dir === "rtl") return true;
+    if (dir === "ltr") return false;
+    return getComputedStyle(lineEl).direction === "rtl";
+  }
+
+  private applySubElementMotion(
+    hopProgress: number,
+    heldNote: boolean,
+    _wordIndex: number,
+    motion: ReturnType<typeof computeBouncerMotion>,
+  ) {
+    const svg = this.spriteEl.querySelector("svg");
+    if (!svg) return;
+
+    const glow = svg.querySelector<SVGElement>(".lg-glow");
+
+    if (this.bouncerId === "eq-pulse") {
+      const scales = eqBarScales(hopProgress, heldNote);
+      const bars = svg.querySelectorAll<SVGRectElement>(".lg-bar");
+      bars.forEach((bar, i) => {
+        const sy = scales[i] ?? 1;
+        bar.style.transform = `scaleY(${sy.toFixed(3)})`;
+        bar.style.transformOrigin = "center bottom";
+      });
+    }
+
+    if (this.bouncerId === "comet") {
+      const op = cometTailOpacity(hopProgress);
+      svg.querySelectorAll<SVGPathElement>(".lg-tail").forEach((tail, i) => {
+        tail.style.opacity = String(op[i] ?? 0.5);
+      });
+    }
+
+    if (this.bouncerId === "music-note") {
+      const flag = svg.querySelector<SVGPathElement>(".lg-flag");
+      if (flag) {
+        const lag = Math.max(0, hopProgress - 0.08);
+        flag.style.transform = `rotate(${(-6 * Math.sin(lag * Math.PI)).toFixed(2)}deg)`;
+        flag.style.transformOrigin = "14px 8px";
+      }
+    }
+
+    if (glow && motion.glowOpacity != null) {
+      glow.style.opacity = String(motion.glowOpacity);
+    }
+
+    this.shadowEl.style.opacity = String(motion.shadowOpacity ?? 0);
+    this.hostEl.classList.toggle("karaoke-flash", Boolean(motion.flash));
+  }
+
+  private applyPose(
+    x: number,
+    y: number,
+    sync: KaraokeSyncState,
+    words: TimedWord[],
+  ) {
+    const hopProgress = sync.progress;
+    const wordIndex = sync.activeIndex;
+    const w = words[wordIndex];
+    const heldNote = Boolean(
+      w && w.endMs - w.startMs > 700 && hopProgress > 0.25 && hopProgress < 0.92,
+    );
+
+    const rtl =
+      RTL_MIRROR_BOUNCERS.has(this.bouncerId) &&
+      this.lineIsRtl(this.activeLineEl);
+    const motion = computeBouncerMotion({
+      id: this.bouncerId,
+      hopProgress,
+      rtl,
+      heldNote,
+      wordIndex,
+      interWordBlend: hopProgress > 0.5 ? (hopProgress - 0.5) * 2 : 0,
+    });
+
+    this.applySubElementMotion(hopProgress, heldNote, wordIndex, motion);
+
+    const hostParts = [`translate(${x}px, ${y}px)`, "translate(-50%, -100%)"];
+    if (motion.hostTransform) hostParts.push(motion.hostTransform);
+    this.hostEl.style.transform = hostParts.join(" ");
+    this.spriteEl.style.transform = motion.localTransform;
+    this.hostEl.style.opacity = "1";
   }
 
   private renderCrossLine(handoff: CrossLineHandoff) {
@@ -203,9 +313,36 @@ export class KaraokeBall {
     const x = sx + (ex - sx) * eased;
     const baseY = sy + (ey - sy) * eased;
     const arc = Math.sin(eased * Math.PI) * KARAOKE_ARC_PX;
-    this.applyBallAt(x, baseY - arc);
-    this.updateWordHighlights(handoff.fromLine, [], Number.POSITIVE_INFINITY);
-    this.updateWordHighlights(handoff.toLine, [], -1);
+
+    this.activeLineEl = handoff.toLine;
+    const crossSync: KaraokeSyncState = {
+      timeMs: 0,
+      activeIndex: fromWords - 1,
+      progress: eased,
+      interWordT: eased,
+    };
+    this.applyPose(x, baseY - arc, crossSync, []);
+    const lastIdx = Math.max(0, fromWords - 1);
+    const fromBall: KaraokeBallState = {
+      sync: crossSync,
+      ballWordIndex: lastIdx,
+      positionFrom: lastIdx,
+      positionTo: lastIdx,
+      positionBlend: 0,
+    };
+    this.applyWordHighlights(handoff.fromLine, fromBall);
+    const toBall: KaraokeBallState = {
+      sync: crossSync,
+      ballWordIndex: eased >= 1 ? 0 : -1,
+      positionFrom: 0,
+      positionTo: 0,
+      positionBlend: 0,
+    };
+    if (toBall.ballWordIndex >= 0) {
+      this.applyWordHighlights(handoff.toLine, toBall);
+    } else {
+      this.updateWordHighlights(handoff.toLine, [], "none");
+    }
   }
 
   update(
@@ -236,9 +373,18 @@ export class KaraokeBall {
       const lastIdx = Math.max(0, w.length - 1);
       const anchor = this.measureWordByIndex(line, lastIdx);
       if (anchor) {
+        this.activeLineEl = line;
         const frag = this.pickFragment(anchor);
-        this.applyBallAt(frag.landX, frag.landY + scrollY);
-        this.updateWordHighlights(line, w, w[lastIdx]?.endMs ?? timeMs);
+        const hopP = 0.85;
+        const restSync: KaraokeSyncState = {
+          timeMs,
+          activeIndex: lastIdx,
+          progress: hopP,
+          interWordT: 0,
+        };
+        const ball = deriveBallState(restSync, w.length);
+        this.applyPose(frag.landX, frag.landY + scrollY, restSync, w);
+        this.applyWordHighlights(line, ball);
       }
       return;
     }
@@ -248,51 +394,62 @@ export class KaraokeBall {
       return;
     }
 
+    this.activeLineEl = activeLine;
     this.scheduleMeasure(activeLine);
     if (this.anchors.length === 0) return;
 
-    const idx = findActiveWordIndex(words, timeMs);
-    if (idx < 0) {
+    const sync = computeKaraokeSync(words, timeMs);
+    if (!sync) {
       this.hide();
       return;
     }
 
-    const anchor = this.anchors[idx];
-    if (!anchor) return;
+    const ball = deriveBallState(sync, words.length);
+    const { positionFrom: from, positionTo: to, positionBlend: blend } = ball;
+    const fromAnchor = this.anchors[from];
+    if (!fromAnchor) return;
 
-    const nextAnchor = this.anchors[idx + 1];
-    const progress = wordProgress(words, timeMs);
-
-    const destFrag = nextAnchor
-      ? this.pickFragment(nextAnchor, undefined)
-      : undefined;
-    const startFrag = this.pickFragment(anchor, destFrag?.landX);
-
+    const startFrag = this.pickFragment(fromAnchor);
     let x = startFrag.landX;
     let y = startFrag.landY + scrollY;
 
-    if (nextAnchor && destFrag && progress > 0.5) {
-      const t = (progress - 0.5) / 0.5;
-      const eased = t * t * (3 - 2 * t);
-      const endFrag = this.pickFragment(nextAnchor, startFrag.landX);
-      x = startFrag.landX + (endFrag.landX - startFrag.landX) * eased;
-      const baseY =
-        Math.min(startFrag.landY, endFrag.landY) + scrollY;
-      const arc = Math.sin(eased * Math.PI) * KARAOKE_ARC_PX;
-      y = baseY - arc;
+    if (blend > 0 && to !== from) {
+      const nextAnchor = this.anchors[to];
+      if (nextAnchor) {
+        const endFrag = this.pickFragment(nextAnchor, startFrag.landX);
+        x = startFrag.landX + (endFrag.landX - startFrag.landX) * blend;
+        const baseY = Math.min(startFrag.landY, endFrag.landY) + scrollY;
+        const arc = Math.sin(blend * Math.PI) * KARAOKE_ARC_PX;
+        y = baseY - arc;
+      }
     }
 
-    this.applyBallAt(x, y);
-    this.updateWordHighlights(activeLine, words, timeMs);
+    this.applyPose(x, y, sync, words);
+    this.applyWordHighlights(activeLine, ball);
+  }
+
+  private applyWordHighlights(
+    lineEl: HTMLElement,
+    ball: KaraokeBallState,
+  ) {
+    const coloredThrough = highlightedWordIndex(ball);
+    const spans = lineEl.querySelectorAll<HTMLElement>(".lyric-word");
+    spans.forEach((span, i) => {
+      span.classList.remove("sung", "singing");
+      span.style.removeProperty("--sung-frac");
+      if (i <= coloredThrough) {
+        span.classList.add("sung");
+      }
+    });
   }
 
   private updateWordHighlights(
     lineEl: HTMLElement,
-    words: TimedWord[],
-    timeMs: number,
+    _words: TimedWord[],
+    sync: KaraokeSyncState | KaraokeBallState | "all-sung" | "none",
   ) {
     const spans = lineEl.querySelectorAll<HTMLElement>(".lyric-word");
-    if (!Number.isFinite(timeMs)) {
+    if (sync === "all-sung") {
       spans.forEach((span) => {
         span.classList.add("sung");
         span.classList.remove("singing");
@@ -300,33 +457,101 @@ export class KaraokeBall {
       });
       return;
     }
-    if (timeMs < 0) {
+    if (sync === "none") {
       spans.forEach((span) => {
         span.classList.remove("sung", "singing");
         span.style.removeProperty("--sung-frac");
       });
       return;
     }
-    const activeIdx = findActiveWordIndex(words, timeMs);
-    spans.forEach((span, i) => {
-      span.classList.remove("sung", "singing");
-      if (i < activeIdx) span.classList.add("sung");
-      else if (i === activeIdx) {
-        span.classList.add("singing");
-        span.style.setProperty("--sung-frac", String(wordProgress(words, timeMs)));
-      } else {
-        span.style.removeProperty("--sung-frac");
-      }
-    });
+    const ball =
+      "ballWordIndex" in sync
+        ? sync
+        : deriveBallState(sync, spans.length);
+    this.applyWordHighlights(lineEl, ball);
+  }
+
+  getClientPosition(): { x: number; y: number } | null {
+    if (this.hostEl.style.opacity === "0") return null;
+    const r = this.hostEl.getBoundingClientRect();
+    const c = this.container.getBoundingClientRect();
+    return {
+      x: r.left - c.left + r.width / 2,
+      y: r.bottom - c.top,
+    };
+  }
+
+  /** Centered bounce above an upcoming line (intro / long instrumental). */
+  updateIdleCenter(
+    lineEl: HTMLElement,
+    timeMs: number,
+    _hopAtMs: number,
+    scrollY: number,
+  ) {
+    this.activeLineEl = lineEl;
+    const containerRect = this.container.getBoundingClientRect();
+    const lineRect = lineEl.getBoundingClientRect();
+    const x = containerRect.width / 2;
+    const landY = lineRect.top - containerRect.top - KARAOKE_CLEARANCE_PX;
+    const phase = (timeMs % 900) / 900;
+    const sync: KaraokeSyncState = {
+      timeMs,
+      activeIndex: 0,
+      progress: phase,
+      interWordT: 0,
+    };
+    this.applyPose(x, landY + scrollY, sync, []);
+    this.updateWordHighlights(lineEl, [], "none");
+  }
+
+  /** Hop from center onto word 0 at line start. */
+  updateIdleHopToFirstWord(
+    lineEl: HTMLElement,
+    words: TimedWord[],
+    timeMs: number,
+    hopAtMs: number,
+    scrollY: number,
+  ) {
+    this.activeLineEl = lineEl;
+    this.scheduleMeasure(lineEl);
+    const hopDur = Math.max(280, Math.min(450, words[0]?.endMs - hopAtMs || 400));
+    const t = Math.max(0, Math.min(1, (timeMs - hopAtMs) / hopDur));
+    const containerRect = this.container.getBoundingClientRect();
+    const lineRect = lineEl.getBoundingClientRect();
+    const cx = containerRect.width / 2;
+    const landY = lineRect.top - containerRect.top - KARAOKE_CLEARANCE_PX;
+    const anchor = this.anchors[0] ?? this.measureWords(lineEl)[0];
+    if (!anchor) return;
+
+    const endFrag = this.pickFragment(anchor);
+    const eased = t * t * (3 - 2 * t);
+    const x = cx + (endFrag.landX - cx) * eased;
+    const arc = Math.sin(eased * Math.PI) * KARAOKE_ARC_PX;
+    const y = landY + scrollY - arc + (endFrag.landY - landY) * eased;
+
+    const sync: KaraokeSyncState = {
+      timeMs,
+      activeIndex: 0,
+      progress: eased,
+      interWordT: eased < 1 ? 0 : 0,
+    };
+    this.applyPose(x, y, sync, words);
+    const live = computeKaraokeSync(words, timeMs);
+    if (timeMs >= hopAtMs && live) {
+      const ball = deriveBallState(live, words.length);
+      this.applyWordHighlights(lineEl, ball);
+    } else {
+      this.updateWordHighlights(lineEl, [], "none");
+    }
   }
 
   hide() {
-    this.ballEl.style.opacity = "0";
+    this.hostEl.style.opacity = "0";
   }
 
   reattach() {
-    if (!this.container.contains(this.ballEl)) {
-      this.container.appendChild(this.ballEl);
+    if (!this.container.contains(this.hostEl)) {
+      this.container.appendChild(this.hostEl);
     }
   }
 }

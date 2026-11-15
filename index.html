@@ -10,7 +10,7 @@
     <div id="app">
       <header class="titlebar">
         <span class="brand" data-tauri-drag-region>
-          LyricGlass <small id="app-version">0.3.2</small>
+          LyricGlass <small id="app-version">0.4.3</small>
         </span>
         <div class="titlebar-tools">
           <button
@@ -65,8 +65,15 @@
             <span id="timing-readout" class="timing-readout">0.0s</span>
             <label class="setting-toggle">
               <input type="checkbox" id="karaoke-ball-toggle" checked />
-              <span>Karaoke ball</span>
+              <span>Karaoke</span>
             </label>
+            <p class="bouncer-picker-label">Bouncer</p>
+            <div
+              id="bouncer-picker"
+              class="bouncer-picker"
+              role="listbox"
+              aria-label="Karaoke bouncer"
+            ></div>
             <label class="setting-row">
               <span>Ball</span>
               <input type="color" id="ball-color" value="#ffc857" />

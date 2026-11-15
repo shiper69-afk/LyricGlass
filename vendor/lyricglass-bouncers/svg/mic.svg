@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
+     color="#FF3F4C" role="img" aria-label="Mic">
+  <title>LyricGlass Mic</title>
+  <desc>Karaoke bouncer for LyricGlass. Recolor by setting the CSS color property or, when inlined, --lg-bouncer on a parent (the host should also set color: var(--lg-bouncer)). Body uses currentColor; highlights are a white sheen and a dark overlay so any user colour still reads. When used as an image, the color="#FF3F4C" presentation attribute is the default.</desc>
+  <g class="lg-bouncer lg-mic">
+
+    <g class="lg-mic-rig" transform="rotate(-8 12 12)">
+      <circle class="lg-glow" cx="12" cy="11.2" r="8.8" fill="currentColor" opacity="0.12"/>
+      <rect class="lg-handle" x="10.2" y="14.05" width="3.6" height="7.3" rx="1.5" fill="currentColor"/>
+      <rect class="lg-ferrule" x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="currentColor"/>
+      <rect x="9.25" y="13.3" width="5.5" height="2.05" rx="0.7" fill="#041218" opacity="0.22"/>
+      <rect class="lg-body" x="7.1" y="2.45" width="9.8" height="12.15" rx="4.9" fill="currentColor"/>
+      <ellipse class="lg-shade" cx="13.15" cy="10.35" rx="3.65" ry="3.2" fill="#041218" opacity="0.22"/>
+      <rect class="lg-grille" x="8.45" y="6.65" width="7.1" height="2.5" rx="1.25" fill="#041218" opacity="0.24"/>
+      <ellipse class="lg-highlight" cx="10.15" cy="5.45" rx="2.45" ry="2.05" fill="#FFFFFF" opacity="0.48"/>
+    </g>
+  </g>
+</svg>

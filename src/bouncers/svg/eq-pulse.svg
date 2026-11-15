@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
+     color="#FF3F4C" role="img" aria-label="EQ Pulse">
+  <title>LyricGlass EQ Pulse</title>
+  <desc>Karaoke bouncer for LyricGlass. Recolor by setting the CSS color property or, when inlined, --lg-bouncer on a parent (the host should also set color: var(--lg-bouncer)). Body uses currentColor; highlights are a white sheen and a dark overlay so any user colour still reads. When used as an image, the color="#FF3F4C" presentation attribute is the default.</desc>
+  <g class="lg-bouncer lg-eq-pulse">
+
+    <g class="lg-glow" fill="currentColor" opacity="0.16">
+      <rect x="3.25" y="9.1" width="4.7" height="12.2" rx="2.35"/>
+      <rect x="9.65" y="4.2" width="4.7" height="17.1" rx="2.35"/>
+      <rect x="16.05" y="11.5" width="4.7" height="9.8" rx="2.35"/>
+    </g>
+    <rect class="lg-bar lg-bar-1" x="3.5" y="9.55" width="4.2" height="11.25" rx="2.1" fill="currentColor" opacity="0.78"/>
+    <rect class="lg-bar lg-bar-2" x="9.9" y="4.7" width="4.2" height="16.1" rx="2.1" fill="currentColor"/>
+    <rect class="lg-bar lg-bar-3" x="16.3" y="11.95" width="4.2" height="8.85" rx="2.1" fill="currentColor" opacity="0.62"/>
+    <rect x="4.25" y="10.1" width="2.7" height="2.35" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+    <rect x="10.65" y="5.25" width="2.7" height="2.5" rx="1.15" fill="#FFFFFF" opacity="0.42"/>
+    <rect x="17.05" y="12.5" width="2.7" height="2.15" rx="1.15" fill="#FFFFFF" opacity="0.38"/>
+  </g>
+</svg>

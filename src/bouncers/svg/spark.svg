@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
+     color="#FF3F4C" role="img" aria-label="Spark">
+  <title>LyricGlass Spark</title>
+  <desc>Karaoke bouncer for LyricGlass. Recolor by setting the CSS color property or, when inlined, --lg-bouncer on a parent (the host should also set color: var(--lg-bouncer)). Body uses currentColor; highlights are a white sheen and a dark overlay so any user colour still reads. When used as an image, the color="#FF3F4C" presentation attribute is the default.</desc>
+  <g class="lg-bouncer lg-spark">
+
+    <circle class="lg-glow" cx="12" cy="12" r="9.2" fill="currentColor" opacity="0.14"/>
+    <path class="lg-body" d="M12.00,2.55L14.76,9.24L21.45,12.00L14.76,14.76L12.00,21.45L9.24,14.76L2.55,12.00L9.24,9.24Z" fill="currentColor"/>
+    <path class="lg-highlight" d="M12.00,5.95L12.81,8.49L15.35,9.30L12.81,10.11L12.00,12.65L11.19,10.11L8.65,9.30L11.19,8.49Z" fill="#FFFFFF" opacity="0.42"/>
+    <circle class="lg-highlight-core" cx="12" cy="9.1" r="1.05" fill="#FFFFFF" opacity="0.8"/>
+  </g>
+</svg>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none"
+     color="#FF3F4C" role="img" aria-label="Music Note">
+  <title>LyricGlass Music Note</title>
+  <desc>Karaoke bouncer for LyricGlass. Recolor by setting the CSS color property or, when inlined, --lg-bouncer on a parent (the host should also set color: var(--lg-bouncer)). Body uses currentColor; highlights are a white sheen and a dark overlay so any user colour still reads. When used as an image, the color="#FF3F4C" presentation attribute is the default.</desc>
+  <g class="lg-bouncer lg-music-note">
+
+    <circle class="lg-glow" cx="11.2" cy="13.2" r="9.0" fill="currentColor" opacity="0.12"/>
+    <path class="lg-flag" d="M14.9 4.1 C21.15 4.55 22.9 9.2 20.15 13.0 C17.5 10.2 15.95 8.55 14.9 8.85 Z" fill="currentColor"/>
+    <rect class="lg-stem" x="12.72" y="4.1" width="2.4" height="12.7" rx="0.9" fill="currentColor"/>
+    <g class="lg-head" transform="rotate(-24 9.15 16.75)">
+      <ellipse class="lg-body" cx="9.15" cy="16.75" rx="4.8" ry="3.5" fill="currentColor"/>
+      <ellipse class="lg-highlight" cx="8.1" cy="15.7" rx="2.2" ry="1.5" fill="#FFFFFF" opacity="0.42"/>
+    </g>
+  </g>
+</svg>
