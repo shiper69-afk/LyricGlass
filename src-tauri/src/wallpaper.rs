@@ -647,6 +647,17 @@ mod imp {
             let ex = GetWindowLongPtrW(host, GWL_EXSTYLE) as u32 | WS_EX_LAYERED;
             set_window_long_ptr_logged(host, GWL_EXSTYLE, ex as isize, "host exstyle layered", diag);
 
+            // Layered style must be committed before SetLayeredWindowAttributes (else 0x80070057).
+            let _ = SetWindowPos(
+                host,
+                None,
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
+            );
+
             let layered_r = SetLayeredWindowAttributes(
                 host,
                 windows::Win32::Foundation::COLORREF(0),
@@ -1305,6 +1316,54 @@ mod imp {
                 .expect("host create");
             assert!(hwnd_valid(host));
             unsafe {
+                let _ = DestroyWindow(host);
+            }
+        }
+
+        #[test]
+        fn fake_progman_path_b_visible_and_z_order() {
+            let fake = create_fake_desktop().expect("fake desktop");
+            let snapshot = WallpaperRestore::default();
+            let mut diag = String::new();
+            let plan = WallpaperAttachPlan {
+                layout: crate::wallpaper_select::DesktopLayout::ProgmanLayered,
+                parent_hwnd: hwnd_to_u64(fake.progman),
+                z_insert_after_hwnd: hwnd_to_u64(fake.defview),
+                defview_hwnd: hwnd_to_u64(fake.defview),
+                wallpaper_workerw_hwnd: hwnd_to_u64(fake.workerw),
+            };
+            let parent = fake.progman;
+            let insert_after = fake.defview;
+            let (x, y, w, h) = child_screen_rect(parent, fake.content);
+            set_redraw(fake.content, false, &mut diag);
+            let host =
+                create_layered_host(parent, &plan, x, y, w, h, true, &mut diag).expect("host");
+            let host_id = hwnd_to_u64(host);
+            reparent_fullscreen(
+                fake.content,
+                host,
+                "LyricGlassHost",
+                Some(crate::wallpaper_select::DesktopLayout::ProgmanLayered),
+                &snapshot,
+                &mut diag,
+                None,
+                true,
+                true,
+            )
+            .expect("reparent");
+            finalize_progman_show(fake.content, insert_after, Some(host), &mut diag).expect("show");
+            verify_attach(fake.content, &plan, ProgmanAttachPath::B, host_id, &mut diag).expect("verify");
+            let input = collect_verify_input(
+                fake.content,
+                &plan,
+                ProgmanAttachPath::B,
+                host_id,
+                &mut diag,
+            );
+            verify_progman_layered_state(&input).expect("z-order");
+            assert!(input.visible);
+            unsafe {
+                let _ = SetParent(fake.content, None);
                 let _ = DestroyWindow(host);
             }
         }
