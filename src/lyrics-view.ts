@@ -19,6 +19,7 @@ import {
   plainScrollOffsetPx,
   textLooksHebrew,
 } from "./plain-scroll";
+import { BUILTIN_SYNC_LAG_MS, effectiveSyncOffsetMs } from "./sync-lag";
 
 export interface MediaState extends PlaybackClockMedia {
   spotifyRunning: boolean;
@@ -164,6 +165,14 @@ export class LyricsView {
 
   getSyncOffsetMs() {
     return this.syncOffsetMs;
+  }
+
+  getBuiltinSyncLagMs() {
+    return BUILTIN_SYNC_LAG_MS;
+  }
+
+  getEffectiveSyncOffsetMs() {
+    return effectiveSyncOffsetMs(this.syncOffsetMs);
   }
 
   getLastLyrics() {
@@ -327,7 +336,7 @@ export class LyricsView {
     if (!this.parsed?.lines.length) {
       return { index: -1, lineTimeMs: 0, nextLineTimeMs: -1, computedMs };
     }
-    const timeMs = computedMs + this.syncOffsetMs;
+    const timeMs = computedMs + effectiveSyncOffsetMs(this.syncOffsetMs);
     const idx = findActiveLineIndex(this.parsed.lines, timeMs);
     const lineTimeMs = idx >= 0 ? this.parsed.lines[idx].timeMs : 0;
     const nextLineTimeMs =
@@ -490,7 +499,7 @@ export class LyricsView {
     }
     if (!this.parsed || this.parsed.lines.length === 0) return;
 
-    const timeMs = playbackMs + this.syncOffsetMs;
+    const timeMs = playbackMs + effectiveSyncOffsetMs(this.syncOffsetMs);
     const idx = findActiveLineIndex(this.parsed.lines, timeMs);
     const lines = this.parsed.lines;
     const seek = this.isSeekLike(playbackMs, idx);
@@ -699,7 +708,7 @@ export class LyricsView {
 
   private tickPlainScroll(playbackMs: number, durationMs: number) {
     if (durationMs <= 0) return;
-    const timeMs = playbackMs + this.syncOffsetMs;
+    const timeMs = playbackMs + effectiveSyncOffsetMs(this.syncOffsetMs);
     const contentH = this.plainScrollInner.scrollHeight;
     const viewH = this.plainEl.clientHeight;
     const target = plainScrollOffsetPx(timeMs, durationMs, contentH, viewH);

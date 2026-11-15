@@ -6,7 +6,7 @@ import {
 import { playbackClockMs, type PlaybackAnchor } from "./playback-clock";
 import type { LyricsView, LyricsResponse, MediaState } from "./lyrics-view";
 
-const APP_VERSION = "0.6.0";
+const APP_VERSION = "0.6.1";
 
 export interface FullMediaState extends MediaState {
   sourceAppId: string;
@@ -22,6 +22,7 @@ export interface FullMediaState extends MediaState {
 export interface WallpaperDiag {
   attached: boolean;
   lastError?: string | null;
+  lastDiagnostics?: string | null;
 }
 
 export function buildDiagnosticsBlock(
@@ -84,11 +85,16 @@ export function buildDiagnosticsBlock(
     `  serverTimeMs: ${media?.serverTimeMs ?? 0}`,
     `  backendComputedAtEmit: ${media?.computedPositionMs ?? 0} ms`,
     `  computedClock: ${formatMs(computed)} (${computed} ms)`,
-    `  userSyncOffsetMs: ${syncMs}`,
+    `  userSyncOffsetMs: ${syncMs} (slider)`,
+    `  builtinLagCompensationMs: ${lyricsView.getBuiltinSyncLagMs()}`,
+    `  effectiveSyncOffsetMs: ${lyricsView.getEffectiveSyncOffsetMs()}`,
     "",
     "Wallpaper",
     `  attached: ${wallpaper?.attached ?? "—"}`,
     `  lastError: ${wallpaper?.lastError?.length ? wallpaper.lastError : "—"}`,
+    ...(wallpaper?.lastDiagnostics?.trim()
+      ? ["  attachTrace:", ...wallpaper.lastDiagnostics.trim().split("\n").map((l) => `    ${l}`)]
+      : []),
     "",
     "Active line",
     `  index: ${line.index}`,

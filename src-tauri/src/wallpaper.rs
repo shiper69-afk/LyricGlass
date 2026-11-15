@@ -1,20 +1,29 @@
 use crate::startup;
+use crate::wallpaper_select::{choose_wallpaper_parent, DesktopLayout, DesktopWindowInfo};
 use parking_lot::Mutex;
 use std::sync::LazyLock;
 
 static LAST_ERROR: LazyLock<Mutex<Option<String>>> = LazyLock::new(|| Mutex::new(None));
+static LAST_DIAGNOSTICS: LazyLock<Mutex<Option<String>>> = LazyLock::new(|| Mutex::new(None));
 
 pub fn last_attach_error() -> Option<String> {
     LAST_ERROR.lock().clone()
 }
 
-pub fn clear_attach_error() {
-    *LAST_ERROR.lock() = None;
+pub fn last_attach_diagnostics() -> Option<String> {
+    LAST_DIAGNOSTICS.lock().clone()
 }
 
-fn record_error(msg: String) {
-    startup::step(&format!("wallpaper: {msg}"));
-    *LAST_ERROR.lock() = Some(msg);
+pub fn clear_attach_error() {
+    *LAST_ERROR.lock() = None;
+    *LAST_DIAGNOSTICS.lock() = None;
+}
+
+fn record_attach_failure(step: &str, summary: &str, detail: String) {
+    startup::step(&format!("wallpaper: {step}: {summary}"));
+    startup::log_diagnostic(&format!("WALLPAPER ATTACH FAILED\n{detail}"));
+    *LAST_ERROR.lock() = Some(format!("{step}: {summary}"));
+    *LAST_DIAGNOSTICS.lock() = Some(detail);
 }
 
 #[derive(Debug, Default, Clone)]
@@ -25,7 +34,7 @@ pub struct OverlayGeometry {
     pub height: u32,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 struct WallpaperRestore {
     attached: bool,
     overlay: OverlayGeometry,
@@ -41,19 +50,38 @@ static WALLPAPER_STATE: LazyLock<Mutex<WallpaperRestore>> =
 #[cfg(windows)]
 mod imp {
     use super::*;
-    use windows::core::w;
-    use windows::Win32::Foundation::{HWND, LPARAM, RECT};
-    use windows::core::BOOL;
+    use windows::core::{w, BOOL};
+    use windows::Win32::Foundation::{GetLastError, HWND, LPARAM, RECT, WPARAM};
+    use windows::Win32::UI::HiDpi::{GetDpiForWindow, MONITOR_DEFAULTTOPRIMARY};
     use windows::Win32::UI::WindowsAndMessaging::{
-        EnumWindows, FindWindowExW, FindWindowW, GetClassNameW, GetParent, GetSystemMetrics,
-        GetWindowLongPtrW, GetWindowRect, IsWindow, SendMessageW, SetParent, SetWindowLongPtrW,
-        SetWindowPos, ShowWindow, GWL_EXSTYLE, GWL_STYLE, SM_CXSCREEN, SM_CYSCREEN, SWP_FRAMECHANGED,
-        SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW, WM_USER,
+        EnumWindows, FindWindowExW, FindWindowW, GetClassNameW, GetParent,
+        GetWindowLongPtrW, GetWindowRect, IsWindow, SendMessageTimeoutW, SetParent,
+        SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE, GWL_STYLE, SMTO_ABORTIFHUNG,
+        SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_HIDE, SW_SHOW,
     };
+    use windows::Win32::Graphics::Gdi::MonitorFromWindow;
+    use windows::Win32::UI::WindowsAndMessaging::{GetMonitorInfoW, MONITORINFO};
 
+    const PROGMAN_DESKTOP_MSG: u32 = 0x052C;
+    const WS_CHILD: u32 = 0x4000_0000;
+    const WS_POPUP: u32 = 0x8000_0000;
+    const WS_CAPTION: u32 = 0x00C0_0000;
+    const WS_THICKFRAME: u32 = 0x0004_0000;
+    const WS_MINIMIZEBOX: u32 = 0x0002_0000;
+    const WS_MAXIMIZEBOX: u32 = 0x0001_0000;
+    const WS_SYSMENU: u32 = 0x0008_0000;
+    const WS_BORDER: u32 = 0x0080_0000;
+    const WS_DLGFRAME: u32 = 0x0040_0000;
+    const WS_EX_TOPMOST: u32 = 0x0000_0008;
     const WS_EX_LAYERED: u32 = 0x0008_0000;
     const WS_EX_TOOLWINDOW: u32 = 0x0000_0080;
     const WS_EX_NOACTIVATE: u32 = 0x0800_0000;
+    const WS_EX_APPWINDOW: u32 = 0x0004_0000;
+    const WS_EX_NOREDIRECTIONBITMAP: u32 = 0x0020_0000;
+
+    fn hwnd_to_u64(hwnd: HWND) -> u64 {
+        hwnd.0 as usize as u64
+    }
 
     fn hwnd_valid(hwnd: HWND) -> bool {
         !hwnd.0.is_null() && unsafe { IsWindow(Some(hwnd)).as_bool() }
@@ -64,123 +92,231 @@ mod imp {
         hwnd_valid(hwnd).then_some(hwnd)
     }
 
-    fn spawn_desktop_workerw() {
-        if let Some(progman) = progman() {
-            unsafe {
-                let _ = SendMessageW(progman, WM_USER + 0x052C, None, None);
-            }
+    fn last_error_code() -> u32 {
+        unsafe { GetLastError().0 }
+    }
+
+    fn windows_build_label() -> String {
+        use windows::Win32::System::SystemInformation::GetVersion;
+        unsafe {
+            let v = GetVersion();
+            let build = v >> 16;
+            let major = (v >> 8) & 0xff;
+            let minor = v & 0xff;
+            format!("{major}.{minor} build {build}")
         }
     }
 
-    /// WorkerW under Progman that does **not** host `SHELLDLL_DefView` (Win11 24H2+ layout).
-    fn workerw_under_progman(progman: HWND) -> Option<HWND> {
-        let mut sibling = HWND::default();
-        loop {
-            let next = unsafe {
-                FindWindowExW(Some(progman), Some(sibling), w!("WorkerW"), None).ok()?
+    fn spawn_desktop_workerw(diag: &mut String) -> Result<(), String> {
+        let progman = progman().ok_or_else(|| "Progman not found".to_string())?;
+        diag.push_str(&format!("progman_hwnd=0x{:x}\n", hwnd_to_u64(progman)));
+
+        let variants: [(isize, isize); 4] = [(0xD, 0), (0xD, 1), (0, 0), (1, 0)];
+        for (attempt, (wp, lp)) in variants.iter().enumerate() {
+            let mut result = 0usize;
+            let r = unsafe {
+                SendMessageTimeoutW(
+                    progman,
+                    PROGMAN_DESKTOP_MSG,
+                    WPARAM(*wp as usize),
+                    LPARAM(*lp),
+                    SMTO_ABORTIFHUNG,
+                    1500,
+                    Some(&mut result),
+                )
             };
-            if !hwnd_valid(next) {
-                break;
-            }
-            let defview =
-                unsafe { FindWindowExW(Some(next), None, w!("SHELLDLL_DefView"), None).ok() };
-            let has_defview = defview.map(hwnd_valid).unwrap_or(false);
-            if !has_defview {
-                return Some(next);
-            }
-            sibling = next;
+            diag.push_str(&format!(
+                "spawn attempt {attempt}: msg=0x{PROGMAN_DESKTOP_MSG:x} wParam=0x{wp:x} lParam=0x{lp:x} ok={} result=0x{result:x} lastError={}\n",
+                r.is_ok(),
+                last_error_code()
+            ));
         }
-        None
+        Ok(())
     }
 
-    /// Legacy: WorkerW immediately after the icon `SHELLDLL_DefView` sibling.
-    fn workerw_legacy(progman: HWND) -> Option<HWND> {
-        let defview = unsafe {
-            FindWindowExW(Some(progman), None, w!("SHELLDLL_DefView"), None).ok()?
-        };
-        if !hwnd_valid(defview) {
-            return None;
-        }
-        let workerw = unsafe { FindWindowExW(None, Some(defview), w!("WorkerW"), None).ok()? };
-        hwnd_valid(workerw).then_some(workerw)
+    struct EnumCollect {
+        z: usize,
+        windows: Vec<DesktopWindowInfo>,
     }
 
-  struct EnumCtx {
-      progman: HWND,
-      found: HWND,
-  }
-
-    unsafe extern "system" fn enum_workerw(hwnd: HWND, lparam: LPARAM) -> BOOL {
-        let ctx = &mut *(lparam.0 as *mut EnumCtx);
+    unsafe extern "system" fn enum_collect_top(hwnd: HWND, lparam: LPARAM) -> BOOL {
         if !hwnd_valid(hwnd) {
             return BOOL::from(true);
         }
-        let mut class = [0u16; 32];
+        let ctx = &mut *(lparam.0 as *mut EnumCollect);
+        let mut class = [0u16; 64];
         let len = GetClassNameW(hwnd, &mut class);
-        if len == 0 {
-            return BOOL::from(true);
-        }
-        let name = String::from_utf16_lossy(&class[..len as usize]);
-        if name != "WorkerW" {
-            return BOOL::from(true);
-        }
+        let class_name = if len > 0 {
+            String::from_utf16_lossy(&class[..len as usize])
+        } else {
+            String::new()
+        };
         let parent = GetParent(hwnd).unwrap_or(HWND::default());
-        if parent == ctx.progman {
-            let defview =
-                FindWindowExW(Some(hwnd), None, w!("SHELLDLL_DefView"), None).ok();
-            let has_defview = defview.map(hwnd_valid).unwrap_or(false);
-            if !has_defview && ctx.found.0.is_null() {
-                ctx.found = hwnd;
-            }
-        }
+        let parent_hwnd = if parent.0.is_null() {
+            0
+        } else {
+            hwnd_to_u64(parent)
+        };
+        let defview =
+            FindWindowExW(Some(hwnd), None, w!("SHELLDLL_DefView"), None).ok();
+        let has_defview_child = defview.map(hwnd_valid).unwrap_or(false);
+        ctx.windows.push(DesktopWindowInfo {
+            hwnd: hwnd_to_u64(hwnd),
+            class_name,
+            parent_hwnd,
+            has_defview_child,
+            z_order: ctx.z,
+        });
+        ctx.z += 1;
         BOOL::from(true)
     }
 
-    fn find_wallpaper_workerw() -> Option<HWND> {
-        spawn_desktop_workerw();
-        let progman = progman()?;
-
-        if let Some(w) = workerw_under_progman(progman) {
-            return Some(w);
-        }
-        if let Some(w) = workerw_legacy(progman) {
-            return Some(w);
-        }
-
-        let mut ctx = EnumCtx {
-            progman,
-            found: HWND::default(),
+    fn collect_desktop_windows() -> Vec<DesktopWindowInfo> {
+        let mut ctx = EnumCollect {
+            z: 0,
+            windows: Vec::new(),
         };
         unsafe {
-            let _ = EnumWindows(Some(enum_workerw), LPARAM(&mut ctx as *mut _ as isize));
+            let _ = EnumWindows(Some(enum_collect_top), LPARAM(&mut ctx as *mut _ as isize));
         }
-        hwnd_valid(ctx.found).then_some(ctx.found)
+        ctx.windows
     }
 
-    fn primary_screen_rect() -> RECT {
-        let w = unsafe { GetSystemMetrics(SM_CXSCREEN) };
-        let h = unsafe { GetSystemMetrics(SM_CYSCREEN) };
-        RECT {
-            left: 0,
-            top: 0,
-            right: w,
-            bottom: h,
+    fn wait_for_workerw(diag: &mut String) -> Result<(HWND, DesktopLayout), String> {
+        let progman = progman().ok_or_else(|| "Progman missing after spawn".to_string())?;
+        for retry in 0..12 {
+            let list = collect_desktop_windows();
+            if retry == 0 || retry == 11 {
+                for w in &list {
+                    if w.class_name == "WorkerW" || w.class_name == "Progman" {
+                        diag.push_str(&format!(
+                            "  hwnd=0x{:x} class={} parent=0x{:x} defview={} z={}\n",
+                            w.hwnd, w.class_name, w.parent_hwnd, w.has_defview_child, w.z_order
+                        ));
+                    }
+                }
+            }
+            if let Some((host, layout)) =
+                choose_wallpaper_parent(&list, hwnd_to_u64(progman))
+            {
+                let hwnd = HWND(host as isize);
+                if hwnd_valid(hwnd) {
+                    diag.push_str(&format!(
+                        "workerw retry {retry}: host=0x{host:x} layout={layout:?}\n"
+                    ));
+                    return Ok((hwnd, layout));
+                }
+            }
+            std::thread::sleep(std::time::Duration::from_millis(80));
+        }
+        Err("WorkerW host not found after retries".into())
+    }
+
+    fn parent_chain(hwnd: HWND) -> String {
+        let mut parts = Vec::new();
+        let mut cur = hwnd;
+        for _ in 0..8 {
+            if !hwnd_valid(cur) {
+                break;
+            }
+            let mut class = [0u16; 64];
+            let len = unsafe { GetClassNameW(cur, &mut class) };
+            let name = if len > 0 {
+                String::from_utf16_lossy(&class[..len as usize])
+            } else {
+                "?".into()
+            };
+            parts.push(format!("0x{:x}({name})", hwnd_to_u64(cur)));
+            let parent = unsafe { GetParent(cur) }.unwrap_or(HWND::default());
+            if parent.0.is_null() || parent == cur {
+                break;
+            }
+            cur = parent;
+        }
+        parts.join(" -> ")
+    }
+
+    fn monitor_rect_for_window(hwnd: HWND) -> (RECT, u32) {
+        let dpi = unsafe { GetDpiForWindow(hwnd) };
+        let dpi = if dpi == 0 { 96 } else { dpi };
+        let monitor = unsafe { MonitorFromWindow(Some(hwnd), MONITOR_DEFAULTTOPRIMARY) };
+        let mut info = MONITORINFO {
+            cbSize: std::mem::size_of::<MONITORINFO>() as u32,
+            ..Default::default()
+        };
+        let rect = if unsafe { GetMonitorInfoW(monitor, &mut info) }.as_bool() {
+            info.rcMonitor
+        } else {
+            RECT {
+                left: 0,
+                top: 0,
+                right: 1920,
+                bottom: 1080,
+            }
+        };
+        (rect, dpi)
+    }
+
+    fn child_screen_rect(parent: HWND, hwnd: HWND) -> (i32, i32, i32, i32) {
+        let (monitor, dpi) = monitor_rect_for_window(hwnd);
+        let width = monitor.right - monitor.left;
+        let height = monitor.bottom - monitor.top;
+        let parent_rect = unsafe {
+            let mut r = RECT::default();
+            let _ = GetWindowRect(parent, &mut r);
+            r
+        };
+        // Position relative to parent client (WorkerW origin is screen coords).
+        let x = monitor.left - parent_rect.left;
+        let y = monitor.top - parent_rect.top;
+        let _ = dpi;
+        (x, y, width, height)
+    }
+
+    fn rollback_attach(hwnd: HWND, restore: &WallpaperRestore) {
+        unsafe {
+            let _ = SetParent(hwnd, None);
+            SetWindowLongPtrW(hwnd, GWL_STYLE, restore.previous_style);
+            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, restore.previous_ex_style);
+            let geo = &restore.overlay;
+            let _ = SetWindowPos(
+                hwnd,
+                None,
+                geo.x,
+                geo.y,
+                geo.width as i32,
+                geo.height as i32,
+                SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW,
+            );
+            let _ = ShowWindow(hwnd, SW_SHOW);
         }
     }
 
     pub fn attach_wallpaper(hwnd: HWND) -> Result<(), String> {
         clear_attach_error();
-        let workerw =
-            find_wallpaper_workerw().ok_or_else(|| {
-                let msg = "WorkerW not found (Explorer desktop layer unavailable)".to_string();
-                record_error(msg.clone());
-                msg
-            })?;
+        let mut diag = format!(
+            "windows: {}\nstep: begin attach\nour_hwnd=0x{:x}\n",
+            windows_build_label(),
+            hwnd_to_u64(hwnd)
+        );
 
         let mut guard = WALLPAPER_STATE.lock();
         if guard.attached {
             return Ok(());
         }
+
+        if let Err(e) = spawn_desktop_workerw(&mut diag) {
+            record_attach_failure("spawn", &e, diag);
+            return Err(e);
+        }
+
+        let (workerw, layout) = match wait_for_workerw(&mut diag) {
+            Ok(v) => v,
+            Err(e) => {
+                record_attach_failure("find_workerw", &e, diag);
+                return Err(e);
+            }
+        };
 
         unsafe {
             let mut rect = RECT::default();
@@ -191,46 +327,92 @@ mod imp {
                 width: (rect.right - rect.left).max(0) as u32,
                 height: (rect.bottom - rect.top).max(0) as u32,
             };
+        }
+        guard.previous_style = unsafe { GetWindowLongPtrW(hwnd, GWL_STYLE) };
+        guard.previous_ex_style = unsafe { GetWindowLongPtrW(hwnd, GWL_EXSTYLE) };
+        let snapshot = guard.clone();
+        drop(guard);
 
-            guard.previous_style = GetWindowLongPtrW(hwnd, GWL_STYLE);
-            guard.previous_ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+        unsafe {
+            let _ = ShowWindow(hwnd, SW_HIDE);
+        }
 
-            SetParent(hwnd, Some(workerw)).map_err(|e| {
-                let msg = format!("SetParent failed: {e}");
-                record_error(msg.clone());
-                msg
-            })?;
+        let attach_result: Result<(), String> = (|| {
+            unsafe {
+                SetParent(hwnd, Some(workerw)).map_err(|e| {
+                    format!("SetParent -> {e} (lastError={})", last_error_code())
+                })?;
 
-            let style = GetWindowLongPtrW(hwnd, GWL_STYLE);
-            let style = (style as u64 & !0x00C0_0000) | 0x1000_0000;
-            SetWindowLongPtrW(hwnd, GWL_STYLE, style as isize);
+                let style = GetWindowLongPtrW(hwnd, GWL_STYLE) as u32;
+                let strip = WS_POPUP
+                    | WS_CAPTION
+                    | WS_THICKFRAME
+                    | WS_MINIMIZEBOX
+                    | WS_MAXIMIZEBOX
+                    | WS_SYSMENU
+                    | WS_BORDER
+                    | WS_DLGFRAME;
+                let style = (style & !strip) | WS_CHILD;
+                SetWindowLongPtrW(hwnd, GWL_STYLE, style as isize);
 
-            let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
-            let ex = ex | WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
-            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex as isize);
+                let mut ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
+                ex &= !WS_EX_TOPMOST;
+                ex &= !WS_EX_APPWINDOW;
+                ex |= WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_NOREDIRECTIONBITMAP;
+                // Keep WS_EX_LAYERED when already set (Tauri transparency).
+                if (snapshot.previous_ex_style as u32) & WS_EX_LAYERED != 0 {
+                    ex |= WS_EX_LAYERED;
+                }
+                SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex as isize);
 
-            let area = primary_screen_rect();
-            let width = area.right - area.left;
-            let height = area.bottom - area.top;
-            SetWindowPos(
-                hwnd,
-                None,
-                area.left,
-                area.top,
-                width,
-                height,
-                SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_SHOWWINDOW,
-            )
-            .map_err(|e| {
-                let _ = SetParent(hwnd, None);
-                let msg = format!("SetWindowPos (fullscreen) failed: {e}");
-                record_error(msg.clone());
-                msg
-            })?;
+                let (x, y, w, h) = child_screen_rect(workerw, hwnd);
+                let (_, dpi) = monitor_rect_for_window(hwnd);
+                diag.push_str(&format!(
+                    "layout={layout:?} parent=0x{:x} dpi={dpi}\nsetpos child x={x} y={y} w={w} h={h}\n",
+                    hwnd_to_u64(workerw)
+                ));
+
+                SetWindowPos(
+                    hwnd,
+                    None,
+                    x,
+                    y,
+                    w,
+                    h,
+                    SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE,
+                )
+                .map_err(|e| {
+                    format!("SetWindowPos -> {e} (lastError={})", last_error_code())
+                })?;
+
+                let parent = GetParent(hwnd).unwrap_or(HWND::default());
+                if parent != workerw {
+                    return Err(format!(
+                        "verify: parent=0x{:x} expected WorkerW 0x{:x}",
+                        hwnd_to_u64(parent),
+                        hwnd_to_u64(workerw)
+                    ));
+                }
+
+                diag.push_str(&format!("parent_chain: {}\n", parent_chain(hwnd)));
+                Ok(())
+            }
+        })();
+
+        let mut guard = WALLPAPER_STATE.lock();
+        if let Err(ref e) = attach_result {
+            rollback_attach(hwnd, &snapshot);
+            record_attach_failure("attach", e, diag);
+            return Err(e.clone());
+        }
+
+        unsafe {
             let _ = ShowWindow(hwnd, SW_SHOW);
         }
         guard.attached = true;
-        startup::step("wallpaper: attached to WorkerW");
+        startup::step(&format!("wallpaper: attached ({layout:?})"));
+        diag.push_str("step: attach OK\n");
+        *LAST_DIAGNOSTICS.lock() = Some(diag);
         Ok(())
     }
 

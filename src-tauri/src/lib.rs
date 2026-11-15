@@ -3,6 +3,7 @@ mod lyrics;
 mod media;
 mod startup;
 mod wallpaper;
+mod wallpaper_select;
 
 use lyrics::{create_service, LyricsResponse, SharedLyricsService};
 use media::{now_unix_ms, smoothed_now, MediaState, SharedMediaState, start_media_watcher};
@@ -38,6 +39,8 @@ struct UiState {
 struct WallpaperStatus {
     attached: bool,
     last_error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    last_diagnostics: Option<String>,
 }
 
 #[derive(Clone, Serialize)]
@@ -301,10 +304,8 @@ fn set_wallpaper_mode_inner(
     #[cfg(windows)]
     {
         if enabled {
-            apply_wallpaper_shell(window, true)?;
             let hwnd = window.hwnd().map_err(|e| e.to_string())?;
             if let Err(e) = wallpaper::attach_wallpaper(hwnd) {
-                let _ = apply_wallpaper_shell(window, false);
                 if persist {
                     let _ = service.set_wallpaper_mode(false);
                 }
@@ -312,6 +313,7 @@ fn set_wallpaper_mode_inner(
                 let _ = window.app_handle().emit("wallpaper-attach-failed", &e);
                 return Err(e);
             }
+            apply_wallpaper_shell(window, true)?;
             if persist {
                 service.set_wallpaper_mode(true)?;
             }
@@ -361,7 +363,12 @@ fn set_wallpaper_mode(
     service: tauri::State<SharedLyricsService>,
     app: AppHandle,
 ) -> Result<(), String> {
-    set_wallpaper_mode_inner(&window, flags.inner(), &service, enabled, true)?;
+    if let Err(e) =
+        set_wallpaper_mode_inner(&window, flags.inner(), &service, enabled, true)
+    {
+        let _ = app.emit("ui-state", current_ui_state(flags.inner()));
+        return Err(e);
+    }
     let _ = app.emit("ui-state", current_ui_state(flags.inner()));
     Ok(())
 }
@@ -374,7 +381,12 @@ fn toggle_wallpaper_mode(
     app: AppHandle,
 ) -> Result<bool, String> {
     let next = !wallpaper::is_attached();
-    set_wallpaper_mode_inner(&window, flags.inner(), &service, next, true)?;
+    if let Err(e) =
+        set_wallpaper_mode_inner(&window, flags.inner(), &service, next, true)
+    {
+        let _ = app.emit("ui-state", current_ui_state(flags.inner()));
+        return Err(e);
+    }
     let _ = app.emit("ui-state", current_ui_state(flags.inner()));
     Ok(next)
 }
@@ -384,6 +396,7 @@ fn get_wallpaper_status() -> WallpaperStatus {
     WallpaperStatus {
         attached: wallpaper::is_attached(),
         last_error: wallpaper::last_attach_error(),
+        last_diagnostics: wallpaper::last_attach_diagnostics(),
     }
 }
 

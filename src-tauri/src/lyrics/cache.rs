@@ -5,6 +5,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 const FOUND_TTL_SECS: i64 = 7 * 24 * 3600;
 const NOT_FOUND_TTL_SECS: i64 = 6 * 3600;
+/// Built-in compensation for Microsoft Store Spotify GSMTC lag (v0.6.1+).
+pub const SYNC_BUILTIN_LAG_MS: i64 = 600;
 
 pub struct LyricsCache {
     conn: Option<Connection>,
@@ -33,7 +35,34 @@ impl LyricsCache {
             );",
         )
         .map_err(|e| e.to_string())?;
+        migrate_sync_offsets_v061(&conn)?;
         Ok(Self { conn: Some(conn) })
+    }
+
+    fn migrate_sync_offsets_v061(conn: &Connection) -> Result<(), String> {
+        let migrated: bool = conn
+            .query_row(
+                "SELECT value FROM app_settings WHERE key = 'sync_offset_v061_migrated'",
+                [],
+                |row| row.get::<_, String>(0),
+            )
+            .ok()
+            .map(|v| v == "1")
+            .unwrap_or(false);
+        if migrated {
+            return Ok(());
+        }
+        conn.execute(
+            "UPDATE sync_offset SET offset_ms = MAX(-10000, MIN(10000, offset_ms - ?1))",
+            params![SYNC_BUILTIN_LAG_MS],
+        )
+        .map_err(|e| e.to_string())?;
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('sync_offset_v061_migrated', '1')",
+            [],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(())
     }
 
     pub fn disabled() -> Self {
@@ -454,6 +483,35 @@ mod settings_tests {
         )
         .expect("schema");
         LyricsCache { conn: Some(conn) }
+    }
+
+    #[test]
+    fn sync_offset_v061_migrates_builtin_lag_out_of_stored() {
+        let conn = Connection::open_in_memory().expect("in-memory db");
+        conn.execute_batch(
+            "CREATE TABLE sync_offset (cache_key TEXT PRIMARY KEY, offset_ms INTEGER NOT NULL);
+             CREATE TABLE app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+             INSERT INTO sync_offset (cache_key, offset_ms) VALUES ('a|b|c|120', 600);
+             INSERT INTO sync_offset (cache_key, offset_ms) VALUES ('x|y|z|200', 100);",
+        )
+        .expect("schema");
+        super::migrate_sync_offsets_v061(&conn).expect("migrate");
+        let a: i64 = conn
+            .query_row(
+                "SELECT offset_ms FROM sync_offset WHERE cache_key = 'a|b|c|120'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        let x: i64 = conn
+            .query_row(
+                "SELECT offset_ms FROM sync_offset WHERE cache_key = 'x|y|z|200'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(a, 0);
+        assert_eq!(x, -500);
     }
 
     #[test]
