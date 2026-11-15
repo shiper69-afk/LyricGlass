@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   DEFAULT_BUILTIN_SYNC_LAG_MS,
   effectiveSyncOffsetMs,
