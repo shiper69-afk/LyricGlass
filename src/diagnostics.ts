@@ -6,7 +6,7 @@ import {
 import { playbackClockMs, type PlaybackAnchor } from "./playback-clock";
 import type { LyricsView, LyricsResponse, MediaState } from "./lyrics-view";
 
-const APP_VERSION = "0.4.3";
+const APP_VERSION = "0.5.0";
 
 export interface FullMediaState extends MediaState {
   sourceAppId: string;
@@ -48,6 +48,12 @@ export function buildDiagnosticsBlock(
     `  playback: ${media?.playbackStatus ?? "—"} rate=${media?.playbackRate ?? 1}`,
     `  lastEvent: ${media?.lastEventKind ?? "—"}`,
     "",
+    "Lyrics source",
+    `  provider: ${lyrics?.lyricsSource?.length ? lyrics.lyricsSource : "—"}`,
+    `  status: ${lyrics?.status ?? "—"}`,
+    `  message: ${lyrics?.message ?? "—"}`,
+    `  fromCache: ${lyrics?.fromCache ?? false}`,
+    "",
     "LRCLIB match",
     `  id: ${lyrics?.lrclibId ?? "—"}`,
     `  track: ${lyrics?.lrclibTrackName ?? "—"}`,
@@ -55,7 +61,13 @@ export function buildDiagnosticsBlock(
     `  album: ${lyrics?.lrclibAlbumName ?? "—"}`,
     `  duration: ${lrclibDur}s`,
     `  delta vs GSMTC: ${lyrics?.durationDeltaSec != null ? lyrics.durationDeltaSec.toFixed(2) : "—"}s warning=${lyrics?.durationWarning ?? false}`,
-    `  lyrics status: ${lyrics?.status ?? "—"}`,
+    "",
+    "Shironet match",
+    `  wrkid: ${lyrics?.shironetWrkid ?? "—"}`,
+    `  prfid: ${lyrics?.shironetPrfid ?? "—"}`,
+    `  title: ${lyrics?.shironetMatchTitle ?? "—"}`,
+    `  artist: ${lyrics?.shironetMatchArtist ?? "—"}`,
+    `  url: ${lyrics?.shironetPageUrl ?? "—"}`,
     "",
     "Clock",
     `  gsmtcPosition: ${formatMs(media?.positionReportedMs ?? 0)} (${media?.positionReportedMs ?? 0} ms)`,

@@ -220,6 +220,10 @@ button.active {
   box-sizing: border-box;
 }
 
+.lyrics-lines.lyrics-hebrew .lyric-line {
+  direction: rtl;
+}
+
 .lyric-line {
   margin: 0;
   padding: 2px 8px;
@@ -403,7 +407,7 @@ button.active {
 
 .lyrics-plain {
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
   white-space: pre-wrap;
   font-size: 14px;
   line-height: 1.5;
@@ -415,6 +419,18 @@ button.active {
     0 0 12px rgba(0, 0, 0, 0.95),
     0 2px 6px rgba(0, 0, 0, 1);
   padding: 4px 8px;
+  width: 100%;
+}
+
+.lyrics-plain.plain-rtl {
+  text-align: center;
+}
+
+.plain-scroll-inner {
+  will-change: transform;
+  white-space: pre-wrap;
+  text-align: center;
+  unicode-bidi: plaintext;
   width: 100%;
 }
 

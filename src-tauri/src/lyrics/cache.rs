@@ -1,4 +1,4 @@
-use super::lrclib::LyricsResponse;
+use super::response::LyricsResponse;
 use rusqlite::{params, Connection};
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};

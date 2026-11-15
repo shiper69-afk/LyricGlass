@@ -2,14 +2,29 @@ use crate::startup;
 
 mod cache;
 mod lrclib;
+mod response;
+mod shironet;
 
 use cache::LyricsCache;
-pub use lrclib::LyricsResponse;
+pub use response::{looks_hebrew, LyricsResponse};
 use parking_lot::Mutex;
 use std::sync::Arc;
 
 pub struct LyricsService {
     cache: Mutex<LyricsCache>,
+}
+
+fn lrclib_has_lyrics(res: &LyricsResponse) -> bool {
+    matches!(res.status.as_str(), "synced" | "plain" | "instrumental")
+}
+
+fn should_try_shironet(artist: &str, track: &str, lrclib: &LyricsResponse) -> bool {
+    if lrclib_has_lyrics(lrclib) {
+        return false;
+    }
+    looks_hebrew(artist)
+        || looks_hebrew(track)
+        || matches!(lrclib.status.as_str(), "not_found")
 }
 
 impl LyricsService {
@@ -121,8 +136,23 @@ impl LyricsService {
             return hit;
         }
 
-        let result = lrclib::fetch_from_network(artist, track, album, duration_ms);
-        if let Err(e) = self.cache.lock().put(artist, track, album, duration_ms, &result) {
+        let mut result = lrclib::fetch_from_network(artist, track, album, duration_ms);
+
+        if should_try_shironet(artist, track, &result) {
+            startup::step("lyrics: trying Shironet fallback");
+            let shironet = shironet::fetch_from_network(artist, track);
+            if shironet.status == "plain" && shironet.plain_lyrics.is_some() {
+                result = shironet;
+            } else if result.status == "not_found" && shironet.lyrics_source == "shironet" {
+                result = shironet;
+            }
+        }
+
+        if let Err(e) = self
+            .cache
+            .lock()
+            .put(artist, track, album, duration_ms, &result)
+        {
             startup::step(&format!("lyrics: cache write failed: {e}"));
         }
         result

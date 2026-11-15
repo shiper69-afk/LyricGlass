@@ -15,6 +15,7 @@ import {
   LyricsView,
   type LyricsResponse,
 } from "./lyrics-view";
+import { plainSourceLabel } from "./plain-scroll";
 import { BOUNCER_META, normalizeBouncerId } from "./bouncers/ids";
 import { bouncerSvgMarkup } from "./bouncers/svg-store";
 
@@ -238,7 +239,11 @@ async function loadLyrics(media: FullMediaState) {
     if (gen !== fetchGeneration) return;
     latestLyrics = res;
     lyricsView.onLyricsResponse(res);
-    els.plainBadge.classList.toggle("hidden", res.status !== "plain");
+    const untimed = res.status === "plain";
+    els.plainBadge.classList.toggle("hidden", !untimed);
+    if (untimed) {
+      els.plainBadge.textContent = `Untimed · ${plainSourceLabel(res.lyricsSource)}`;
+    }
   } catch (e) {
     if (gen !== fetchGeneration) return;
     latestLyrics = {
@@ -300,7 +305,7 @@ function tick() {
       playbackAnchor,
       Date.now(),
     );
-    lyricsView.tick(playbackMs);
+    lyricsView.tick(playbackMs, latestMedia.durationMs);
     renderDebugClock();
   }
   rafId = requestAnimationFrame(tick);

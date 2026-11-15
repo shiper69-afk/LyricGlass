@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LyricGlass Hebrew RTL e2e</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+    <style>
+      #app {
+        width: 440px;
+        height: 320px;
+        margin: 24px auto;
+      }
+      .lyrics-panel {
+        flex: 1;
+        min-height: 0;
+      }
+      .lyrics-lines.karaoke-on .lyric-line {
+        padding-top: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <section class="lyrics-panel" id="lyrics-root">
+        <p class="np-header">
+          <span id="np-title" class="np-title">עברית</span>
+          <span id="np-artist" class="np-artist">בדיקה</span>
+        </p>
+        <p id="duration-warn" class="duration-warn hidden"></p>
+        <p id="lyrics-status" class="lyrics-status"></p>
+        <p id="sync-offset-label" class="sync-offset"></p>
+        <div id="lyrics-lines" class="lyrics-lines karaoke-on"></div>
+        <div id="lyrics-plain" class="lyrics-plain hidden"></div>
+      </section>
+    </div>
+    <script type="module" src="/src/e2e/hebrew-harness.ts"></script>
+  </body>
+</html>

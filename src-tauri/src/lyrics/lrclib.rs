@@ -1,65 +1,8 @@
-use serde::{Deserialize, Serialize};
+use super::response::LyricsResponse;
+use serde::Deserialize;
 
-const USER_AGENT: &str = "LyricGlass/0.4.3 https://github.com/shiper69-afk/LyricGlass";
+const USER_AGENT: &str = "LyricGlass/0.5.0 https://github.com/shiper69-afk/LyricGlass";
 const BASE: &str = "https://lrclib.net";
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct LyricsResponse {
-    pub status: String,
-    pub message: String,
-    pub synced_lrc: Option<String>,
-    pub plain_lyrics: Option<String>,
-    pub instrumental: bool,
-    #[serde(default)]
-    pub from_cache: bool,
-    pub lrclib_id: Option<i64>,
-    pub lrclib_duration_sec: Option<f64>,
-    pub lrclib_track_name: Option<String>,
-    pub lrclib_artist_name: Option<String>,
-    pub lrclib_album_name: Option<String>,
-    pub duration_delta_sec: Option<f64>,
-    #[serde(default)]
-    pub duration_warning: bool,
-}
-
-impl LyricsResponse {
-    fn err(message: impl Into<String>) -> Self {
-        Self {
-            status: "error".into(),
-            message: message.into(),
-            synced_lrc: None,
-            plain_lyrics: None,
-            instrumental: false,
-            from_cache: false,
-            lrclib_id: None,
-            lrclib_duration_sec: None,
-            lrclib_track_name: None,
-            lrclib_artist_name: None,
-            lrclib_album_name: None,
-            duration_delta_sec: None,
-            duration_warning: false,
-        }
-    }
-
-    fn not_found() -> Self {
-        Self {
-            status: "not_found".into(),
-            message: "No lyrics found".into(),
-            synced_lrc: None,
-            plain_lyrics: None,
-            instrumental: false,
-            from_cache: false,
-            lrclib_id: None,
-            lrclib_duration_sec: None,
-            lrclib_track_name: None,
-            lrclib_artist_name: None,
-            lrclib_album_name: None,
-            duration_delta_sec: None,
-            duration_warning: false,
-        }
-    }
-}
 
 #[derive(Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -89,14 +32,15 @@ fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> Lyr
         .filter(|s| !s.trim().is_empty());
     let plain = record.plain_lyrics.filter(|s| !s.trim().is_empty());
 
-    let duration_delta_sec = record
-        .duration
-        .map(|d| d - target_duration_sec);
-    let duration_warning = duration_delta_sec
-        .map(|d| d.abs() > 3.0)
-        .unwrap_or(false);
+    let duration_delta_sec = record.duration.map(|d| d - target_duration_sec);
+    let duration_warning = duration_delta_sec.map(|d| d.abs() > 3.0).unwrap_or(false);
 
-    let meta = |status: &str, message: String, synced_lrc: Option<String>, plain_lyrics: Option<String>, instrumental: bool| {
+    let meta = |status: &str,
+                  message: String,
+                  lyrics_source: &str,
+                  synced_lrc: Option<String>,
+                  plain_lyrics: Option<String>,
+                  instrumental: bool| {
         LyricsResponse {
             status: status.into(),
             message,
@@ -104,6 +48,7 @@ fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> Lyr
             plain_lyrics,
             instrumental,
             from_cache: false,
+            lyrics_source: lyrics_source.into(),
             lrclib_id: Some(record.id),
             lrclib_duration_sec: record.duration,
             lrclib_track_name: record.track_name.clone(),
@@ -111,6 +56,11 @@ fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> Lyr
             lrclib_album_name: record.album_name.clone(),
             duration_delta_sec,
             duration_warning,
+            shironet_wrkid: None,
+            shironet_prfid: None,
+            shironet_match_title: None,
+            shironet_match_artist: None,
+            shironet_page_url: None,
         }
     };
 
@@ -118,6 +68,7 @@ fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> Lyr
         return meta(
             "instrumental",
             "Instrumental track (LRCLIB)".into(),
+            "instrumental",
             synced,
             plain,
             true,
@@ -128,6 +79,7 @@ fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> Lyr
         return meta(
             "synced",
             format!("Synced lyrics ({source})"),
+            "lrclib-synced",
             Some(lrc),
             plain,
             false,
@@ -138,6 +90,7 @@ fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> Lyr
         return meta(
             "plain",
             "Plain lyrics (untimed)".into(),
+            "lrclib-plain",
             None,
             Some(text),
             false,
@@ -200,10 +153,7 @@ fn pick_best_record(
                     album_match_score(&b.album_name, target_album)
                         .cmp(&album_match_score(&a.album_name, target_album))
                 })
-                .then_with(|| {
-                    has_synced_lyrics(b)
-                        .cmp(&has_synced_lyrics(a))
-                })
+                .then_with(|| has_synced_lyrics(b).cmp(&has_synced_lyrics(a)))
         })
 }
 
@@ -238,10 +188,7 @@ pub fn fetch_from_network(
         }
         Ok(resp) if resp.status() == reqwest::StatusCode::NOT_FOUND => {}
         Ok(resp) => {
-            return LyricsResponse::err(format!(
-                "LRCLIB get failed: HTTP {}",
-                resp.status()
-            ));
+            return LyricsResponse::err(format!("LRCLIB get failed: HTTP {}", resp.status()));
         }
         Err(e) => return LyricsResponse::err(format!("Network error: {e}")),
     }

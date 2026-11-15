@@ -15,6 +15,7 @@ export default defineConfig(() => ({
       input: {
         main: "index.html",
         scrollHarness: "scroll-harness.html",
+        hebrewHarness: "hebrew-harness.html",
       },
     },
   },

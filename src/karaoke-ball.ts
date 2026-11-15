@@ -141,6 +141,7 @@ export class KaraokeBall {
   scheduleMeasure(activeLine: HTMLElement) {
     if (this.activeLineEl === activeLine && this.anchors.length > 0) return;
     this.activeLineEl = activeLine;
+    this.anchors = this.measureWords(activeLine);
     const gen = ++this.measureGeneration;
     requestAnimationFrame(() => {
       if (gen !== this.measureGeneration) return;

@@ -54,6 +54,18 @@ describe("bouncer motion", () => {
     expect(motion.hostTransform).toBe("scaleX(-1)");
   });
 
+  it("paper-plane mirrors in rtl on host", () => {
+    const motion = computeBouncerMotion({
+      id: "paper-plane",
+      hopProgress: 0.4,
+      rtl: true,
+      heldNote: false,
+      wordIndex: 1,
+      interWordBlend: 0.2,
+    });
+    expect(motion.hostTransform).toBe("scaleX(-1)");
+  });
+
   it("eq bars vary heights", () => {
     const a = eqBarScales(0.2, false);
     const b = eqBarScales(0.7, false);
