@@ -3,40 +3,42 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LyricGlass Phase 0</title>
+    <title>LyricGlass</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div id="app">
       <header class="titlebar" data-tauri-drag-region>
-        <span>LyricGlass · Phase 0 spike</span>
+        <span class="brand">LyricGlass</span>
         <div class="titlebar-actions">
-          <button type="button" id="btn-click" title="Toggle click-through (Ctrl+Alt+C)">Click-through</button>
-          <button type="button" id="btn-wallpaper" title="Toggle wallpaper attach (Ctrl+Alt+W)">Wallpaper</button>
-          <label class="anim-toggle">
-            <input type="checkbox" id="anim-enabled" checked />
-            Animate
-          </label>
+          <button type="button" id="btn-click" title="Click-through (Ctrl+Alt+C)">◻</button>
+          <button type="button" id="btn-wallpaper" title="Wallpaper (Ctrl+Alt+W)">🖼</button>
         </div>
       </header>
 
-      <section class="panel media-panel">
-        <h2>Spotify · Windows media session</h2>
-        <p id="media-status" class="muted">Connecting…</p>
+      <section class="lyrics-panel" id="lyrics-root">
+        <p class="np-header">
+          <span id="np-title" class="np-title">—</span>
+          <span id="np-artist" class="np-artist">—</span>
+        </p>
+        <p id="lyrics-status" class="lyrics-status">Waiting for Spotify…</p>
+        <p id="sync-offset-label" class="sync-offset" aria-live="polite"></p>
+        <div id="lyrics-lines" class="lyrics-lines" aria-live="polite"></div>
+        <div id="lyrics-plain" class="lyrics-plain hidden" dir="auto"></div>
+        <p class="plain-badge hidden" id="plain-badge">Untimed lyrics</p>
+      </section>
+
+      <section class="panel debug-panel hidden" id="debug-panel" aria-hidden="true">
+        <h2>Diagnostics (Phase 0)</h2>
+        <p id="media-status" class="muted">—</p>
         <dl class="media-grid">
-          <dt>Title</dt>
-          <dd id="m-title">—</dd>
-          <dt>Artist</dt>
-          <dd id="m-artist">—</dd>
           <dt>Album</dt>
           <dd id="m-album">—</dd>
           <dt>Status</dt>
           <dd id="m-status">—</dd>
-          <dt>Duration</dt>
-          <dd id="m-duration">—</dd>
-          <dt>Position (reported)</dt>
+          <dt>Reported</dt>
           <dd id="m-position-raw">—</dd>
-          <dt>Position (smoothed)</dt>
+          <dt>Smoothed</dt>
           <dd id="m-position-smooth">—</dd>
           <dt>Timeline events</dt>
           <dd id="m-timeline-count">0</dd>
@@ -45,18 +47,8 @@
         </dl>
       </section>
 
-      <section class="panel demo-panel">
-        <h2>Overlay demo</h2>
-        <div class="lyric-row">
-          <div class="lyric-en" id="lyric-en">Hello world — overlay test line</div>
-          <div class="lyric-he" dir="rtl" lang="he">שלום עולם, זו בדיקה</div>
-        </div>
-        <canvas id="karaoke-canvas" width="520" height="56" aria-hidden="true"></canvas>
-        <p class="fps" id="fps-label">FPS: —</p>
-      </section>
-
       <footer class="hints">
-        <span>Drag title bar · Tray menu · Ctrl+Alt+C click-through · Ctrl+Alt+W wallpaper</span>
+        <span>Ctrl+Alt+C click-through · Ctrl+Alt+W wallpaper · Ctrl+Alt+[ / ] sync ±500ms</span>
       </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>

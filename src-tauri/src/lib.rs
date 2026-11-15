@@ -1,8 +1,10 @@
 mod clock;
+mod lyrics;
 mod media;
 mod startup;
 mod wallpaper;
 
+use lyrics::{create_service, LyricsResponse, SharedLyricsService};
 use media::{now_unix_ms, smoothed_now, MediaState, SharedMediaState, start_media_watcher};
 use parking_lot::Mutex;
 use serde::Serialize;
@@ -16,6 +18,7 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 struct AppFlags {
     click_through: bool,
+    debug_visible: bool,
 }
 
 type SharedFlags = Arc<Mutex<AppFlags>>;
@@ -25,12 +28,15 @@ type SharedFlags = Arc<Mutex<AppFlags>>;
 struct UiState {
     click_through: bool,
     wallpaper_mode: bool,
+    debug_visible: bool,
 }
 
 fn current_ui_state(flags: &SharedFlags) -> UiState {
+    let guard = flags.lock();
     UiState {
-        click_through: flags.lock().click_through,
+        click_through: guard.click_through,
         wallpaper_mode: wallpaper::is_attached(),
+        debug_visible: guard.debug_visible,
     }
 }
 
@@ -53,6 +59,31 @@ fn get_ui_state(flags: tauri::State<SharedFlags>) -> UiState {
 #[tauri::command]
 fn get_startup_log_path() -> String {
     startup::log_path_display()
+}
+
+#[tauri::command]
+fn fetch_lyrics(
+    service: tauri::State<SharedLyricsService>,
+    artist: String,
+    track: String,
+    album: String,
+    duration_ms: u64,
+) -> LyricsResponse {
+    service.fetch(&artist, &track, &album, duration_ms)
+}
+
+#[tauri::command]
+fn toggle_debug(
+    flags: tauri::State<SharedFlags>,
+    app: AppHandle,
+) -> Result<bool, String> {
+    let next = {
+        let mut guard = flags.lock();
+        guard.debug_visible = !guard.debug_visible;
+        guard.debug_visible
+    };
+    let _ = app.emit("ui-state", current_ui_state(flags.inner()));
+    Ok(next)
 }
 
 fn set_click_through(window: &WebviewWindow, flags: &SharedFlags, enabled: bool) -> Result<(), String> {
@@ -122,12 +153,20 @@ fn toggle_wallpaper_mode(
     Ok(next)
 }
 
-fn register_shortcuts(app: &AppHandle) {
-    register_one_shortcut(app, "Ctrl+Alt+C", true);
-    register_one_shortcut(app, "Ctrl+Alt+W", false);
+enum ShortcutAction {
+    ToggleClickThrough,
+    ToggleWallpaper,
+    SyncOffset(i64),
 }
 
-fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, click: bool) {
+fn register_shortcuts(app: &AppHandle) {
+    register_one_shortcut(app, "Ctrl+Alt+C", ShortcutAction::ToggleClickThrough);
+    register_one_shortcut(app, "Ctrl+Alt+W", ShortcutAction::ToggleWallpaper);
+    register_one_shortcut(app, "Ctrl+Alt+[", ShortcutAction::SyncOffset(-500));
+    register_one_shortcut(app, "Ctrl+Alt+]", ShortcutAction::SyncOffset(500));
+}
+
+fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, action: ShortcutAction) {
     let parsed: Shortcut = match shortcut_str.parse() {
         Ok(s) => s,
         Err(e) => {
@@ -141,15 +180,27 @@ fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, click: bool) {
         if event.state != ShortcutState::Pressed {
             return;
         }
-        if let Some(window) = app_handle.get_webview_window("main") {
-            let flags = app_handle.state::<SharedFlags>();
-            if click {
-                let next = !flags.lock().click_through;
-                if set_click_through(&window, flags.inner(), next).is_ok() {
-                    let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
+        match action {
+            ShortcutAction::SyncOffset(delta) => {
+                let _ = app_handle.emit("sync-offset", delta);
+                let _ = app_handle.emit("seek-tick", ());
+            }
+            ShortcutAction::ToggleClickThrough => {
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let flags = app_handle.state::<SharedFlags>();
+                    let next = !flags.lock().click_through;
+                    if set_click_through(&window, flags.inner(), next).is_ok() {
+                        let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
+                    }
                 }
-            } else if set_wallpaper_mode_inner(&window, !wallpaper::is_attached()).is_ok() {
-                let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
+            }
+            ShortcutAction::ToggleWallpaper => {
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let flags = app_handle.state::<SharedFlags>();
+                    if set_wallpaper_mode_inner(&window, !wallpaper::is_attached()).is_ok() {
+                        let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
+                    }
+                }
             }
         }
     }) {
@@ -174,6 +225,13 @@ fn build_tray(app: &AppHandle) {
             return;
         }
     };
+    let toggle_debug = match MenuItem::with_id(app, "toggle_debug", "Show diagnostics", true, None::<&str>) {
+        Ok(i) => i,
+        Err(e) => {
+            startup::step(&format!("tray menu item failed: {e}"));
+            return;
+        }
+    };
     let quit = match PredefinedMenuItem::quit(app, None) {
         Ok(i) => i,
         Err(e) => {
@@ -181,7 +239,7 @@ fn build_tray(app: &AppHandle) {
             return;
         }
     };
-    let menu = match Menu::with_items(app, &[&toggle_click, &toggle_wallpaper, &quit]) {
+    let menu = match Menu::with_items(app, &[&toggle_click, &toggle_wallpaper, &toggle_debug, &quit]) {
         Ok(m) => m,
         Err(e) => {
             startup::step(&format!("tray menu failed: {e}"));
@@ -197,7 +255,7 @@ fn build_tray(app: &AppHandle) {
     if let Err(e) = TrayIconBuilder::with_id("main")
         .icon(icon)
         .menu(&menu)
-        .tooltip("LyricGlass Phase 0 spike")
+        .tooltip("LyricGlass")
         .on_menu_event({
             let app_handle = app.clone();
             move |app, event| match event.id.as_ref() {
@@ -217,6 +275,12 @@ fn build_tray(app: &AppHandle) {
                             let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
                         }
                     }
+                }
+                "toggle_debug" => {
+                    let flags = app.state::<SharedFlags>();
+                    let mut guard = flags.lock();
+                    guard.debug_visible = !guard.debug_visible;
+                    let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
                 }
                 _ => {}
             }
@@ -250,8 +314,10 @@ pub fn run() {
     startup::step("LyricGlass run() begin");
 
     let media_state: SharedMediaState = Arc::new(parking_lot::RwLock::new(MediaState::default()));
+    let lyrics_service = create_service();
     let flags: SharedFlags = Arc::new(Mutex::new(AppFlags {
         click_through: false,
+        debug_visible: false,
     }));
 
     startup::step("creating tauri builder");
@@ -262,12 +328,15 @@ pub fn run() {
             tauri_plugin_global_shortcut::Builder::new().build()
         })
         .manage(media_state.clone())
+        .manage(lyrics_service)
         .manage(flags.clone())
         .invoke_handler(tauri::generate_handler![
             get_media_state,
             get_smoothed_position,
             get_ui_state,
             get_startup_log_path,
+            fetch_lyrics,
+            toggle_debug,
             toggle_click_through,
             set_wallpaper_mode,
             toggle_wallpaper_mode,

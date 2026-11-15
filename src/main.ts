@@ -1,18 +1,10 @@
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { formatMs, smoothedPositionMs } from "./clock";
+import { LyricsView, type LyricsResponse, type MediaState } from "./lyrics-view";
 
-interface MediaState {
-  spotifyRunning: boolean;
+interface FullMediaState extends MediaState {
   sourceAppId: string;
-  title: string;
-  artist: string;
-  album: string;
-  durationMs: number;
-  positionReportedMs: number;
-  positionReportedAtMs: number;
-  playbackStatus: string;
   lastEventKind: string;
   timelineUpdates: number;
   message: string;
@@ -21,163 +13,133 @@ interface MediaState {
 interface UiState {
   clickThrough: boolean;
   wallpaperMode: boolean;
+  debugVisible: boolean;
 }
+
+const lyricsRoot = document.getElementById("lyrics-root")!;
+const lyricsView = new LyricsView(lyricsRoot);
 
 const els = {
   mediaStatus: document.getElementById("media-status")!,
-  title: document.getElementById("m-title")!,
-  artist: document.getElementById("m-artist")!,
   album: document.getElementById("m-album")!,
   status: document.getElementById("m-status")!,
-  duration: document.getElementById("m-duration")!,
   posRaw: document.getElementById("m-position-raw")!,
   posSmooth: document.getElementById("m-position-smooth")!,
   timelineCount: document.getElementById("m-timeline-count")!,
   lastEvent: document.getElementById("m-last-event")!,
   btnClick: document.getElementById("btn-click") as HTMLButtonElement,
   btnWallpaper: document.getElementById("btn-wallpaper") as HTMLButtonElement,
-  animEnabled: document.getElementById("anim-enabled") as HTMLInputElement,
-  canvas: document.getElementById("karaoke-canvas") as HTMLCanvasElement,
-  fps: document.getElementById("fps-label")!,
+  debugPanel: document.getElementById("debug-panel")!,
+  plainBadge: document.getElementById("plain-badge")!,
 };
 
-let latestMedia: MediaState | null = null;
+let latestMedia: FullMediaState | null = null;
+let fetchGeneration = 0;
 
-function renderMedia(state: MediaState) {
+function renderDebug(media: FullMediaState) {
+  els.mediaStatus.textContent = media.message;
+  els.album.textContent = media.album || "—";
+  els.status.textContent = media.playbackStatus;
+  els.posRaw.textContent = formatMs(media.positionReportedMs);
+  els.timelineCount.textContent = String(media.timelineUpdates);
+  els.lastEvent.textContent = media.lastEventKind;
+
+  const playing = media.playbackStatus.toLowerCase() === "playing";
+  const smooth = smoothedPositionMs(
+    media.positionReportedMs,
+    playing,
+    Date.now() - media.positionReportedAtMs,
+  );
+  els.posSmooth.textContent = formatMs(smooth);
+}
+
+async function loadLyrics(media: FullMediaState) {
+  if (!lyricsView.shouldFetchLyrics(media)) return;
+
+  const gen = ++fetchGeneration;
+  lyricsView.onLyricsLoading();
+
+  try {
+    const res = await invoke<LyricsResponse>("fetch_lyrics", {
+      artist: media.artist,
+      track: media.title,
+      album: media.album,
+      durationMs: media.durationMs,
+    });
+    if (gen !== fetchGeneration) return;
+    lyricsView.onLyricsResponse(res);
+    els.plainBadge.classList.toggle("hidden", res.status !== "plain");
+  } catch (e) {
+    if (gen !== fetchGeneration) return;
+    lyricsView.onLyricsResponse({
+      status: "error",
+      message: String(e),
+      instrumental: false,
+    });
+  }
+}
+
+function onMedia(state: FullMediaState) {
+  const prevKind = latestMedia?.lastEventKind;
   latestMedia = state;
-  els.mediaStatus.textContent = state.message;
-  els.title.textContent = state.title || "—";
-  els.artist.textContent = state.artist || "—";
-  els.album.textContent = state.album || "—";
-  els.status.textContent = state.playbackStatus;
-  els.duration.textContent = formatMs(state.durationMs);
-  els.posRaw.textContent = formatMs(state.positionReportedMs);
-  els.timelineCount.textContent = String(state.timelineUpdates);
-  els.lastEvent.textContent = state.lastEventKind;
+  lyricsView.onMediaHeader(state);
+
+  const trackChanged =
+    !prevKind ||
+    state.lastEventKind === "track" ||
+    lyricsView.shouldFetchLyrics(state);
+
+  if (trackChanged) {
+    void loadLyrics(state);
+  }
+
+  renderDebug(state);
 }
 
 function renderUi(state: UiState) {
   els.btnClick.classList.toggle("active", state.clickThrough);
   els.btnWallpaper.classList.toggle("active", state.wallpaperMode);
+  els.debugPanel.classList.toggle("hidden", !state.debugVisible);
+  els.debugPanel.setAttribute("aria-hidden", state.debugVisible ? "false" : "true");
 }
-
-function updateSmoothedClock() {
-  if (!latestMedia) return;
-  const now = Date.now();
-  const playing = latestMedia.playbackStatus.toLowerCase() === "playing";
-  const smooth = smoothedPositionMs(
-    latestMedia.positionReportedMs,
-    playing,
-    now - latestMedia.positionReportedAtMs,
-  );
-  els.posSmooth.textContent = formatMs(smooth);
-}
-
-els.btnClick.addEventListener("click", async () => {
-  await invoke("toggle_click_through");
-});
-
-els.btnWallpaper.addEventListener("click", async () => {
-  await invoke("toggle_wallpaper_mode");
-});
 
 let rafId = 0;
-let clockTimer: number | undefined;
 
-const ctx = els.canvas.getContext("2d")!;
-
-function drawBouncingBall(t: number) {
-  const w = els.canvas.width;
-  const h = els.canvas.height;
-  ctx.clearRect(0, 0, w, h);
-
-  const x = (w * 0.1) + (Math.sin(t * 0.0025) * 0.5 + 0.5) * (w * 0.8);
-  const y = h * 0.65 + Math.abs(Math.sin(t * 0.006)) * -18;
-
-  ctx.fillStyle = "rgba(255, 210, 90, 0.95)";
-  ctx.beginPath();
-  ctx.arc(x, y, 9, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-  ctx.fillRect(0, h - 6, w, 2);
+function tick() {
+  if (latestMedia) {
+    lyricsView.tick(latestMedia);
+  }
+  rafId = requestAnimationFrame(tick);
 }
 
-let lastFpsT = 0;
-let frameCount = 0;
-let fpsValue = 0;
-
-function loop(now: number) {
-  if (!els.animEnabled.checked) {
-    rafId = 0;
-    els.fps.textContent = "FPS: idle";
-    return;
-  }
-
-  drawBouncingBall(now);
-  frameCount += 1;
-  if (now - lastFpsT >= 500) {
-    fpsValue = Math.round((frameCount * 1000) / (now - lastFpsT));
-    frameCount = 0;
-    lastFpsT = now;
-    els.fps.textContent = `FPS: ${fpsValue}`;
-  }
-
-  updateSmoothedClock();
-  rafId = requestAnimationFrame(loop);
+function startTicker() {
+  if (!rafId) rafId = requestAnimationFrame(tick);
 }
 
-function startAnimationLoop() {
-  if (rafId) cancelAnimationFrame(rafId);
-  if (els.animEnabled.checked) {
-    lastFpsT = performance.now();
-    frameCount = 0;
-    rafId = requestAnimationFrame(loop);
-  } else {
-    els.fps.textContent = "FPS: idle";
-    if (!clockTimer) {
-      clockTimer = window.setInterval(updateSmoothedClock, 250);
-    }
-  }
-}
-
-els.animEnabled.addEventListener("change", () => {
-  if (els.animEnabled.checked && clockTimer) {
-    clearInterval(clockTimer);
-    clockTimer = undefined;
-  }
-  startAnimationLoop();
-});
+els.btnClick.addEventListener("click", () => void invoke("toggle_click_through"));
+els.btnWallpaper.addEventListener("click", () => void invoke("toggle_wallpaper_mode"));
 
 async function boot() {
-  await listen<MediaState>("media-state", (e) => renderMedia(e.payload));
+  await listen<FullMediaState>("media-state", (e) => onMedia(e.payload));
   await listen<UiState>("ui-state", (e) => renderUi(e.payload));
-
-  const media = await invoke<MediaState>("get_media_state");
-  renderMedia(media);
-  const ui = await invoke<UiState>("get_ui_state");
-  renderUi(ui);
-
-  startAnimationLoop();
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-        rafId = 0;
-      }
-    } else if (els.animEnabled.checked) {
-      startAnimationLoop();
-    }
+  await listen<number>("sync-offset", (e) => lyricsView.setSyncOffset(e.payload));
+  await listen("seek-tick", () => {
+    lyricsView.onSeek();
+    if (latestMedia) lyricsView.tick(latestMedia);
   });
 
-  void getCurrentWindow().onFocusChanged(({ payload: focused }) => {
-    if (!focused && rafId) {
+  const media = await invoke<FullMediaState>("get_media_state");
+  onMedia(media);
+  renderUi(await invoke<UiState>("get_ui_state"));
+
+  startTicker();
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && rafId) {
       cancelAnimationFrame(rafId);
       rafId = 0;
-      els.fps.textContent = "FPS: paused (unfocused)";
-    } else if (focused && els.animEnabled.checked) {
-      startAnimationLoop();
+    } else if (!document.hidden) {
+      startTicker();
     }
   });
 }

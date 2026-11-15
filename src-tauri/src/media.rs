@@ -196,6 +196,7 @@ mod imp {
                         let mut event_kind = "poll";
                         let mut timeline_tick = false;
 
+                        let mut seek_jump = false;
                         if let Some(prev) = &last {
                             if prev.title != snap.title
                                 || prev.artist != snap.artist
@@ -207,6 +208,7 @@ mod imp {
                             } else if prev.position_ms != snap.position_ms {
                                 event_kind = "timeline";
                                 timeline_tick = true;
+                                seek_jump = prev.position_ms.abs_diff(snap.position_ms) > 2000;
                             }
                         }
 
@@ -230,6 +232,9 @@ mod imp {
 
                         last = Some(snap);
                         let _ = app.emit("media-state", shared.read().clone());
+                        if seek_jump {
+                            let _ = app.emit("seek-tick", ());
+                        }
                         None
                     } else {
                         last = None;

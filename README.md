@@ -1,22 +1,22 @@
 # LyricGlass
 
-Planned Windows app: a floating, always-on-top, semi-transparent lyrics overlay for the Spotify desktop client (with synced lyrics, RTL Hebrew support, and wallpaper mode in later phases).
+Windows app: floating, semi-transparent synced lyrics overlay for Spotify desktop (RTL Hebrew, wallpaper mode, LRCLIB lyrics in **Phase 1**).
 
-This repository's **Phase 0** spike is a small test app that de-risks three integrations on real Windows 10/11 machines.
+## Phase 1 (v0.2.0)
 
-## What this spike covers
-
-| Area | Purpose |
+| Area | What it does |
 | --- | --- |
-| **Windows media controls** | Spotify now-playing via `GlobalSystemMediaTransportControlsSessionManager` (no Spotify login). Polls ~250ms, classifies track/playback/timeline changes, shows raw timeline position and a smoothed interpolated clock between updates. |
-| **Transparent overlay window** | Frameless, always-on-top, transparent WebView2 window; draggable title bar; click-through toggle (UI, tray, **Ctrl+Alt+C**); Hebrew RTL + English sample lines; bouncing-ball `requestAnimationFrame` demo and FPS counter (idle when animation is off). |
-| **WorkerW wallpaper attach** | Re-parent behind desktop icons (Progman `0x052C` / WorkerW) and undo (**Ctrl+Alt+W**, tray, UI). |
+| **LRCLIB** | Rust client: `/api/get` (artist, track, album, duration) then `/api/search` fallback. User-Agent: `LyricGlass/0.2.0` + repo URL. Prefers synced LRC; plain text shown as **untimed** scroll with badge. |
+| **Cache** | SQLite at `%LOCALAPPDATA%\LyricGlass\lyrics-cache.sqlite3` (7d hits, 6h for not-found/errors). Offline replay uses cache. |
+| **LRC** | TypeScript parser + Vitest (multi-timestamp lines, `[offset:]`, blanks, enhanced word tags stripped for display). |
+| **Overlay** | Previous / current / next lines, highlight + smooth CSS transitions, smoothed GSMTC clock. Pause freezes line; seek jumps; track change shows loading. `dir="auto"` per line. Subtle now-playing header. |
+| **P0 retained** | Click-through, wallpaper attach, tray, hotkeys, startup logs. **Diagnostics** panel hidden by default — tray → **Show diagnostics**. |
 
-**Out of scope:** LRCLIB / Shironet lyrics, real karaoke, settings, installer polish.
+**Out of scope:** Shironet, karaoke ball, settings UI, installer/icon polish.
 
 ## Stack
 
-Tauri 2, Rust (`windows` crate), TypeScript + Vite (WebView2).
+Tauri 2, Rust (`reqwest`, `rusqlite`, `windows` GSMTC), TypeScript + Vite.
 
 ## Build locally (Windows)
 
@@ -26,69 +26,55 @@ Prerequisites: https://v2.tauri.app/start/prerequisites/
 git clone https://github.com/shiper69-afk/LyricGlass.git
 cd LyricGlass
 npm install
+npm test
 npm run tauri dev
 ```
 
-Release: `npm run tauri build` → installer under `src-tauri\target\release\bundle\nsis\`, exe at `src-tauri\target\release\lyricglass.exe`.
+Release: `npm run tauri build` → `src-tauri\target\release\bundle\nsis\` and `lyricglass.exe`.
 
-### Startup logs & crash diagnostics
+### Logs & cache paths
 
-Each run writes a timestamped log under:
-
-`%LOCALAPPDATA%\LyricGlass\logs\lyricglass-<unix-time>.log`
-
-The log records startup steps (COM/media watcher, tray, hotkeys, Tauri setup, WebView2). On panic or fatal startup error, Windows shows a message box with the log path; panics also include a backtrace in the log file (release builds use `panic = unwind`).
-
-If the app fails to launch, open the newest file in that folder and attach it to your bug report.
+- Startup log: `%LOCALAPPDATA%\LyricGlass\logs\lyricglass-<unix-time>.log`
+- Lyrics cache: `%LOCALAPPDATA%\LyricGlass\lyrics-cache.sqlite3`
 
 ### CI artifacts
 
-GitHub Actions on `windows-latest` uploads artifact **`lyricglass-windows-<commit-sha>`** (NSIS installer and/or `lyricglass.exe`) on each push/PR. Download from the workflow run **Artifacts** section.
+Artifact name: **`lyricglass-windows-<commit-sha>`** (NSIS + exe) from `windows-latest` on push/PR.
 
-## Manual test checklist (Windows)
+## Manual test checklist — Phase 1 (Windows)
 
-Use Spotify desktop with LyricGlass running (Microsoft Store Spotify is supported; session id may look like `SpotifyAB.SpotifyMusic_...!Spotify`).
+Use Spotify desktop (Microsoft Store id `SpotifyAB.SpotifyMusic_...!Spotify` is supported).
 
-### 0. Startup & uninstall (regression)
+### 1. Lyrics sync
 
-1. Install per-user from the NSIS artifact → launch from Start Menu → **window must appear within a few seconds** (no instant crash).
-2. Confirm `%LOCALAPPDATA%\LyricGlass\logs\` contains a fresh log with lines through `tauri setup complete`.
-3. Quit from tray → uninstall from Settings/Apps while **not running** → uninstall must complete without “Failed to kill LyricGlass”.
-4. Optional: start app, then uninstall → installer may prompt to close/kill; accept and verify clean removal.
+1. Launch LyricGlass; play a mainstream track with synced lyrics on LRCLIB (e.g. well-known English pop).
+2. **Loading** → synced lines appear; **current line highlighted**; window shows previous/next lines.
+3. Let it play ~30s — highlight advances with the song (smoothed clock).
+4. **Pause** — highlight stays on the current line (no drift).
+5. **Seek** backward/forward — correct line within ~1–2 s (GSMTC poll + smoothing).
+6. **Skip track** — brief loading, new lyrics or **No lyrics found**.
+7. Try a track with only plain lyrics on LRCLIB — **Untimed lyrics** badge and scrollable text.
+8. Disconnect network, replay a previously cached track — lyrics load instantly (**cached** in log/status area).
 
-### A. Media session
+### 2. Sync offset (optional)
 
-1. Spotify closed → status says Spotify not in sessions; no crash.
-2. Play a track → metadata and `playing` appear.
-3. Pause → smoothed position stops; reported updates on timeline events.
-4. Resume → smoothed clock advances between events.
-5. Seek → reported position jumps; **Timeline events** increments.
-6. Skip track → metadata changes; last event may be `track`.
+- **Ctrl+Alt+]** / **Ctrl+Alt+[** nudge offset ±500 ms; small label under the header shows cumulative offset.
 
-Report: typical timeline event interval while playing, metadata gaps, smoothed vs reported drift.
+### 3. Overlay & modes
 
-### B. Overlay
+1. Semi-transparent, readable on busy wallpaper (text shadow).
+2. Hebrew line in synced LRC — correct RTL via `dir="auto"`.
+3. **Ctrl+Alt+C** / tray — click-through.
+4. **Ctrl+Alt+W** — wallpaper attach/detach.
+5. Tray → **Show diagnostics** — Phase 0 GSMTC panel; hide again from tray.
 
-1. Frameless, semi-transparent, always on top.
-2. Drag title bar.
-3. Animate on → ball moves, FPS ~60.
-4. Animate off → FPS idle, low CPU.
-5. English + Hebrew RTL lines visible.
-6. Click-through on/off (button, tray, **Ctrl+Alt+C**).
+### 4. Regression
 
-Report: WebView2 transparency flash/ghosting, click-through stuck state.
+1. Cold start — no crash; log reaches `tauri setup complete`.
+2. Quit tray → uninstall — no false “Failed to kill LyricGlass”.
+3. `npm test` and CI (build + smoke 10s) green.
 
-### C. Wallpaper
-
-1. Off → always-on-top overlay.
-2. On → behind desktop icons.
-3. Off again → restored; repeat without Explorer issues.
-
-Report: multi-monitor, window missing, Explorer restart needed.
-
-### D. Tray
-
-Right-click: toggles + Quit. Left-click: show/focus window.
+Report: LRCLIB misses, plain-vs-synced, offset needed, multi-monitor wallpaper quirks.
 
 ## Hotkeys
 
@@ -96,9 +82,9 @@ Right-click: toggles + Quit. Left-click: show/focus window.
 | --- | --- |
 | Ctrl+Alt+C | Toggle click-through |
 | Ctrl+Alt+W | Toggle wallpaper attach |
+| Ctrl+Alt+[ | Lyrics sync −500 ms |
+| Ctrl+Alt+] | Lyrics sync +500 ms |
 
 ## Layout
 
-`src/` frontend · `src-tauri/` Rust · `.github/workflows/` CI
-
-Do not merge Phase 0 until manual Windows testing passes.
+`src/` frontend · `src-tauri/src/lyrics/` LRCLIB + cache · `.github/workflows/windows-build.yml`
