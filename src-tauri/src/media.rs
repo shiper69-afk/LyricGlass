@@ -92,7 +92,7 @@ mod imp {
     const WINDOWS_TICK_OFFSET: i64 = 11_644_473_600_000_000;
 
     fn date_time_to_unix_ms(dto: windows::Foundation::DateTime) -> Option<u64> {
-        let ticks = dto.UniversalTime();
+        let ticks = dto.UniversalTime;
         if ticks <= WINDOWS_TICK_OFFSET {
             return None;
         }
