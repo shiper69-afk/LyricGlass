@@ -43,14 +43,13 @@ mod imp {
     use super::*;
     use windows::core::w;
     use windows::Win32::Foundation::{HWND, LPARAM, RECT};
-    use windows::Win32::Graphics::Gdi::{GetMonitorInfoW, MonitorFromWindow, MONITORINFO};
+    use windows::core::BOOL;
     use windows::Win32::UI::WindowsAndMessaging::{
         EnumWindows, FindWindowExW, FindWindowW, GetClassNameW, GetParent, GetSystemMetrics,
         GetWindowLongPtrW, GetWindowRect, IsWindow, SendMessageW, SetParent, SetWindowLongPtrW,
-        SetWindowPos, ShowWindow, GWL_EXSTYLE, GWL_STYLE, MONITOR_DEFAULTTONEAREST, SM_CXSCREEN,
-        SM_CYSCREEN, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW, WM_USER,
+        SetWindowPos, ShowWindow, GWL_EXSTYLE, GWL_STYLE, SM_CXSCREEN, SM_CYSCREEN, SWP_FRAMECHANGED,
+        SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW, WM_USER,
     };
-    use windows_core::BOOL;
 
     const WS_EX_LAYERED: u32 = 0x0008_0000;
     const WS_EX_TOOLWINDOW: u32 = 0x0000_0080;
@@ -169,21 +168,6 @@ mod imp {
         }
     }
 
-    fn monitor_rect(hwnd: HWND) -> RECT {
-        unsafe {
-            let mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-            let mut info = MONITORINFO {
-                cbSize: std::mem::size_of::<MONITORINFO>() as u32,
-                ..Default::default()
-            };
-            if GetMonitorInfoW(mon, &mut info).as_bool() {
-                info.rcMonitor
-            } else {
-                primary_screen_rect()
-            }
-        }
-    }
-
     pub fn attach_wallpaper(hwnd: HWND) -> Result<(), String> {
         clear_attach_error();
         let workerw =
@@ -225,7 +209,7 @@ mod imp {
             let ex = ex | WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
             SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex as isize);
 
-            let area = monitor_rect(workerw);
+            let area = primary_screen_rect();
             let width = area.right - area.left;
             let height = area.bottom - area.top;
             SetWindowPos(
