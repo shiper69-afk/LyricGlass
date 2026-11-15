@@ -14,7 +14,9 @@ import {
 } from "./bouncers/motion";
 import {
   computeKaraokeSync,
-  highlightWordIndex,
+  deriveBallState,
+  highlightedWordIndex,
+  type KaraokeBallState,
   type KaraokeSyncState,
 } from "./karaoke-sync";
 import type { TimedWord } from "./word-timing";
@@ -320,8 +322,27 @@ export class KaraokeBall {
       interWordT: eased,
     };
     this.applyPose(x, baseY - arc, crossSync, []);
-    this.updateWordHighlights(handoff.fromLine, [], "all-sung");
-    this.updateWordHighlights(handoff.toLine, [], "none");
+    const lastIdx = Math.max(0, fromWords - 1);
+    const fromBall: KaraokeBallState = {
+      sync: crossSync,
+      ballWordIndex: lastIdx,
+      positionFrom: lastIdx,
+      positionTo: lastIdx,
+      positionBlend: 0,
+    };
+    this.applyWordHighlights(handoff.fromLine, fromBall);
+    const toBall: KaraokeBallState = {
+      sync: crossSync,
+      ballWordIndex: eased >= 1 ? 0 : -1,
+      positionFrom: 0,
+      positionTo: 0,
+      positionBlend: 0,
+    };
+    if (toBall.ballWordIndex >= 0) {
+      this.applyWordHighlights(handoff.toLine, toBall);
+    } else {
+      this.updateWordHighlights(handoff.toLine, [], "none");
+    }
   }
 
   update(
@@ -361,8 +382,9 @@ export class KaraokeBall {
           progress: hopP,
           interWordT: 0,
         };
+        const ball = deriveBallState(restSync, w.length);
         this.applyPose(frag.landX, frag.landY + scrollY, restSync, w);
-        this.updateWordHighlights(line, w, restSync);
+        this.applyWordHighlights(line, ball);
       }
       return;
     }
@@ -382,35 +404,49 @@ export class KaraokeBall {
       return;
     }
 
-    const idx = sync.activeIndex;
-    const anchor = this.anchors[idx];
-    if (!anchor) return;
+    const ball = deriveBallState(sync, words.length);
+    const { positionFrom: from, positionTo: to, positionBlend: blend } = ball;
+    const fromAnchor = this.anchors[from];
+    if (!fromAnchor) return;
 
-    const startFrag = this.pickFragment(anchor);
-
+    const startFrag = this.pickFragment(fromAnchor);
     let x = startFrag.landX;
     let y = startFrag.landY + scrollY;
 
-    if (sync.interWordT > 0) {
-      const nextAnchor = this.anchors[idx + 1];
+    if (blend > 0 && to !== from) {
+      const nextAnchor = this.anchors[to];
       if (nextAnchor) {
         const endFrag = this.pickFragment(nextAnchor, startFrag.landX);
-        const t = sync.interWordT;
-        x = startFrag.landX + (endFrag.landX - startFrag.landX) * t;
+        x = startFrag.landX + (endFrag.landX - startFrag.landX) * blend;
         const baseY = Math.min(startFrag.landY, endFrag.landY) + scrollY;
-        const arc = Math.sin(t * Math.PI) * KARAOKE_ARC_PX;
+        const arc = Math.sin(blend * Math.PI) * KARAOKE_ARC_PX;
         y = baseY - arc;
       }
     }
 
     this.applyPose(x, y, sync, words);
-    this.updateWordHighlights(activeLine, words, sync);
+    this.applyWordHighlights(activeLine, ball);
+  }
+
+  private applyWordHighlights(
+    lineEl: HTMLElement,
+    ball: KaraokeBallState,
+  ) {
+    const coloredThrough = highlightedWordIndex(ball);
+    const spans = lineEl.querySelectorAll<HTMLElement>(".lyric-word");
+    spans.forEach((span, i) => {
+      span.classList.remove("sung", "singing");
+      span.style.removeProperty("--sung-frac");
+      if (i <= coloredThrough) {
+        span.classList.add("sung");
+      }
+    });
   }
 
   private updateWordHighlights(
     lineEl: HTMLElement,
     _words: TimedWord[],
-    sync: KaraokeSyncState | "all-sung" | "none",
+    sync: KaraokeSyncState | KaraokeBallState | "all-sung" | "none",
   ) {
     const spans = lineEl.querySelectorAll<HTMLElement>(".lyric-word");
     if (sync === "all-sung") {
@@ -428,18 +464,11 @@ export class KaraokeBall {
       });
       return;
     }
-    const activeIdx = highlightWordIndex(sync);
-    const frac = sync.progress;
-    spans.forEach((span, i) => {
-      span.classList.remove("sung", "singing");
-      if (i < activeIdx) span.classList.add("sung");
-      else if (i === activeIdx) {
-        span.classList.add("singing");
-        span.style.setProperty("--sung-frac", String(frac));
-      } else {
-        span.style.removeProperty("--sung-frac");
-      }
-    });
+    const ball =
+      "ballWordIndex" in sync
+        ? sync
+        : deriveBallState(sync, spans.length);
+    this.applyWordHighlights(lineEl, ball);
   }
 
   hide() {

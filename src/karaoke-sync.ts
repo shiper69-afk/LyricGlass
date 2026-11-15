@@ -7,13 +7,23 @@ import {
 export interface KaraokeSyncState {
   timeMs: number;
   activeIndex: number;
-  /** 0..1 progress within the active word (same clock for ball hop + highlight). */
+  /** 0..1 hop phase within the timed active word (ball motion only). */
   progress: number;
   /**
    * 0 = resting on active word; (0,1) = airborne toward next word in active word's tail;
-   * reaches 1 exactly at `words[activeIndex+1].startMs`.
+   * completes as `timeMs` reaches `words[activeIndex+1].startMs`.
    */
   interWordT: number;
+}
+
+/** Ball is the source of truth for which words are fully highlighted. */
+export interface KaraokeBallState {
+  sync: KaraokeSyncState;
+  /** Inclusive index: words `0..ballWordIndex` are fully colored. */
+  ballWordIndex: number;
+  positionFrom: number;
+  positionTo: number;
+  positionBlend: number;
 }
 
 function smoothstep(t: number): number {
@@ -21,7 +31,7 @@ function smoothstep(t: number): number {
   return x * x * (3 - 2 * x);
 }
 
-/** Single per-frame karaoke clock + word index (ball + highlight must use this only). */
+/** Single per-frame karaoke clock (timing); combine with {@link deriveBallState}. */
 export function computeKaraokeSync(
   words: TimedWord[],
   timeMs: number,
@@ -49,24 +59,51 @@ export function computeKaraokeSync(
 }
 
 /**
- * Index used for highlight classes and for "which word is being sung".
- * Always equals `activeIndex` from {@link computeKaraokeSync} (no look-ahead).
+ * Derive ball position + highlight index from sync.
+ * While flying toward word N (`interWordT` in (0,1)), ballWordIndex stays on N-1;
+ * next word stays uncolored until hop completes (`interWordT` === 0 on word N).
  */
-export function highlightWordIndex(state: KaraokeSyncState): number {
-  return state.activeIndex;
+export function deriveBallState(
+  sync: KaraokeSyncState,
+  wordCount: number,
+): KaraokeBallState {
+  const inFlight = sync.interWordT > 0 && sync.interWordT < 1;
+  const ballWordIndex = inFlight ? sync.activeIndex : sync.activeIndex;
+
+  let positionFrom = sync.activeIndex;
+  let positionTo = sync.activeIndex;
+  let positionBlend = 0;
+
+  if (inFlight && positionFrom + 1 < wordCount) {
+    positionTo = positionFrom + 1;
+    positionBlend = sync.interWordT;
+  }
+
+  return {
+    sync,
+    ballWordIndex,
+    positionFrom,
+    positionTo,
+    positionBlend,
+  };
 }
 
-/**
- * Ball anchor indices: start on active word; during tail flight blend toward next
- * but landing completes when `activeIndex` advances to next word (same instant as highlight).
- */
+/** Highlighted word index === ball landed word (inclusive full color). */
+export function highlightedWordIndex(state: KaraokeBallState): number {
+  return state.ballWordIndex;
+}
+
+/** @deprecated use highlightedWordIndex(deriveBallState(...)) */
+export function highlightWordIndex(sync: KaraokeSyncState): number {
+  return deriveBallState(sync, Number.MAX_SAFE_INTEGER).ballWordIndex;
+}
+
 export function ballAnchorIndices(
-  state: KaraokeSyncState,
-  wordCount: number,
+  state: KaraokeBallState,
 ): { from: number; to: number; blend: number } {
-  const from = state.activeIndex;
-  if (state.interWordT <= 0 || from + 1 >= wordCount) {
-    return { from, to: from, blend: 0 };
-  }
-  return { from, to: from + 1, blend: state.interWordT };
+  return {
+    from: state.positionFrom,
+    to: state.positionTo,
+    blend: state.positionBlend,
+  };
 }
