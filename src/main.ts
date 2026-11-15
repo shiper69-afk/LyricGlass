@@ -17,7 +17,7 @@ import {
 } from "./lyrics-view";
 
 interface UiState {
-  clickThrough: boolean;
+  alwaysOnTop: boolean;
   wallpaperMode: boolean;
   debugVisible: boolean;
 }
@@ -43,8 +43,11 @@ const els = {
   lineIndex: document.getElementById("m-line-index")!,
   timelineCount: document.getElementById("m-timeline-count")!,
   lastEvent: document.getElementById("m-last-event")!,
-  btnClick: document.getElementById("btn-click") as HTMLButtonElement,
+  btnAlwaysOnTop: document.getElementById("btn-always-on-top") as HTMLButtonElement,
   btnWallpaper: document.getElementById("btn-wallpaper") as HTMLButtonElement,
+  btnSettings: document.getElementById("btn-settings") as HTMLButtonElement,
+  settingsPopover: document.getElementById("settings-popover") as HTMLDivElement,
+  titlebarTools: document.querySelector(".titlebar-tools")!,
   debugPanel: document.getElementById("debug-panel")!,
   plainBadge: document.getElementById("plain-badge")!,
   btnCopyDiag: document.getElementById("btn-copy-diag") as HTMLButtonElement,
@@ -206,9 +209,18 @@ function onMedia(state: FullMediaState) {
   if (debugVisible) renderDebugClock(true);
 }
 
+let settingsOpen = false;
+
+function setSettingsOpen(open: boolean) {
+  settingsOpen = open;
+  els.settingsPopover.hidden = !open;
+  els.btnSettings.classList.toggle("active", open);
+  els.btnSettings.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
 function renderUi(state: UiState) {
   debugVisible = state.debugVisible;
-  els.btnClick.classList.toggle("active", state.clickThrough);
+  els.btnAlwaysOnTop.classList.toggle("active", state.alwaysOnTop);
   els.btnWallpaper.classList.toggle("active", state.wallpaperMode);
   els.debugPanel.classList.toggle("hidden", !state.debugVisible);
   els.debugPanel.setAttribute("aria-hidden", state.debugVisible ? "false" : "true");
@@ -234,8 +246,35 @@ function startTicker() {
   if (!rafId) rafId = requestAnimationFrame(tick);
 }
 
-els.btnClick.addEventListener("click", () => void invoke("toggle_click_through"));
-els.btnWallpaper.addEventListener("click", () => void invoke("toggle_wallpaper_mode"));
+els.btnAlwaysOnTop.addEventListener("click", (e) => {
+  e.stopPropagation();
+  void invoke("toggle_always_on_top");
+});
+els.btnWallpaper.addEventListener("click", (e) => {
+  e.stopPropagation();
+  void invoke("toggle_wallpaper_mode");
+});
+
+els.btnSettings.addEventListener("click", (e) => {
+  e.stopPropagation();
+  setSettingsOpen(!settingsOpen);
+});
+
+document.addEventListener("mousedown", (e) => {
+  if (!settingsOpen) return;
+  const target = e.target as Node;
+  if (els.settingsPopover.contains(target) || els.btnSettings.contains(target)) {
+    return;
+  }
+  setSettingsOpen(false);
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && settingsOpen) {
+    e.preventDefault();
+    setSettingsOpen(false);
+  }
+});
 
 els.opacitySlider.addEventListener("input", () => {
   const opacity = Number(els.opacitySlider.value) / 100;

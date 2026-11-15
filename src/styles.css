@@ -52,37 +52,37 @@ body {
   text-transform: uppercase;
 }
 
-.titlebar-hover-zone {
+.titlebar-tools {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-.titlebar-actions {
-  display: flex;
   gap: 6px;
 }
 
-.settings-strip {
-  display: none;
+.icon-btn {
+  min-width: 28px;
+  padding: 2px 6px;
+  line-height: 1.2;
+}
+
+.settings-popover {
   position: absolute;
   right: 0;
-  top: calc(100% + 6px);
+  top: calc(100% + 4px);
   min-width: 280px;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(12, 14, 22, 0.92);
+  background: rgba(12, 14, 22, 0.96);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  z-index: 20;
+  z-index: 30;
+  display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.titlebar-hover-zone:hover .settings-strip,
-.settings-strip:hover {
-  display: flex;
+.settings-popover[hidden] {
+  display: none !important;
 }
 
 .setting-row {

@@ -2,20 +2,21 @@
 
 Windows app: floating, semi-transparent synced lyrics overlay for Spotify desktop (RTL Hebrew, wallpaper mode, LRCLIB lyrics in **Phase 1**).
 
-## Phase 1 (v0.2.2)
+## Phase 1 (v0.2.3)
 
 | Area | What it does |
 | --- | --- |
-| **LRCLIB** | Rust client with duration-aware match (prefer ±2s; warn if Δ>3s). User-Agent: `LyricGlass/0.2.2` + repo URL. |
+| **LRCLIB** | Rust client with duration-aware match (prefer ±2s; warn if Δ>3s). User-Agent: `LyricGlass/0.2.3` + repo URL. |
 | **Playback clock** | Dual extrapolation: `LastUpdatedTime` **and** a monotonic wall anchor (Store Spotify often refreshes time while `Position` stays stale). |
 | **Self-diagnostics** | Tray → diagnostics; **Copy diagnostics**; auto log on track change; **Ctrl+Alt+M** sync mark when a line starts. |
-| **Quick settings** | Hover title bar: **opacity** slider (persisted) and **timing** ±10s slider (per track, syncs with Ctrl+Alt+[ / ]). |
+| **Quick settings** | Title bar **⚙** opens a pinned popover: **opacity** (persisted) and **timing** ±10s per track (syncs with Ctrl+Alt+[ / ]). |
+| **Window** | **Always on top** (📌, default ON, persisted). Wallpaper mode (🖼 / Ctrl+Alt+W) temporarily disables top-most. |
 | **Cache** | SQLite at `%LOCALAPPDATA%\LyricGlass\lyrics-cache.sqlite3` (7d hits, 6h for not-found/errors). Offline replay uses cache. |
 | **LRC** | TypeScript parser + Vitest (multi-timestamp lines, `[offset:]`, blanks, enhanced word tags stripped for display). |
 | **Overlay** | Previous / current / next lines, highlight + smooth CSS transitions, smoothed GSMTC clock. Pause freezes line; seek jumps; track change shows loading. `dir="auto"` per line. Subtle now-playing header. |
-| **P0 retained** | Click-through, wallpaper attach, tray, hotkeys, startup logs. **Diagnostics** panel hidden by default — tray → **Show diagnostics** (v0.2.2 fixes v0.2.1 tray deadlock on that item). |
+| **P0 retained** | Wallpaper attach, tray, hotkeys, startup logs. **Diagnostics** hidden by default — tray → **Show diagnostics**. |
 
-**Out of scope:** Shironet, karaoke ball, settings UI, installer/icon polish.
+**Out of scope:** Shironet, karaoke ball, installer/icon polish.
 
 ## Stack
 
@@ -50,43 +51,30 @@ Use Spotify desktop (Microsoft Store id `SpotifyAB.SpotifyMusic_...!Spotify` is 
 
 ### 1. Lyrics sync
 
-1. Launch LyricGlass; play a mainstream track with synced lyrics on LRCLIB (e.g. well-known English pop).
-2. **Loading** → synced lines appear; **current line highlighted**; window shows previous/next lines.
-3. Let it play ~30s — highlight should track the vocal within a few hundred ms (not 2–4 s late).
-4. Tray → **Show diagnostics** — verify **Computed clock** advances smoothly while **Timeline age** may sit at several seconds between GSMTC updates; highlight should still follow audio.
-5. **Pause** — highlight stays on the current line (no drift).
-6. **Seek** backward/forward — line jumps promptly (within ~1 s of GSMTC catching up).
-7. **Skip track** — brief loading, new lyrics or **No lyrics found**.
-8. Try a track with only plain lyrics on LRCLIB — **Untimed lyrics** badge and scrollable text.
-9. Disconnect network, replay a previously cached track — lyrics load instantly (**cached** in log/status area).
+1. Launch LyricGlass; play a mainstream track with synced lyrics on LRCLIB.
+2. Let it play ~30s — highlight should track the vocal within a few hundred ms.
+3. Tray → **Show diagnostics** — **Computed clock** advances; panel must not hang the app.
 
-### 2. Timing & diagnostics
+### 2. Timing & settings
 
-1. Hover the **title bar** — adjust **Opacity** and **Timing** (±10s); timing saves per track.
-2. **Ctrl+Alt+]** / **Ctrl+Alt+[** nudge ±0.1s; **Ctrl+Alt+M** when a line starts (logs measured delta).
-3. Tray → **Show diagnostics** → **Copy diagnostics** (paste to bug reports). Each track change also appends to `%LOCALAPPDATA%\\LyricGlass\\logs\\`.
+1. Title bar **⚙** — popover stays open while dragging sliders; close with **⚙**, outside click, or **Esc**.
+2. **Ctrl+Alt+]** / **Ctrl+Alt+[** nudge ±0.1s; **Ctrl+Alt+M** on line start.
+3. **Copy diagnostics** or track-change log under `%LOCALAPPDATA%\LyricGlass\logs\`.
 
 ### 3. Overlay & modes
 
-1. Semi-transparent, readable on busy wallpaper (text shadow).
-2. Hebrew line in synced LRC — correct RTL via `dir="auto"`.
-3. **Ctrl+Alt+C** / tray — click-through.
-4. **Ctrl+Alt+W** — wallpaper attach/detach.
-5. Tray → **Show diagnostics** — Phase 0 GSMTC panel; hide again from tray.
+1. **📌** always on top (default on, persists).
+2. **Ctrl+Alt+W** / 🖼 — wallpaper attach/detach.
 
 ### 4. Regression
 
-1. Cold start — no crash; log reaches `tauri setup complete`.
-2. Quit tray → uninstall — no false “Failed to kill LyricGlass”.
-3. `npm test` and CI (build + smoke 10s) green.
-
-Report: LRCLIB misses, plain-vs-synced, offset needed, multi-monitor wallpaper quirks.
+1. Cold start — click-through disabled; log reaches `tauri setup complete`.
+2. `npm test` and CI green.
 
 ## Hotkeys
 
 | Key | Action |
 | --- | --- |
-| Ctrl+Alt+C | Toggle click-through |
 | Ctrl+Alt+W | Toggle wallpaper attach |
 | Ctrl+Alt+[ | Lyrics sync −100 ms |
 | Ctrl+Alt+] | Lyrics sync +100 ms |

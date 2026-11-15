@@ -52,6 +52,14 @@ impl LyricsService {
         self.cache.lock().set_overlay_opacity(opacity)
     }
 
+    pub fn get_always_on_top(&self) -> bool {
+        self.cache.lock().get_always_on_top()
+    }
+
+    pub fn set_always_on_top(&self, enabled: bool) -> Result<bool, String> {
+        self.cache.lock().set_always_on_top(enabled)
+    }
+
     pub fn add_sync_offset(
         &self,
         artist: &str,

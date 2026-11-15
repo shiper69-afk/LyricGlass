@@ -17,7 +17,7 @@ use tauri::{
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
 struct AppFlags {
-    click_through: bool,
+    always_on_top: bool,
     debug_visible: bool,
 }
 
@@ -26,7 +26,7 @@ type SharedFlags = Arc<Mutex<AppFlags>>;
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct UiState {
-    click_through: bool,
+    always_on_top: bool,
     wallpaper_mode: bool,
     debug_visible: bool,
 }
@@ -37,9 +37,14 @@ struct AppearanceState {
     overlay_opacity: f64,
 }
 
+fn apply_topmost(window: &WebviewWindow, flags: &AppFlags) {
+    let on_top = flags.always_on_top && !wallpaper::is_attached();
+    let _ = window.set_always_on_top(on_top);
+}
+
 fn ui_state_from_flags(flags: &AppFlags) -> UiState {
     UiState {
-        click_through: flags.click_through,
+        always_on_top: flags.always_on_top,
         wallpaper_mode: wallpaper::is_attached(),
         debug_visible: flags.debug_visible,
     }
@@ -170,31 +175,26 @@ fn toggle_debug(
     Ok(flags.lock().debug_visible)
 }
 
-fn set_click_through(window: &WebviewWindow, flags: &SharedFlags, enabled: bool) -> Result<(), String> {
-    window
-        .set_ignore_cursor_events(enabled)
-        .map_err(|e| e.to_string())?;
-    flags.lock().click_through = enabled;
-    Ok(())
-}
-
-fn set_wallpaper_mode_inner(window: &WebviewWindow, enabled: bool) -> Result<(), String> {
+fn set_wallpaper_mode_inner(
+    window: &WebviewWindow,
+    flags: &SharedFlags,
+    enabled: bool,
+) -> Result<(), String> {
     #[cfg(windows)]
     {
         let hwnd = window.hwnd().map_err(|e| e.to_string())?;
 
         if enabled {
             wallpaper::attach_wallpaper(hwnd)?;
-            let _ = window.set_always_on_top(false);
         } else {
             wallpaper::detach_wallpaper(hwnd)?;
-            let _ = window.set_always_on_top(true);
         }
+        apply_topmost(window, &flags.lock());
     }
 
     #[cfg(not(windows))]
     {
-        let _ = (window, enabled);
+        let _ = (window, flags, enabled);
         return Err("Wallpaper mode is Windows-only".into());
     }
 
@@ -202,13 +202,19 @@ fn set_wallpaper_mode_inner(window: &WebviewWindow, enabled: bool) -> Result<(),
 }
 
 #[tauri::command]
-fn toggle_click_through(
+fn toggle_always_on_top(
     window: WebviewWindow,
     flags: tauri::State<SharedFlags>,
+    service: tauri::State<SharedLyricsService>,
     app: AppHandle,
 ) -> Result<bool, String> {
-    let next = !flags.lock().click_through;
-    set_click_through(&window, flags.inner(), next)?;
+    let next = {
+        let mut guard = flags.lock();
+        guard.always_on_top = !guard.always_on_top;
+        service.set_always_on_top(guard.always_on_top)?;
+        apply_topmost(&window, &guard);
+        guard.always_on_top
+    };
     let _ = app.emit("ui-state", current_ui_state(flags.inner()));
     Ok(next)
 }
@@ -220,7 +226,7 @@ fn set_wallpaper_mode(
     flags: tauri::State<SharedFlags>,
     app: AppHandle,
 ) -> Result<(), String> {
-    set_wallpaper_mode_inner(&window, enabled)?;
+    set_wallpaper_mode_inner(&window, flags.inner(), enabled)?;
     let _ = app.emit("ui-state", current_ui_state(flags.inner()));
     Ok(())
 }
@@ -232,20 +238,18 @@ fn toggle_wallpaper_mode(
     app: AppHandle,
 ) -> Result<bool, String> {
     let next = !wallpaper::is_attached();
-    set_wallpaper_mode_inner(&window, next)?;
+    set_wallpaper_mode_inner(&window, flags.inner(), next)?;
     let _ = app.emit("ui-state", current_ui_state(flags.inner()));
     Ok(next)
 }
 
 enum ShortcutAction {
-    ToggleClickThrough,
     ToggleWallpaper,
     SyncOffset(i64),
     MarkSync,
 }
 
 fn register_shortcuts(app: &AppHandle) {
-    register_one_shortcut(app, "Ctrl+Alt+C", ShortcutAction::ToggleClickThrough);
     register_one_shortcut(app, "Ctrl+Alt+W", ShortcutAction::ToggleWallpaper);
     register_one_shortcut(app, "Ctrl+Alt+[", ShortcutAction::SyncOffset(-100));
     register_one_shortcut(app, "Ctrl+Alt+]", ShortcutAction::SyncOffset(100));
@@ -290,19 +294,16 @@ fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, action: ShortcutAc
                     Err(e) => startup::step(&format!("sync offset save failed: {e}")),
                 }
             }
-            ShortcutAction::ToggleClickThrough => {
-                if let Some(window) = app_handle.get_webview_window("main") {
-                    let flags = app_handle.state::<SharedFlags>();
-                    let next = !flags.lock().click_through;
-                    if set_click_through(&window, flags.inner(), next).is_ok() {
-                        let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
-                    }
-                }
-            }
             ShortcutAction::ToggleWallpaper => {
                 if let Some(window) = app_handle.get_webview_window("main") {
                     let flags = app_handle.state::<SharedFlags>();
-                    if set_wallpaper_mode_inner(&window, !wallpaper::is_attached()).is_ok() {
+                    if set_wallpaper_mode_inner(
+                        &window,
+                        flags.inner(),
+                        !wallpaper::is_attached(),
+                    )
+                    .is_ok()
+                    {
                         let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
                     }
                 }
@@ -316,13 +317,6 @@ fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, action: ShortcutAc
 }
 
 fn build_tray(app: &AppHandle) {
-    let toggle_click = match MenuItem::with_id(app, "toggle_click", "Toggle click-through", true, None::<&str>) {
-        Ok(i) => i,
-        Err(e) => {
-            startup::step(&format!("tray menu item failed: {e}"));
-            return;
-        }
-    };
     let toggle_wallpaper = match MenuItem::with_id(app, "toggle_wallpaper", "Toggle wallpaper mode", true, None::<&str>) {
         Ok(i) => i,
         Err(e) => {
@@ -344,7 +338,7 @@ fn build_tray(app: &AppHandle) {
             return;
         }
     };
-    let menu = match Menu::with_items(app, &[&toggle_click, &toggle_wallpaper, &toggle_debug, &quit]) {
+    let menu = match Menu::with_items(app, &[&toggle_wallpaper, &toggle_debug, &quit]) {
         Ok(m) => m,
         Err(e) => {
             startup::step(&format!("tray menu failed: {e}"));
@@ -364,19 +358,16 @@ fn build_tray(app: &AppHandle) {
         .on_menu_event({
             let app_handle = app.clone();
             move |app, event| match event.id.as_ref() {
-                "toggle_click" => {
-                    if let Some(window) = app.get_webview_window("main") {
-                        let flags = app.state::<SharedFlags>();
-                        let next = !flags.lock().click_through;
-                        if set_click_through(&window, flags.inner(), next).is_ok() {
-                            let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
-                        }
-                    }
-                }
                 "toggle_wallpaper" => {
                     if let Some(window) = app.get_webview_window("main") {
                         let flags = app.state::<SharedFlags>();
-                        if set_wallpaper_mode_inner(&window, !wallpaper::is_attached()).is_ok() {
+                        if set_wallpaper_mode_inner(
+                            &window,
+                            flags.inner(),
+                            !wallpaper::is_attached(),
+                        )
+                        .is_ok()
+                        {
                             let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
                         }
                     }
@@ -427,7 +418,7 @@ pub fn run() {
     let media_state: SharedMediaState = Arc::new(parking_lot::RwLock::new(MediaState::default()));
     let lyrics_service = create_service();
     let flags: SharedFlags = Arc::new(Mutex::new(AppFlags {
-        click_through: false,
+        always_on_top: true,
         debug_visible: false,
     }));
 
@@ -454,7 +445,7 @@ pub fn run() {
             log_diagnostics,
             log_sync_mark,
             toggle_debug,
-            toggle_click_through,
+            toggle_always_on_top,
             set_wallpaper_mode,
             toggle_wallpaper_mode,
         ])
@@ -462,6 +453,16 @@ pub fn run() {
             let flags = flags.clone();
             move |app| {
                 startup::step("tauri setup: window shell");
+                let service = app.state::<SharedLyricsService>();
+                {
+                    let mut guard = flags.lock();
+                    guard.always_on_top = service.get_always_on_top();
+                }
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.set_ignore_cursor_events(false);
+                    apply_topmost(&window, &flags.lock());
+                    startup::step("startup: click-through cleared, always-on-top applied");
+                }
                 startup::step("tauri setup: building tray (optional)");
                 build_tray(app.handle());
                 startup::step("tauri setup: registering hotkeys (optional)");
