@@ -1,6 +1,6 @@
 [package]
 name = "lyricglass"
-version = "0.6.1"
+version = "0.6.2"
 description = "LyricGlass — synced lyrics overlay for Spotify on Windows"
 authors = ["LyricGlass"]
 edition = "2021"
@@ -38,6 +38,7 @@ windows = { version = "0.62", features = [
   "Win32_System_Com",
   "Win32_System_SystemInformation",
   "Win32_UI_HiDpi",
+  "Win32_System_LibraryLoader",
 ] }
 
 [profile.release]

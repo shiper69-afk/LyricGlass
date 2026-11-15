@@ -1,29 +1,29 @@
 use crate::startup;
+use crate::wallpaper_log;
 use crate::wallpaper_select::{choose_wallpaper_parent, DesktopLayout, DesktopWindowInfo};
 use parking_lot::Mutex;
 use std::sync::LazyLock;
 
-static LAST_ERROR: LazyLock<Mutex<Option<String>>> = LazyLock::new(|| Mutex::new(None));
-static LAST_DIAGNOSTICS: LazyLock<Mutex<Option<String>>> = LazyLock::new(|| Mutex::new(None));
-
 pub fn last_attach_error() -> Option<String> {
-    LAST_ERROR.lock().clone()
+    wallpaper_log::last_attempt().and_then(|a| a.error)
 }
 
 pub fn last_attach_diagnostics() -> Option<String> {
-    LAST_DIAGNOSTICS.lock().clone()
+    wallpaper_log::last_attempt().map(|a| a.trace)
 }
 
-pub fn clear_attach_error() {
-    *LAST_ERROR.lock() = None;
-    *LAST_DIAGNOSTICS.lock() = None;
-}
-
-fn record_attach_failure(step: &str, summary: &str, detail: String) {
-    startup::step(&format!("wallpaper: {step}: {summary}"));
-    startup::log_diagnostic(&format!("WALLPAPER ATTACH FAILED\n{detail}"));
-    *LAST_ERROR.lock() = Some(format!("{step}: {summary}"));
-    *LAST_DIAGNOSTICS.lock() = Some(detail);
+fn finish_attempt(
+    trigger: &str,
+    outcome: &str,
+    attached_after: bool,
+    error: Option<String>,
+    trace: String,
+) {
+    startup::step(&format!("wallpaper: {outcome} trigger={trigger} attached={attached_after}"));
+    wallpaper_log::record_attempt(trigger, outcome, attached_after, error.clone(), trace.clone());
+    if error.is_some() {
+        startup::log_diagnostic(&format!("WALLPAPER ATTACH\n{trace}"));
+    }
 }
 
 #[derive(Debug, Default, Clone)]
@@ -60,7 +60,7 @@ mod imp {
         EnumWindows, FindWindowExW, FindWindowW, GetClassNameW, GetParent,
         GetWindowLongPtrW, GetWindowRect, IsWindow, SendMessageTimeoutW, SetParent,
         SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE, GWL_STYLE, SMTO_ABORTIFHUNG,
-        SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_HIDE, SW_SHOW,
+        HWND_BOTTOM, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW,
     };
 
     const PROGMAN_DESKTOP_MSG: u32 = 0x052C;
@@ -97,14 +97,39 @@ mod imp {
         unsafe { GetLastError().0 }
     }
 
+    #[repr(C)]
+    struct RtlOsVersionInfo {
+        dw_os_version_info_size: u32,
+        dw_major_version: u32,
+        dw_minor_version: u32,
+        dw_build_number: u32,
+        dw_platform_id: u32,
+        sz_csd_version: [u16; 128],
+    }
+
+    #[link(name = "ntdll")]
+    extern "system" {
+        fn RtlGetVersion(info: *mut RtlOsVersionInfo) -> i32;
+    }
+
     fn windows_build_label() -> String {
-        use windows::Win32::System::SystemInformation::GetVersion;
         unsafe {
-            let v = GetVersion();
-            let build = v >> 16;
-            let major = (v >> 8) & 0xff;
-            let minor = v & 0xff;
-            format!("{major}.{minor} build {build}")
+            let mut v = RtlOsVersionInfo {
+                dw_os_version_info_size: std::mem::size_of::<RtlOsVersionInfo>() as u32,
+                dw_major_version: 0,
+                dw_minor_version: 0,
+                dw_build_number: 0,
+                dw_platform_id: 0,
+                sz_csd_version: [0; 128],
+            };
+            let status = RtlGetVersion(&mut v);
+            format!(
+                "RtlGetVersion status={status} {}.{}.{} build {}",
+                v.dw_major_version,
+                v.dw_minor_version,
+                v.dw_build_number,
+                v.dw_build_number
+            )
         }
     }
 
@@ -237,6 +262,60 @@ mod imp {
         parts.join(" -> ")
     }
 
+    fn log_shell_defview(diag: &mut String) {
+        let dv = unsafe { FindWindowExW(None, None, w!("SHELLDLL_DefView"), None).ok() };
+        match dv {
+            Some(hwnd) if hwnd_valid(hwnd) => {
+                let parent = unsafe { GetParent(hwnd) }.unwrap_or(HWND::default());
+                diag.push_str(&format!(
+                    "SHELLDLL_DefView hwnd=0x{:x} parent=0x{:x} parent_chain={}\n",
+                    hwnd_to_u64(hwnd),
+                    hwnd_to_u64(parent),
+                    parent_chain(hwnd)
+                ));
+            }
+            _ => diag.push_str("SHELLDLL_DefView: not found\n"),
+        }
+    }
+
+    fn apply_wallpaper_styles(hwnd: HWND, snapshot: &WallpaperRestore, diag: &mut String) -> Result<(), String> {
+        unsafe {
+            let style_before = GetWindowLongPtrW(hwnd, GWL_STYLE);
+            let ex_before = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+            diag.push_str(&format!(
+                "style_before=0x{style_before:x} ex_before=0x{ex_before:x}\n"
+            ));
+
+            let style = style_before as u32;
+            let strip = WS_POPUP
+                | WS_CAPTION
+                | WS_THICKFRAME
+                | WS_MINIMIZEBOX
+                | WS_MAXIMIZEBOX
+                | WS_SYSMENU
+                | WS_BORDER
+                | WS_DLGFRAME;
+            let style = (style & !strip) | WS_CHILD;
+            SetWindowLongPtrW(hwnd, GWL_STYLE, style as isize);
+
+            let mut ex = ex_before as u32;
+            ex &= !WS_EX_TOPMOST;
+            ex &= !WS_EX_APPWINDOW;
+            ex |= WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_NOREDIRECTIONBITMAP;
+            if (snapshot.previous_ex_style as u32) & WS_EX_LAYERED != 0 {
+                ex |= WS_EX_LAYERED;
+            }
+            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex as isize);
+
+            let style_after = GetWindowLongPtrW(hwnd, GWL_STYLE);
+            let ex_after = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+            diag.push_str(&format!(
+                "style_after=0x{style_after:x} ex_after=0x{ex_after:x}\n"
+            ));
+        }
+        Ok(())
+    }
+
     fn monitor_rect_for_window(hwnd: HWND) -> (RECT, u32) {
         let dpi = unsafe { GetDpiForWindow(hwnd) };
         let dpi = if dpi == 0 { 96 } else { dpi };
@@ -293,31 +372,75 @@ mod imp {
         }
     }
 
-    pub fn attach_wallpaper(hwnd: HWND) -> Result<(), String> {
-        clear_attach_error();
+    fn reparent_fullscreen(
+        hwnd: HWND,
+        parent: HWND,
+        host_label: &str,
+        layout: Option<DesktopLayout>,
+        snapshot: &WallpaperRestore,
+        diag: &mut String,
+        insert_bottom: bool,
+    ) -> Result<(), String> {
+        unsafe {
+            let sp = SetParent(hwnd, Some(parent));
+            diag.push_str(&format!(
+                "SetParent({host_label}) ret={sp:?} lastError={}\n",
+                last_error_code()
+            ));
+            sp.map_err(|e| format!("SetParent({host_label}): {e}"))?;
+
+            apply_wallpaper_styles(hwnd, snapshot, diag)?;
+
+            let (x, y, w, h) = child_screen_rect(parent, hwnd);
+            let (_, dpi) = monitor_rect_for_window(hwnd);
+            diag.push_str(&format!(
+                "host={host_label} layout={layout:?} parent_hwnd=0x{:x} dpi={dpi}\nsetpos x={x} y={y} w={w} h={h} z_bottom={insert_bottom}\n",
+                hwnd_to_u64(parent)
+            ));
+
+            let z = if insert_bottom { Some(HWND_BOTTOM) } else { None };
+            SetWindowPos(
+                hwnd,
+                z,
+                x,
+                y,
+                w,
+                h,
+                SWP_FRAMECHANGED | SWP_NOACTIVATE,
+            )
+            .map_err(|e| format!("SetWindowPos({host_label}): {e} (lastError={})", last_error_code()))?;
+
+            let got_parent = GetParent(hwnd).unwrap_or(HWND::default());
+            diag.push_str(&format!(
+                "verify GetParent=0x{:x} expected=0x{:x}\n",
+                hwnd_to_u64(got_parent),
+                hwnd_to_u64(parent)
+            ));
+            if got_parent != parent {
+                return Err(format!(
+                    "parent verify failed: got 0x{:x} want 0x{:x}",
+                    hwnd_to_u64(got_parent),
+                    hwnd_to_u64(parent)
+                ));
+            }
+            diag.push_str(&format!("our_parent_chain: {}\n", parent_chain(hwnd)));
+        }
+        Ok(())
+    }
+
+    pub fn attach_wallpaper(hwnd: HWND, trigger: &str) -> Result<(), String> {
         let mut diag = format!(
-            "windows: {}\nstep: begin attach\nour_hwnd=0x{:x}\n",
+            "windows: {}\ntrigger: {trigger}\nstep: begin attach\nour_hwnd=0x{:x}\n",
             windows_build_label(),
             hwnd_to_u64(hwnd)
         );
+        log_shell_defview(&mut diag);
 
         let mut guard = WALLPAPER_STATE.lock();
         if guard.attached {
+            finish_attempt(trigger, "already_attached", true, None, diag);
             return Ok(());
         }
-
-        if let Err(e) = spawn_desktop_workerw(&mut diag) {
-            record_attach_failure("spawn", &e, diag);
-            return Err(e);
-        }
-
-        let (workerw, layout) = match wait_for_workerw(&mut diag) {
-            Ok(v) => v,
-            Err(e) => {
-                record_attach_failure("find_workerw", &e, diag);
-                return Err(e);
-            }
-        };
 
         unsafe {
             let mut rect = RECT::default();
@@ -334,90 +457,60 @@ mod imp {
         let snapshot = guard.clone();
         drop(guard);
 
-        unsafe {
-            let _ = ShowWindow(hwnd, SW_HIDE);
+        if let Err(e) = spawn_desktop_workerw(&mut diag) {
+            finish_attempt(trigger, "failure", false, Some(format!("spawn: {e}")), diag);
+            return Err(e);
         }
 
-        let attach_result: Result<(), String> = (|| {
-            unsafe {
-                SetParent(hwnd, Some(workerw)).map_err(|e| {
-                    format!("SetParent -> {e} (lastError={})", last_error_code())
-                })?;
+        let host_result = wait_for_workerw(&mut diag);
+        if let Err(ref e) = host_result {
+            diag.push_str(&format!("find_workerw failed: {e}\n"));
+        }
+        let progman_hwnd = progman();
 
-                let style = GetWindowLongPtrW(hwnd, GWL_STYLE) as u32;
-                let strip = WS_POPUP
-                    | WS_CAPTION
-                    | WS_THICKFRAME
-                    | WS_MINIMIZEBOX
-                    | WS_MAXIMIZEBOX
-                    | WS_SYSMENU
-                    | WS_BORDER
-                    | WS_DLGFRAME;
-                let style = (style & !strip) | WS_CHILD;
-                SetWindowLongPtrW(hwnd, GWL_STYLE, style as isize);
+        let mut attach_result: Result<(), String> = Err("no host".into());
 
-                let mut ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
-                ex &= !WS_EX_TOPMOST;
-                ex &= !WS_EX_APPWINDOW;
-                ex |= WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE | WS_EX_NOREDIRECTIONBITMAP;
-                // Keep WS_EX_LAYERED when already set (Tauri transparency).
-                if (snapshot.previous_ex_style as u32) & WS_EX_LAYERED != 0 {
-                    ex |= WS_EX_LAYERED;
-                }
-                SetWindowLongPtrW(hwnd, GWL_EXSTYLE, ex as isize);
+        if let Ok((workerw, layout)) = host_result {
+            diag.push_str(&format!("chosen_host=WorkerW 0x{:x}\n", hwnd_to_u64(workerw)));
+            attach_result =
+                reparent_fullscreen(hwnd, workerw, "WorkerW", Some(layout), &snapshot, &mut diag, false);
+        }
 
-                let (x, y, w, h) = child_screen_rect(workerw, hwnd);
-                let (_, dpi) = monitor_rect_for_window(hwnd);
-                diag.push_str(&format!(
-                    "layout={layout:?} parent=0x{:x} dpi={dpi}\nsetpos child x={x} y={y} w={w} h={h}\n",
-                    hwnd_to_u64(workerw)
-                ));
-
-                SetWindowPos(
+        if attach_result.is_err() {
+            if let Some(progman) = progman_hwnd {
+                diag.push_str("fallback: Progman direct child (z-order bottom)\n");
+                attach_result = reparent_fullscreen(
                     hwnd,
+                    progman,
+                    "Progman",
                     None,
-                    x,
-                    y,
-                    w,
-                    h,
-                    SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE,
-                )
-                .map_err(|e| {
-                    format!("SetWindowPos -> {e} (lastError={})", last_error_code())
-                })?;
-
-                let parent = GetParent(hwnd).unwrap_or(HWND::default());
-                if parent != workerw {
-                    return Err(format!(
-                        "verify: parent=0x{:x} expected WorkerW 0x{:x}",
-                        hwnd_to_u64(parent),
-                        hwnd_to_u64(workerw)
-                    ));
-                }
-
-                diag.push_str(&format!("parent_chain: {}\n", parent_chain(hwnd)));
-                Ok(())
+                    &snapshot,
+                    &mut diag,
+                    true,
+                );
+            } else {
+                diag.push_str("fallback: Progman not found\n");
             }
-        })();
+        }
 
         let mut guard = WALLPAPER_STATE.lock();
-        if let Err(ref e) = attach_result {
-            rollback_attach(hwnd, &snapshot);
-            record_attach_failure("attach", e, diag);
-            return Err(e.clone());
+        match attach_result {
+            Ok(()) => {
+                guard.attached = true;
+                diag.push_str("outcome: success\n");
+                finish_attempt(trigger, "success", true, None, diag);
+                Ok(())
+            }
+            Err(ref e) => {
+                rollback_attach(hwnd, &snapshot);
+                diag.push_str(&format!("outcome: failure ({e})\n"));
+                finish_attempt(trigger, "failure", false, Some(e.clone()), diag);
+                Err(e.clone())
+            }
         }
-
-        unsafe {
-            let _ = ShowWindow(hwnd, SW_SHOW);
-        }
-        guard.attached = true;
-        startup::step(&format!("wallpaper: attached ({layout:?})"));
-        diag.push_str("step: attach OK\n");
-        *LAST_DIAGNOSTICS.lock() = Some(diag);
-        Ok(())
     }
 
-    pub fn detach_wallpaper(hwnd: HWND) -> Result<(), String> {
+    pub fn detach_wallpaper(hwnd: HWND, trigger: &str) -> Result<(), String> {
         let mut guard = WALLPAPER_STATE.lock();
         if !guard.attached {
             return Ok(());
@@ -442,8 +535,8 @@ mod imp {
             let _ = ShowWindow(hwnd, SW_SHOW);
         }
         guard.attached = false;
-        clear_attach_error();
-        startup::step("wallpaper: detached, overlay geometry restored");
+        let trace = format!("detach trigger={trigger} restored_geometry={:?}", guard.overlay);
+        finish_attempt(trigger, "detached", false, None, trace);
         Ok(())
     }
 
@@ -465,11 +558,11 @@ mod imp {
 mod imp {
     use super::*;
 
-    pub fn attach_wallpaper(_hwnd: ()) -> Result<(), String> {
+    pub fn attach_wallpaper(_hwnd: (), _trigger: &str) -> Result<(), String> {
         Err("Wallpaper attach is Windows-only".into())
     }
 
-    pub fn detach_wallpaper(_hwnd: ()) -> Result<(), String> {
+    pub fn detach_wallpaper(_hwnd: (), _trigger: &str) -> Result<(), String> {
         Ok(())
     }
 

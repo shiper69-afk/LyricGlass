@@ -17,6 +17,10 @@ import {
 } from "./lyrics-view";
 import { plainSourceLabel } from "./plain-scroll";
 import { applyWallpaperLayout } from "./wallpaper-ui";
+import {
+  fetchWallpaperStatus,
+  type WallpaperStatus,
+} from "./wallpaper-status";
 import { BOUNCER_META, normalizeBouncerId } from "./bouncers/ids";
 import { bouncerSvgMarkup } from "./bouncers/svg-store";
 
@@ -72,6 +76,7 @@ const els = {
   ballColor: document.getElementById("ball-color") as HTMLInputElement,
   sungColor: document.getElementById("sung-color") as HTMLInputElement,
   colorsReset: document.getElementById("colors-reset") as HTMLButtonElement,
+  btnOpenLogFolder: document.getElementById("btn-open-log-folder") as HTMLButtonElement,
   bouncerPicker: document.getElementById("bouncer-picker") as HTMLDivElement,
 };
 
@@ -83,6 +88,7 @@ let debugVisible = false;
 let timingPersistTimer = 0;
 let lastDebugClockRenderMs = 0;
 let lastWallpaperError: string | null = null;
+let lastWallpaperStatus: WallpaperStatus | null = null;
 const DEBUG_PANEL_HZ_MS = 200;
 
 function applyAppearance(backgroundOpacity: number) {
@@ -216,18 +222,16 @@ async function loadSyncOffset(media: FullMediaState) {
   }
 }
 
-async function logDiagnosticsToFile(reason: string) {
-  let wallpaper: { attached: boolean; lastError?: string | null } = {
-    attached: false,
-    lastError: lastWallpaperError,
-  };
+async function resolveWallpaperForDiagnostics(): Promise<WallpaperStatus | null> {
   try {
-    wallpaper = await invoke<{ attached: boolean; lastError?: string | null }>(
-      "get_wallpaper_status",
-    );
+    return await fetchWallpaperStatus();
   } catch {
-    /* dev / harness */
+    return lastWallpaperStatus;
   }
+}
+
+async function logDiagnosticsToFile(reason: string) {
+  const wallpaper = await resolveWallpaperForDiagnostics();
   const block = buildDiagnosticsBlock(
     latestMedia,
     latestLyrics,
@@ -343,8 +347,23 @@ els.btnWallpaper.addEventListener("click", (e) => {
   void invoke("toggle_wallpaper_mode");
 });
 
-els.wallpaperToggle.addEventListener("change", () => {
-  void invoke("set_wallpaper_mode", { enabled: els.wallpaperToggle.checked });
+async function refreshWallpaperFromBackend() {
+  try {
+    lastWallpaperStatus = await fetchWallpaperStatus();
+    lastWallpaperError = lastWallpaperStatus.lastError ?? null;
+  } catch {
+    /* harness */
+  }
+}
+
+els.wallpaperToggle.addEventListener("change", async () => {
+  const want = els.wallpaperToggle.checked;
+  try {
+    await invoke("set_wallpaper_mode", { enabled: want });
+    await refreshWallpaperFromBackend();
+  } catch {
+    await refreshWallpaperFromBackend();
+  }
 });
 
 els.btnSettings.addEventListener("click", (e) => {
@@ -409,12 +428,18 @@ els.colorsReset.addEventListener("click", () => {
   void invoke("reset_karaoke_colors");
 });
 
+els.btnOpenLogFolder.addEventListener("click", () => {
+  void invoke("open_lyricglass_log_folder");
+});
+
 els.btnCopyDiag.addEventListener("click", async () => {
+  const wallpaper = await resolveWallpaperForDiagnostics();
   const block = buildDiagnosticsBlock(
     latestMedia,
     latestLyrics,
     lyricsView,
     playbackAnchor,
+    wallpaper,
   );
   try {
     await navigator.clipboard.writeText(block);
@@ -451,7 +476,13 @@ async function boot() {
   await listen("sync-mark-request", () => void onSyncMark());
   await listen<string>("wallpaper-attach-failed", (e) => {
     lastWallpaperError = e.payload;
+    void refreshWallpaperFromBackend();
     void logDiagnosticsToFile(`Wallpaper attach failed: ${e.payload}`);
+  });
+
+  await listen<WallpaperStatus>("wallpaper-status", (e) => {
+    lastWallpaperStatus = e.payload;
+    lastWallpaperError = e.payload.lastError ?? null;
   });
 
   const media = await invoke<FullMediaState>("get_media_state");

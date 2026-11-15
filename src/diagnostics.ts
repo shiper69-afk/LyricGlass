@@ -5,8 +5,12 @@ import {
 } from "./clock";
 import { playbackClockMs, type PlaybackAnchor } from "./playback-clock";
 import type { LyricsView, LyricsResponse, MediaState } from "./lyrics-view";
+import {
+  formatWallpaperDiagnosticsLines,
+  type WallpaperStatus,
+} from "./wallpaper-status";
 
-const APP_VERSION = "0.6.1";
+const APP_VERSION = "0.6.2";
 
 export interface FullMediaState extends MediaState {
   sourceAppId: string;
@@ -19,11 +23,7 @@ export interface FullMediaState extends MediaState {
   computedPositionMs?: number;
 }
 
-export interface WallpaperDiag {
-  attached: boolean;
-  lastError?: string | null;
-  lastDiagnostics?: string | null;
-}
+export type WallpaperDiag = WallpaperStatus;
 
 export function buildDiagnosticsBlock(
   media: FullMediaState | null,
@@ -90,11 +90,7 @@ export function buildDiagnosticsBlock(
     `  effectiveSyncOffsetMs: ${lyricsView.getEffectiveSyncOffsetMs()}`,
     "",
     "Wallpaper",
-    `  attached: ${wallpaper?.attached ?? "—"}`,
-    `  lastError: ${wallpaper?.lastError?.length ? wallpaper.lastError : "—"}`,
-    ...(wallpaper?.lastDiagnostics?.trim()
-      ? ["  attachTrace:", ...wallpaper.lastDiagnostics.trim().split("\n").map((l) => `    ${l}`)]
-      : []),
+    ...formatWallpaperDiagnosticsLines(wallpaper),
     "",
     "Active line",
     `  index: ${line.index}`,
