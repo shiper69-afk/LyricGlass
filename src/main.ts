@@ -60,6 +60,8 @@ let latestLyrics: LyricsResponse | null = null;
 let fetchGeneration = 0;
 let debugVisible = false;
 let timingPersistTimer = 0;
+let lastDebugClockRenderMs = 0;
+const DEBUG_PANEL_HZ_MS = 200;
 
 function applyAppearance(opacity: number) {
   const panel = Math.max(0.3, Math.min(1, opacity));
@@ -109,8 +111,11 @@ function renderDebugStatic(media: FullMediaState) {
   els.lastEvent.textContent = media.lastEventKind;
 }
 
-function renderDebugClock() {
+function renderDebugClock(force = false) {
   if (!latestMedia || !debugVisible) return;
+  const perf = performance.now();
+  if (!force && perf - lastDebugClockRenderMs < DEBUG_PANEL_HZ_MS) return;
+  lastDebugClockRenderMs = perf;
   const now = Date.now();
   const computed = playbackClockMs(latestMedia, playbackAnchor, now);
   const line = lyricsView.getLineDiagnostics(computed);
@@ -198,7 +203,7 @@ function onMedia(state: FullMediaState) {
   }
 
   renderDebugStatic(state);
-  renderDebugClock();
+  if (debugVisible) renderDebugClock(true);
 }
 
 function renderUi(state: UiState) {
@@ -207,7 +212,7 @@ function renderUi(state: UiState) {
   els.btnWallpaper.classList.toggle("active", state.wallpaperMode);
   els.debugPanel.classList.toggle("hidden", !state.debugVisible);
   els.debugPanel.setAttribute("aria-hidden", state.debugVisible ? "false" : "true");
-  renderDebugClock();
+  renderDebugClock(true);
 }
 
 let rafId = 0;

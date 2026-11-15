@@ -43,14 +43,27 @@ jobs:
         shell: pwsh
         run: |
           $exe = Resolve-Path "src-tauri/target/release/lyricglass.exe"
-          Write-Host "Launching $exe for smoke test..."
+          Write-Host "Launching $exe for smoke test (diagnostics toggle)..."
+          $env:LYRICGLASS_SMOKE_DIAG = "1"
           $proc = Start-Process -FilePath $exe -PassThru
-          Start-Sleep -Seconds 10
+          Start-Sleep -Seconds 12
           if ($proc.HasExited) {
             throw "lyricglass.exe exited early with code $($proc.ExitCode)"
           }
+          $logDir = Join-Path $env:LOCALAPPDATA "LyricGlass\logs"
+          $log = Get-ChildItem $logDir -Filter "lyricglass-*.log" -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1
+          if (-not $log) { throw "No LyricGlass log file under $logDir" }
+          $text = Get-Content $log.FullName -Raw
+          if ($text -notmatch "diag toggle \(smoke\):") {
+            throw "Smoke diagnostics toggle not found in log $($log.FullName)"
+          }
+          if ($text -notmatch "diag toggle \(smoke\): after ui-state emit") {
+            throw "Diagnostics toggle did not complete emit in log"
+          }
           Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
-          Write-Host "Smoke test passed (process stayed alive 10s)"
+          Write-Host "Smoke test passed (alive 12s, diagnostics toggle logged)"
 
       - name: Upload installer
         uses: actions/upload-artifact@v4

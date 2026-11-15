@@ -13,7 +13,7 @@ Windows app: floating, semi-transparent synced lyrics overlay for Spotify deskto
 | **Cache** | SQLite at `%LOCALAPPDATA%\LyricGlass\lyrics-cache.sqlite3` (7d hits, 6h for not-found/errors). Offline replay uses cache. |
 | **LRC** | TypeScript parser + Vitest (multi-timestamp lines, `[offset:]`, blanks, enhanced word tags stripped for display). |
 | **Overlay** | Previous / current / next lines, highlight + smooth CSS transitions, smoothed GSMTC clock. Pause freezes line; seek jumps; track change shows loading. `dir="auto"` per line. Subtle now-playing header. |
-| **P0 retained** | Click-through, wallpaper attach, tray, hotkeys, startup logs. **Diagnostics** panel hidden by default — tray → **Show diagnostics**. |
+| **P0 retained** | Click-through, wallpaper attach, tray, hotkeys, startup logs. **Diagnostics** panel hidden by default — tray → **Show diagnostics** (v0.2.2 fixes v0.2.1 tray deadlock on that item). |
 
 **Out of scope:** Shironet, karaoke ball, settings UI, installer/icon polish.
 

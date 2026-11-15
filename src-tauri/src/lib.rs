@@ -37,13 +37,36 @@ struct AppearanceState {
     overlay_opacity: f64,
 }
 
-fn current_ui_state(flags: &SharedFlags) -> UiState {
-    let guard = flags.lock();
+fn ui_state_from_flags(flags: &AppFlags) -> UiState {
     UiState {
-        click_through: guard.click_through,
+        click_through: flags.click_through,
         wallpaper_mode: wallpaper::is_attached(),
-        debug_visible: guard.debug_visible,
+        debug_visible: flags.debug_visible,
     }
+}
+
+fn current_ui_state(flags: &SharedFlags) -> UiState {
+    ui_state_from_flags(&flags.lock())
+}
+
+fn toggle_debug_visible(app: &AppHandle, flags: &SharedFlags, source: &str) {
+    startup::step(&format!("diag toggle ({source}): entered"));
+    let ui = {
+        startup::step(&format!("diag toggle ({source}): acquiring flags lock"));
+        let mut guard = flags.lock();
+        startup::step(&format!("diag toggle ({source}): lock acquired"));
+        guard.debug_visible = !guard.debug_visible;
+        let ui = ui_state_from_flags(&guard);
+        startup::step(&format!(
+            "diag toggle ({source}): visible={}",
+            guard.debug_visible
+        ));
+        ui
+    };
+    startup::step(&format!("diag toggle ({source}): lock released"));
+    startup::step(&format!("diag toggle ({source}): before ui-state emit"));
+    let _ = app.emit("ui-state", ui);
+    startup::step(&format!("diag toggle ({source}): after ui-state emit"));
 }
 
 #[tauri::command]
@@ -143,13 +166,8 @@ fn toggle_debug(
     flags: tauri::State<SharedFlags>,
     app: AppHandle,
 ) -> Result<bool, String> {
-    let next = {
-        let mut guard = flags.lock();
-        guard.debug_visible = !guard.debug_visible;
-        guard.debug_visible
-    };
-    let _ = app.emit("ui-state", current_ui_state(flags.inner()));
-    Ok(next)
+    toggle_debug_visible(&app, flags.inner(), "command");
+    Ok(flags.lock().debug_visible)
 }
 
 fn set_click_through(window: &WebviewWindow, flags: &SharedFlags, enabled: bool) -> Result<(), String> {
@@ -365,9 +383,14 @@ fn build_tray(app: &AppHandle) {
                 }
                 "toggle_debug" => {
                     let flags = app.state::<SharedFlags>();
-                    let mut guard = flags.lock();
-                    guard.debug_visible = !guard.debug_visible;
-                    let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
+                    let app_handle = app_handle.clone();
+                    let flags = flags.inner().clone();
+                    std::thread::spawn(move || {
+                        startup::step("tray toggle_debug: worker spawned");
+                        let _ = app_handle.run_on_main_thread(move |app| {
+                            toggle_debug_visible(app, &flags, "tray");
+                        });
+                    });
                 }
                 _ => {}
             }
@@ -454,6 +477,17 @@ pub fn run() {
                     },
                 );
                 startup::step("tauri setup complete — WebView2 loading");
+                if std::env::var("LYRICGLASS_SMOKE_DIAG").is_ok() {
+                    let app = app.handle().clone();
+                    let flags = flags.clone();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_secs(3));
+                        startup::step("smoke: scheduling diagnostics toggle");
+                        let _ = app.run_on_main_thread(move |app| {
+                            toggle_debug_visible(app, &flags, "smoke");
+                        });
+                    });
+                }
                 Ok(())
             }
         })

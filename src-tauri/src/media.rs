@@ -250,13 +250,16 @@ mod imp {
 
         let mut last: Option<Snapshot> = None;
         let mut extrapolation: Option<ExtrapolationTracker> = None;
+        let mut last_publish_ms: u64 = 0;
 
         loop {
                 let message = if let Some(manager) = request_manager() {
                     if let Some(session) = find_spotify_session(&manager) {
                         let snap = capture_snapshot(&session);
                         let changed = last.as_ref().map_or(true, |p| snapshots_differ(p, &snap));
-                        let playing_heartbeat = snap.status == "playing";
+                        let host_now = now_unix_ms();
+                        let playing_heartbeat = snap.status == "playing"
+                            && host_now.saturating_sub(last_publish_ms) >= 1000;
 
                         if changed || playing_heartbeat {
                             let mut event_kind = "poll";
@@ -280,7 +283,6 @@ mod imp {
                                 }
                             }
 
-                            let host_now = now_unix_ms();
                             // Reset wall only on track/playback/seek — not on every GSMTC tick
                             // (Store Spotify advances Position slowly while audio runs ahead).
                             let needs_wall_reset = last.is_none()
@@ -337,6 +339,7 @@ mod imp {
                             }
 
                             last = Some(snap);
+                            last_publish_ms = host_now;
                             let _ = app.emit("media-state", published);
                             if seek_jump {
                                 let _ = app.emit("seek-tick", ());
