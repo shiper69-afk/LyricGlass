@@ -1,4 +1,4 @@
-import { formatMs, mediaClockMs } from "./clock";
+import { mediaClockMs } from "./clock";
 import { findActiveLineIndex, parseLrc, type LrcLine, type ParsedLrc } from "./lrc";
 
 export interface MediaState {
@@ -9,6 +9,7 @@ export interface MediaState {
   durationMs: number;
   positionReportedMs: number;
   positionReportedAtMs: number;
+  positionExtrapolationWallMs?: number;
   playbackRate?: number;
   playbackStatus: string;
 }
@@ -20,16 +21,30 @@ export interface LyricsResponse {
   plainLyrics?: string | null;
   instrumental: boolean;
   fromCache?: boolean;
+  lrclibId?: number | null;
+  lrclibDurationSec?: number | null;
+  lrclibTrackName?: string | null;
+  lrclibArtistName?: string | null;
+  lrclibAlbumName?: string | null;
+  durationDeltaSec?: number | null;
+  durationWarning?: boolean;
+}
+
+export interface LineDiagnostics {
+  index: number;
+  lineTimeMs: number;
+  nextLineTimeMs: number;
+  computedMs: number;
 }
 
 export class LyricsView {
   private syncOffsetMs = 0;
   private parsed: ParsedLrc | null = null;
+  private lastLyrics: LyricsResponse | null = null;
   private statusMessage = "Play a song in Spotify";
 
   private trackKey = "";
   private lastLineIndex = -2;
-  private lastMediaSignature = "";
 
   private readonly headerTitle: HTMLElement;
   private readonly headerArtist: HTMLElement;
@@ -37,6 +52,7 @@ export class LyricsView {
   private readonly linesEl: HTMLElement;
   private readonly plainEl: HTMLElement;
   private readonly offsetEl: HTMLElement;
+  private readonly durationWarnEl: HTMLElement | null;
 
   constructor(root: HTMLElement) {
     this.headerTitle = root.querySelector("#np-title")!;
@@ -45,15 +61,25 @@ export class LyricsView {
     this.linesEl = root.querySelector("#lyrics-lines")!;
     this.plainEl = root.querySelector("#lyrics-plain")!;
     this.offsetEl = root.querySelector("#sync-offset-label")!;
+    this.durationWarnEl = document.getElementById("duration-warn");
   }
 
-  setSyncOffsetAbsolute(offsetMs: number) {
-    this.syncOffsetMs = offsetMs;
+  getSyncOffsetMs() {
+    return this.syncOffsetMs;
+  }
+
+  getLastLyrics() {
+    return this.lastLyrics;
+  }
+
+  setSyncOffsetAbsolute(offsetMs: number, options?: { persistLabel?: boolean }) {
+    this.syncOffsetMs = Math.max(-10_000, Math.min(10_000, offsetMs));
     this.offsetEl.textContent =
       this.syncOffsetMs === 0
         ? ""
-        : `Sync offset ${this.syncOffsetMs > 0 ? "+" : ""}${this.syncOffsetMs} ms`;
+        : `Timing ${this.syncOffsetMs > 0 ? "+" : ""}${(this.syncOffsetMs / 1000).toFixed(1)}s`;
     this.lastLineIndex = -2;
+    void options;
   }
 
   onLyricsLoading() {
@@ -63,11 +89,20 @@ export class LyricsView {
     this.plainEl.classList.add("hidden");
     this.linesEl.classList.remove("hidden");
     this.parsed = null;
+    this.lastLyrics = null;
+    this.hideDurationWarning();
     this.lastLineIndex = -2;
   }
 
   onLyricsResponse(res: LyricsResponse) {
+    this.lastLyrics = res;
     this.statusMessage = res.message;
+
+    if (res.durationWarning && res.lrclibDurationSec != null) {
+      this.showDurationWarning(res);
+    } else {
+      this.hideDurationWarning();
+    }
 
     if (res.syncedLrc) {
       this.statusEl.textContent = res.fromCache ? `${res.message} (cached)` : "";
@@ -90,6 +125,20 @@ export class LyricsView {
     this.lastLineIndex = -2;
   }
 
+  private showDurationWarning(res: LyricsResponse) {
+    if (!this.durationWarnEl) return;
+    const gsmtc = res.durationDeltaSec != null && this.lastLyrics;
+    const lrclib = res.lrclibDurationSec?.toFixed(1) ?? "?";
+    const delta = res.durationDeltaSec?.toFixed(1) ?? "?";
+    this.durationWarnEl.textContent = `Duration mismatch: LRCLIB ${lrclib}s vs Spotify (Δ ${delta}s) — timing may be off`;
+    this.durationWarnEl.classList.remove("hidden");
+    void gsmtc;
+  }
+
+  private hideDurationWarning() {
+    this.durationWarnEl?.classList.add("hidden");
+  }
+
   shouldFetchLyrics(media: MediaState): boolean {
     if (!media.title.trim() && !media.artist.trim()) return false;
     const key = `${media.artist}|${media.title}|${media.album}|${media.durationMs}`;
@@ -107,18 +156,22 @@ export class LyricsView {
     this.lastLineIndex = -2;
   }
 
-  tick(media: MediaState | null) {
-    if (!media) return;
-
-    const signature = `${media.positionReportedMs}|${media.playbackStatus}|${media.positionReportedAtMs}|${media.playbackRate ?? 1}`;
-    if (signature !== this.lastMediaSignature) {
-      this.lastMediaSignature = signature;
-      if (media.playbackStatus.toLowerCase() !== "playing") {
-        // still render once on pause/seek
-      }
+  getLineDiagnostics(computedMs: number): LineDiagnostics {
+    if (!this.parsed?.lines.length) {
+      return { index: -1, lineTimeMs: 0, nextLineTimeMs: -1, computedMs };
     }
+    const timeMs = computedMs + this.syncOffsetMs;
+    const idx = findActiveLineIndex(this.parsed.lines, timeMs);
+    const lineTimeMs = idx >= 0 ? this.parsed.lines[idx].timeMs : 0;
+    const nextLineTimeMs =
+      idx >= 0 && idx + 1 < this.parsed.lines.length
+        ? this.parsed.lines[idx + 1].timeMs
+        : -1;
+    return { index: idx, lineTimeMs, nextLineTimeMs, computedMs: timeMs };
+  }
 
-    if (!this.parsed || this.parsed.lines.length === 0) return;
+  tick(media: MediaState | null) {
+    if (!media || !this.parsed || this.parsed.lines.length === 0) return;
 
     const smooth = mediaClockMs(media, Date.now());
     const timeMs = smooth + this.syncOffsetMs;
@@ -126,10 +179,10 @@ export class LyricsView {
     const idx = findActiveLineIndex(this.parsed.lines, timeMs);
     if (idx === this.lastLineIndex) return;
     this.lastLineIndex = idx;
-    this.renderLines(this.parsed.lines, idx, timeMs);
+    this.renderLines(this.parsed.lines, idx);
   }
 
-  private renderLines(lines: LrcLine[], active: number, timeMs: number) {
+  private renderLines(lines: LrcLine[], active: number) {
     const start = Math.max(0, active - 2);
     const end = Math.min(lines.length - 1, Math.max(active + 3, active + 1));
     const frag = document.createDocumentFragment();
@@ -148,9 +201,6 @@ export class LyricsView {
         else if (i === active) p.classList.add("active");
         else p.classList.add("upcoming");
         p.textContent = lines[i].text;
-        if (i === active) {
-          p.dataset.time = formatMs(timeMs);
-        }
         frag.appendChild(p);
       }
     }

@@ -32,6 +32,15 @@ pub fn log_path_display() -> String {
     ensure_log_file().display().to_string()
 }
 
+pub fn log_diagnostic(block: &str) {
+    let path = ensure_log_file();
+    let ts = time::OffsetDateTime::now_utc().unix_timestamp();
+    let body = format!("{ts} [diagnostics]\n{block}\n---\n");
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
+        let _ = file.write_all(body.as_bytes());
+    }
+}
+
 pub fn step(message: &str) {
     let path = ensure_log_file();
     let ts = time::OffsetDateTime::now_utc().unix_timestamp();

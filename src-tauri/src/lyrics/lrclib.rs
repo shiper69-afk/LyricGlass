@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-const USER_AGENT: &str = "LyricGlass/0.2.1 https://github.com/shiper69-afk/LyricGlass";
+const USER_AGENT: &str = "LyricGlass/0.2.2 https://github.com/shiper69-afk/LyricGlass";
 const BASE: &str = "https://lrclib.net";
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -14,6 +14,13 @@ pub struct LyricsResponse {
     #[serde(default)]
     pub from_cache: bool,
     pub lrclib_id: Option<i64>,
+    pub lrclib_duration_sec: Option<f64>,
+    pub lrclib_track_name: Option<String>,
+    pub lrclib_artist_name: Option<String>,
+    pub lrclib_album_name: Option<String>,
+    pub duration_delta_sec: Option<f64>,
+    #[serde(default)]
+    pub duration_warning: bool,
 }
 
 impl LyricsResponse {
@@ -26,6 +33,12 @@ impl LyricsResponse {
             instrumental: false,
             from_cache: false,
             lrclib_id: None,
+            lrclib_duration_sec: None,
+            lrclib_track_name: None,
+            lrclib_artist_name: None,
+            lrclib_album_name: None,
+            duration_delta_sec: None,
+            duration_warning: false,
         }
     }
 
@@ -38,11 +51,17 @@ impl LyricsResponse {
             instrumental: false,
             from_cache: false,
             lrclib_id: None,
+            lrclib_duration_sec: None,
+            lrclib_track_name: None,
+            lrclib_artist_name: None,
+            lrclib_album_name: None,
+            duration_delta_sec: None,
+            duration_warning: false,
         }
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct LrcRecord {
     id: i64,
@@ -50,6 +69,9 @@ struct LrcRecord {
     instrumental: Option<bool>,
     synced_lyrics: Option<String>,
     plain_lyrics: Option<String>,
+    track_name: Option<String>,
+    artist_name: Option<String>,
+    album_name: Option<String>,
 }
 
 fn client() -> Result<reqwest::blocking::Client, LyricsResponse> {
@@ -60,50 +82,94 @@ fn client() -> Result<reqwest::blocking::Client, LyricsResponse> {
         .map_err(|e| LyricsResponse::err(format!("HTTP client: {e}")))
 }
 
-fn from_record(record: LrcRecord, source: &str) -> LyricsResponse {
+fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> LyricsResponse {
     let instrumental = record.instrumental.unwrap_or(false);
     let synced = record
         .synced_lyrics
         .filter(|s| !s.trim().is_empty());
     let plain = record.plain_lyrics.filter(|s| !s.trim().is_empty());
 
-    if instrumental {
-        return LyricsResponse {
-            status: "instrumental".into(),
-            message: "Instrumental track (LRCLIB)".into(),
-            synced_lrc: synced,
-            plain_lyrics: plain,
-            instrumental: true,
+    let duration_delta_sec = record
+        .duration
+        .map(|d| d - target_duration_sec);
+    let duration_warning = duration_delta_sec
+        .map(|d| d.abs() > 3.0)
+        .unwrap_or(false);
+
+    let meta = |status: &str, message: String, synced_lrc: Option<String>, plain_lyrics: Option<String>, instrumental: bool| {
+        LyricsResponse {
+            status: status.into(),
+            message,
+            synced_lrc,
+            plain_lyrics,
+            instrumental,
             from_cache: false,
             lrclib_id: Some(record.id),
-        };
+            lrclib_duration_sec: record.duration,
+            lrclib_track_name: record.track_name.clone(),
+            lrclib_artist_name: record.artist_name.clone(),
+            lrclib_album_name: record.album_name.clone(),
+            duration_delta_sec,
+            duration_warning,
+        }
+    };
+
+    if instrumental {
+        return meta(
+            "instrumental",
+            "Instrumental track (LRCLIB)".into(),
+            synced,
+            plain,
+            true,
+        );
     }
 
     if let Some(lrc) = synced {
-        return LyricsResponse {
-            status: "synced".into(),
-            message: format!("Synced lyrics ({source})"),
-            synced_lrc: Some(lrc),
-            plain_lyrics: plain,
-            instrumental: false,
-            from_cache: false,
-            lrclib_id: Some(record.id),
-        };
+        return meta(
+            "synced",
+            format!("Synced lyrics ({source})"),
+            Some(lrc),
+            plain,
+            false,
+        );
     }
 
     if let Some(text) = plain {
-        return LyricsResponse {
-            status: "plain".into(),
-            message: "Plain lyrics (untimed)".into(),
-            synced_lrc: None,
-            plain_lyrics: Some(text),
-            instrumental: false,
-            from_cache: false,
-            lrclib_id: Some(record.id),
-        };
+        return meta(
+            "plain",
+            "Plain lyrics (untimed)".into(),
+            None,
+            Some(text),
+            false,
+        );
     }
 
     LyricsResponse::not_found()
+}
+
+fn duration_distance(record: &LrcRecord, target: f64) -> f64 {
+    record
+        .duration
+        .map(|d| (d - target).abs())
+        .unwrap_or(f64::MAX)
+}
+
+fn pick_best_record(mut records: Vec<LrcRecord>, target_duration_sec: f64) -> Option<LrcRecord> {
+    if records.is_empty() {
+        return None;
+    }
+    let close: Vec<LrcRecord> = records
+        .iter()
+        .filter(|r| duration_distance(r, target_duration_sec) <= 2.0)
+        .cloned()
+        .collect();
+    let pool = if close.is_empty() { records } else { close };
+    pool.into_iter()
+        .min_by(|a, b| {
+            duration_distance(a, target_duration_sec)
+                .partial_cmp(&duration_distance(b, target_duration_sec))
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
 }
 
 pub fn fetch_from_network(
@@ -117,25 +183,25 @@ pub fn fetch_from_network(
         Err(e) => return e,
     };
 
-    let duration_sec = (duration_ms / 1000).max(1);
+    let duration_sec = (duration_ms as f64 / 1000.0).max(1.0);
+    let target = duration_sec;
 
     let get_url = format!(
-        "{BASE}/api/get?artist_name={}&track_name={}&album_name={}&duration={duration_sec}",
+        "{BASE}/api/get?artist_name={}&track_name={}&album_name={}&duration={}",
         urlencoding::encode(artist.trim()),
         urlencoding::encode(track.trim()),
         urlencoding::encode(album.trim()),
+        duration_sec.round() as u64
     );
 
     match client.get(&get_url).send() {
         Ok(resp) if resp.status().is_success() => {
             if let Ok(record) = resp.json::<LrcRecord>() {
-                return from_record(record, "LRCLIB get");
+                return from_record(record, "LRCLIB get", target);
             }
             return LyricsResponse::err("Invalid LRCLIB get response");
         }
-        Ok(resp) if resp.status() == reqwest::StatusCode::NOT_FOUND => {
-            // fall through to search
-        }
+        Ok(resp) if resp.status() == reqwest::StatusCode::NOT_FOUND => {}
         Ok(resp) => {
             return LyricsResponse::err(format!(
                 "LRCLIB get failed: HTTP {}",
@@ -166,25 +232,8 @@ pub fn fetch_from_network(
         Err(e) => return LyricsResponse::err(format!("Search JSON error: {e}")),
     };
 
-    if records.is_empty() {
-        return LyricsResponse::not_found();
-    }
-
-    let target = duration_sec as f64;
-    let mut best = records.into_iter().min_by(|a, b| {
-        let da = a
-            .duration
-            .map(|d| (d - target).abs())
-            .unwrap_or(f64::MAX);
-        let db = b
-            .duration
-            .map(|d| (d - target).abs())
-            .unwrap_or(f64::MAX);
-        da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
-    });
-
-    if let Some(record) = best.take() {
-        from_record(record, "LRCLIB search")
+    if let Some(record) = pick_best_record(records, target) {
+        from_record(record, "LRCLIB search", target)
     } else {
         LyricsResponse::not_found()
     }
@@ -192,12 +241,34 @@ pub fn fetch_from_network(
 
 #[cfg(test)]
 mod tests {
-    use super::LyricsResponse;
+    use super::{duration_distance, pick_best_record, LrcRecord};
 
     #[test]
-    fn not_found_message() {
-        let r = LyricsResponse::not_found();
-        assert_eq!(r.status, "not_found");
-        assert!(r.message.contains("No lyrics"));
+    fn picks_close_duration_first() {
+        let records = vec![
+            LrcRecord {
+                id: 1,
+                duration: Some(200.0),
+                instrumental: None,
+                synced_lyrics: Some("[00:01.00] a".into()),
+                plain_lyrics: None,
+                track_name: None,
+                artist_name: None,
+                album_name: None,
+            },
+            LrcRecord {
+                id: 2,
+                duration: Some(245.0),
+                instrumental: None,
+                synced_lyrics: Some("[00:01.00] b".into()),
+                plain_lyrics: None,
+                track_name: None,
+                artist_name: None,
+                album_name: None,
+            },
+        ];
+        let best = pick_best_record(records, 243.0).unwrap();
+        assert_eq!(best.id, 2);
+        assert!(duration_distance(&best, 243.0) <= 2.0);
     }
 }

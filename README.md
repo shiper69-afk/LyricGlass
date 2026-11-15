@@ -2,12 +2,14 @@
 
 Windows app: floating, semi-transparent synced lyrics overlay for Spotify desktop (RTL Hebrew, wallpaper mode, LRCLIB lyrics in **Phase 1**).
 
-## Phase 1 (v0.2.1)
+## Phase 1 (v0.2.2)
 
 | Area | What it does |
 | --- | --- |
-| **LRCLIB** | Rust client: `/api/get` (artist, track, album, duration) then `/api/search` fallback. User-Agent: `LyricGlass/0.2.1` + repo URL. Prefers synced LRC; plain text shown as **untimed** scroll with badge. |
-| **Playback clock** | Extrapolates from GSMTC `Position` + `LastUpdatedTime` × playback rate; does **not** reset the anchor on idle polls (fixes multi-second lyric lag on Store Spotify). |
+| **LRCLIB** | Rust client with duration-aware match (prefer ±2s; warn if Δ>3s). User-Agent: `LyricGlass/0.2.2` + repo URL. |
+| **Playback clock** | Dual extrapolation: `LastUpdatedTime` **and** a monotonic wall anchor (Store Spotify often refreshes time while `Position` stays stale). |
+| **Self-diagnostics** | Tray → diagnostics; **Copy diagnostics**; auto log on track change; **Ctrl+Alt+M** sync mark when a line starts. |
+| **Quick settings** | Hover title bar: **opacity** slider (persisted) and **timing** ±10s slider (per track, syncs with Ctrl+Alt+[ / ]). |
 | **Cache** | SQLite at `%LOCALAPPDATA%\LyricGlass\lyrics-cache.sqlite3` (7d hits, 6h for not-found/errors). Offline replay uses cache. |
 | **LRC** | TypeScript parser + Vitest (multi-timestamp lines, `[offset:]`, blanks, enhanced word tags stripped for display). |
 | **Overlay** | Previous / current / next lines, highlight + smooth CSS transitions, smoothed GSMTC clock. Pause freezes line; seek jumps; track change shows loading. `dir="auto"` per line. Subtle now-playing header. |
@@ -58,9 +60,11 @@ Use Spotify desktop (Microsoft Store id `SpotifyAB.SpotifyMusic_...!Spotify` is 
 8. Try a track with only plain lyrics on LRCLIB — **Untimed lyrics** badge and scrollable text.
 9. Disconnect network, replay a previously cached track — lyrics load instantly (**cached** in log/status area).
 
-### 2. Sync offset (optional)
+### 2. Timing & diagnostics
 
-- **Ctrl+Alt+]** / **Ctrl+Alt+[** nudge offset ±500 ms (saved per track in the lyrics cache DB).
+1. Hover the **title bar** — adjust **Opacity** and **Timing** (±10s); timing saves per track.
+2. **Ctrl+Alt+]** / **Ctrl+Alt+[** nudge ±0.1s; **Ctrl+Alt+M** when a line starts (logs measured delta).
+3. Tray → **Show diagnostics** → **Copy diagnostics** (paste to bug reports). Each track change also appends to `%LOCALAPPDATA%\\LyricGlass\\logs\\`.
 
 ### 3. Overlay & modes
 

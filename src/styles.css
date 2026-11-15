@@ -23,14 +23,16 @@ body {
 }
 
 #app {
+  --panel-alpha: 0.38;
+  --text-alpha: 0.92;
   display: flex;
   flex-direction: column;
   height: 100vh;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(8, 10, 16, 0.55);
+  border: 1px solid rgba(255, 255, 255, calc(0.14 * var(--text-alpha)));
+  background: rgba(8, 10, 16, var(--panel-alpha));
   backdrop-filter: blur(12px);
-  color: #f4f6fb;
+  color: rgba(244, 246, 251, var(--text-alpha));
 }
 
 .titlebar {
@@ -50,9 +52,82 @@ body {
   text-transform: uppercase;
 }
 
+.titlebar-hover-zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .titlebar-actions {
   display: flex;
   gap: 6px;
+}
+
+.settings-strip {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 280px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(12, 14, 22, 0.92);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  z-index: 20;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.titlebar-hover-zone:hover .settings-strip,
+.settings-strip:hover {
+  display: flex;
+}
+
+.setting-row {
+  display: grid;
+  grid-template-columns: 52px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.setting-row input[type="range"] {
+  width: 100%;
+}
+
+.timing-readout {
+  font-size: 11px;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+.mini-btn {
+  font-size: 10px;
+  padding: 2px 6px;
+}
+
+.debug-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.debug-head h2 {
+  margin: 0;
+}
+
+.duration-warn {
+  margin: 0 0 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  background: rgba(255, 120, 80, 0.22);
+  border: 1px solid rgba(255, 140, 100, 0.35);
+  color: #ffe8dc;
 }
 
 button {

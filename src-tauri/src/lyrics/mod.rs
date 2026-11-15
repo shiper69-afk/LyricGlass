@@ -29,6 +29,29 @@ impl LyricsService {
         self.cache.lock().get_sync_offset(artist, track, album, duration_ms)
     }
 
+    pub fn set_sync_offset(
+        &self,
+        artist: &str,
+        track: &str,
+        album: &str,
+        duration_ms: u64,
+        offset_ms: i64,
+    ) -> Result<i64, String> {
+        let clamped = offset_ms.clamp(-10_000, 10_000);
+        self.cache
+            .lock()
+            .set_sync_offset(artist, track, album, duration_ms, clamped)?;
+        Ok(clamped)
+    }
+
+    pub fn get_overlay_opacity(&self) -> f64 {
+        self.cache.lock().get_overlay_opacity()
+    }
+
+    pub fn set_overlay_opacity(&self, opacity: f64) -> Result<f64, String> {
+        self.cache.lock().set_overlay_opacity(opacity)
+    }
+
     pub fn add_sync_offset(
         &self,
         artist: &str,

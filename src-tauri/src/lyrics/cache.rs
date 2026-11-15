@@ -26,6 +26,10 @@ impl LyricsCache {
             CREATE TABLE IF NOT EXISTS sync_offset (
                 cache_key TEXT PRIMARY KEY,
                 offset_ms INTEGER NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS app_settings (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL
             );",
         )
         .map_err(|e| e.to_string())?;
@@ -112,6 +116,36 @@ impl LyricsCache {
         )
         .map_err(|e| e.to_string())?;
         Ok(())
+    }
+
+    pub fn get_overlay_opacity(&self) -> f64 {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return 0.62,
+        };
+        conn.query_row(
+            "SELECT value FROM app_settings WHERE key = 'overlay_opacity'",
+            [],
+            |row| row.get::<_, String>(0),
+        )
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .filter(|o: &f64| (0.30..=1.0).contains(o))
+        .unwrap_or(0.62)
+    }
+
+    pub fn set_overlay_opacity(&self, opacity: f64) -> Result<f64, String> {
+        let clamped = opacity.clamp(0.30, 1.0);
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(clamped),
+        };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('overlay_opacity', ?1)",
+            params![clamped.to_string()],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(clamped)
     }
 
     pub fn add_sync_offset(

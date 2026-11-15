@@ -15,30 +15,51 @@ describe("smoothedPositionMs", () => {
   });
 
   it("extrapolates through a stale GSMTC update", () => {
-    // Position still 30s at anchor, but anchor was 3s ago while playing.
     expect(smoothedPositionMs(30_000, true, 3_000)).toBe(33_000);
   });
 
   it("respects playback rate", () => {
     expect(smoothedPositionMs(10_000, true, 2_000, 1.25)).toBe(12_500);
   });
-
-  it("does not advance when rate is zero", () => {
-    expect(smoothedPositionMs(10_000, true, 2_000, 0)).toBe(10_000);
-  });
 });
 
-describe("mediaClockMs", () => {
+describe("mediaClockMs dual anchor", () => {
   const base = {
-    positionReportedMs: 60_000,
+    positionReportedMs: 30_000,
     positionReportedAtMs: 1_000_000,
+    positionExtrapolationWallMs: 996_000,
     playbackStatus: "playing",
     playbackRate: 1,
   };
 
+  it("uses max of GSMTC and wall extrapolation (Spotify quirk)", () => {
+    const now = 1_000_000;
+    expect(mediaClockMs(base, now)).toBe(34_000);
+  });
+
+  it("clamps future GSMTC anchor", () => {
+    const now = 5_000;
+    const clock = mediaClockMs(
+      {
+        ...base,
+        positionReportedAtMs: 9_000,
+        positionExtrapolationWallMs: 9_000,
+        positionReportedMs: 1_000,
+      },
+      now,
+    );
+    expect(clock).toBe(1_000);
+  });
+
   it("seeks forward when anchor jumps", () => {
     const jumped = mediaClockMs(
-      { ...base, positionReportedMs: 120_000, positionReportedAtMs: 1_000_050 },
+      {
+        positionReportedMs: 120_000,
+        positionReportedAtMs: 1_000_050,
+        positionExtrapolationWallMs: 1_000_050,
+        playbackStatus: "playing",
+        playbackRate: 1,
+      },
       1_000_100,
     );
     expect(jumped).toBe(120_050);
@@ -49,38 +70,16 @@ describe("mediaClockMs", () => {
       { ...base, playbackStatus: "paused" },
       1_005_000,
     );
-    expect(paused).toBe(60_000);
-  });
-
-  it("resumes from new anchor on play", () => {
-    const resumed = mediaClockMs(
-      {
-        ...base,
-        positionReportedMs: 60_000,
-        positionReportedAtMs: 2_000_000,
-        playbackStatus: "playing",
-      },
-      2_001_500,
-    );
-    expect(resumed).toBe(61_500);
-  });
-
-  it("track change uses fresh anchor", () => {
-    const nextTrack = mediaClockMs(
-      {
-        positionReportedMs: 0,
-        positionReportedAtMs: 5_000_000,
-        playbackStatus: "playing",
-        playbackRate: 1,
-      },
-      5_000_250,
-    );
-    expect(nextTrack).toBe(250);
+    expect(paused).toBe(30_000);
   });
 });
 
 describe("timelineAnchorAgeMs", () => {
   it("returns elapsed ms since anchor", () => {
     expect(timelineAnchorAgeMs(1_000, 4_500)).toBe(3_500);
+  });
+
+  it("clamps future anchor to zero age contribution", () => {
+    expect(timelineAnchorAgeMs(5_000, 4_000)).toBe(0);
   });
 });

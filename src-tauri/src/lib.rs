@@ -31,6 +31,12 @@ struct UiState {
     debug_visible: bool,
 }
 
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AppearanceState {
+    overlay_opacity: f64,
+}
+
 fn current_ui_state(flags: &SharedFlags) -> UiState {
     let guard = flags.lock();
     UiState {
@@ -81,6 +87,55 @@ fn get_sync_offset(
     duration_ms: u64,
 ) -> i64 {
     service.get_sync_offset(&artist, &track, &album, duration_ms)
+}
+
+#[tauri::command]
+fn set_sync_offset(
+    service: tauri::State<SharedLyricsService>,
+    artist: String,
+    track: String,
+    album: String,
+    duration_ms: u64,
+    offset_ms: i64,
+    app: AppHandle,
+) -> Result<i64, String> {
+    let total = service.set_sync_offset(&artist, &track, &album, duration_ms, offset_ms)?;
+    let _ = app.emit("sync-offset-absolute", total);
+    let _ = app.emit("seek-tick", ());
+    Ok(total)
+}
+
+#[tauri::command]
+fn get_appearance(service: tauri::State<SharedLyricsService>) -> AppearanceState {
+    AppearanceState {
+        overlay_opacity: service.get_overlay_opacity(),
+    }
+}
+
+#[tauri::command]
+fn set_overlay_opacity(
+    service: tauri::State<SharedLyricsService>,
+    opacity: f64,
+    app: AppHandle,
+) -> Result<f64, String> {
+    let value = service.set_overlay_opacity(opacity)?;
+    let _ = app.emit(
+        "appearance-state",
+        AppearanceState {
+            overlay_opacity: value,
+        },
+    );
+    Ok(value)
+}
+
+#[tauri::command]
+fn log_diagnostics(block: String) {
+    startup::log_diagnostic(&block);
+}
+
+#[tauri::command]
+fn log_sync_mark(block: String) {
+    startup::log_diagnostic(&format!("SYNC MARK\n{block}"));
 }
 
 #[tauri::command]
@@ -168,13 +223,15 @@ enum ShortcutAction {
     ToggleClickThrough,
     ToggleWallpaper,
     SyncOffset(i64),
+    MarkSync,
 }
 
 fn register_shortcuts(app: &AppHandle) {
     register_one_shortcut(app, "Ctrl+Alt+C", ShortcutAction::ToggleClickThrough);
     register_one_shortcut(app, "Ctrl+Alt+W", ShortcutAction::ToggleWallpaper);
-    register_one_shortcut(app, "Ctrl+Alt+[", ShortcutAction::SyncOffset(-500));
-    register_one_shortcut(app, "Ctrl+Alt+]", ShortcutAction::SyncOffset(500));
+    register_one_shortcut(app, "Ctrl+Alt+[", ShortcutAction::SyncOffset(-100));
+    register_one_shortcut(app, "Ctrl+Alt+]", ShortcutAction::SyncOffset(100));
+    register_one_shortcut(app, "Ctrl+Alt+M", ShortcutAction::MarkSync);
 }
 
 fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, action: ShortcutAction) {
@@ -192,6 +249,9 @@ fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, action: ShortcutAc
             return;
         }
         match action {
+            ShortcutAction::MarkSync => {
+                let _ = app_handle.emit("sync-mark-request", ());
+            }
             ShortcutAction::SyncOffset(delta) => {
                 let media = app_handle.state::<SharedMediaState>().read().clone();
                 if media.artist.trim().is_empty() && media.title.trim().is_empty() {
@@ -364,6 +424,11 @@ pub fn run() {
             get_startup_log_path,
             fetch_lyrics,
             get_sync_offset,
+            set_sync_offset,
+            get_appearance,
+            set_overlay_opacity,
+            log_diagnostics,
+            log_sync_mark,
             toggle_debug,
             toggle_click_through,
             set_wallpaper_mode,
@@ -381,6 +446,13 @@ pub fn run() {
                 start_media_watcher(app.handle().clone(), media_state.clone());
                 startup::step("tauri setup: emitting initial UI state");
                 let _ = app.handle().emit("ui-state", current_ui_state(&flags));
+                let appearance = app.state::<SharedLyricsService>();
+                let _ = app.handle().emit(
+                    "appearance-state",
+                    AppearanceState {
+                        overlay_opacity: appearance.get_overlay_opacity(),
+                    },
+                );
                 startup::step("tauri setup complete — WebView2 loading");
                 Ok(())
             }
