@@ -79,6 +79,7 @@ mod imp {
 
     const PROGMAN_DESKTOP_MSG: u32 = 0x052C;
     const WS_CHILD: u32 = 0x4000_0000;
+    const WS_CLIPSIBLINGS: u32 = 0x0400_0000;
     const WS_POPUP: u32 = 0x8000_0000;
     const WS_CAPTION: u32 = 0x00C0_0000;
     const WS_THICKFRAME: u32 = 0x0004_0000;
@@ -583,6 +584,33 @@ mod imp {
         DefWindowProcW(hwnd, msg, wparam, lparam)
     }
 
+    fn apply_host_layered_alpha(host: HWND, diag: &mut String) -> Result<(), String> {
+        unsafe {
+            let ex = GetWindowLongPtrW(host, GWL_EXSTYLE) as u32 | WS_EX_LAYERED;
+            set_window_long_ptr_logged(host, GWL_EXSTYLE, ex as isize, "host exstyle layered", diag);
+            let _ = SetWindowPos(
+                host,
+                None,
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
+            );
+            let layered_r = SetLayeredWindowAttributes(
+                host,
+                windows::Win32::Foundation::COLORREF(0),
+                255,
+                LWA_ALPHA,
+            );
+            diag.push_str(&format!(
+                "SetLayeredWindowAttributes(host) ret={layered_r:?} lastError={}\n",
+                last_error_code()
+            ));
+            layered_r.map_err(|e| format!("{e}"))
+        }
+    }
+
     fn create_layered_host(
         progman: HWND,
         plan: &WallpaperAttachPlan,
@@ -606,13 +634,16 @@ mod imp {
             let hinst = GetModuleHandleW(None).unwrap_or_default();
 
             clear_last_error();
-            let host = match CreateWindowExW(
+            clear_last_error();
+            let host = CreateWindowExW(
                 windows::Win32::UI::WindowsAndMessaging::WINDOW_EX_STYLE(
-                    WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+                    WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
                 ),
                 PCWSTR(class_name.as_ptr()),
                 PCWSTR(class_name.as_ptr()),
-                windows::Win32::UI::WindowsAndMessaging::WINDOW_STYLE(WS_CHILD),
+                windows::Win32::UI::WindowsAndMessaging::WINDOW_STYLE(
+                    WS_CHILD | WS_CLIPSIBLINGS,
+                ),
                 x,
                 y,
                 w,
@@ -621,22 +652,19 @@ mod imp {
                 None,
                 Some(hinst.into()),
                 None,
-            ) {
-                Ok(h) if hwnd_valid(h) => h,
-                Ok(h) => {
-                    return Err(format!(
-                        "CreateWindowExW(host): NULL hwnd=0x{:x} lastError={}",
-                        hwnd_to_u64(h),
-                        last_error_code()
-                    ));
-                }
-                Err(e) => {
-                    return Err(format!(
-                        "CreateWindowExW(host): {e} lastError={}",
-                        last_error_code()
-                    ));
-                }
-            };
+            )
+            .map_err(|e| {
+                format!(
+                    "CreateWindowExW(host): {e} lastError={}",
+                    last_error_code()
+                )
+            })?;
+            if !hwnd_valid(host) {
+                return Err(format!(
+                    "CreateWindowExW(host): NULL lastError={}",
+                    last_error_code()
+                ));
+            }
 
             diag.push_str(&format!(
                 "path B: host hwnd=0x{:x} parent=0x{:x}\n",
@@ -647,17 +675,12 @@ mod imp {
             let ex_after = GetWindowLongPtrW(host, GWL_EXSTYLE) as u32;
             log_exstyle_bits("host exstyle at create", ex_after, diag);
 
-            let layered_r = SetLayeredWindowAttributes(
-                host,
-                windows::Win32::Foundation::COLORREF(0),
-                255,
-                LWA_ALPHA,
-            );
-            diag.push_str(&format!(
-                "SetLayeredWindowAttributes(host) ret={layered_r:?} lastError={}\n",
-                last_error_code()
-            ));
-            layered_r.map_err(|e| format!("SetLayeredWindowAttributes(host): {e}"))?;
+            // WS_EX_LAYERED child windows often fail CreateWindowExW / SetLayeredWindowAttributes on
+            // headless runners and some 24H2 builds; layering is optional for the host container.
+            match apply_host_layered_alpha(host, diag) {
+                Ok(()) => diag.push_str("host: WS_EX_LAYERED applied\n"),
+                Err(e) => diag.push_str(&format!("host: WS_EX_LAYERED skipped: {e}\n")),
+            }
 
             let insert_after = HWND(plan.z_insert_after_hwnd as *mut core::ffi::c_void);
             let flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOREDRAW;
