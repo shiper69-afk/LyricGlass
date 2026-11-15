@@ -8,7 +8,7 @@ pub fn run() -> i32 {
     use std::ffi::OsStr;
     use std::os::windows::ffi::OsStrExt;
     use windows::core::PCWSTR;
-    use windows::Win32::Foundation::{HINSTANCE, HWND, LPARAM, LRESULT, WPARAM};
+    use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
     use windows::Win32::System::LibraryLoader::GetModuleHandleW;
     use windows::Win32::UI::WindowsAndMessaging::{
         CreateWindowExW, DefWindowProcW, DestroyWindow, RegisterClassW, ShowWindow, WNDCLASSW,
@@ -32,10 +32,10 @@ pub fn run() -> i32 {
         .chain(std::iter::once(0))
         .collect();
 
-    let hinst = GetModuleHandleW(None).unwrap_or(HINSTANCE::default());
+    let hinst = GetModuleHandleW(None).unwrap_or_default();
     let wc = WNDCLASSW {
         lpfnWndProc: Some(wnd_proc),
-        hInstance: hinst,
+        hInstance: hinst.into(),
         lpszClassName: PCWSTR(class_name.as_ptr()),
         style: CS_HREDRAW | CS_VREDRAW,
         ..Default::default()
@@ -59,7 +59,7 @@ pub fn run() -> i32 {
         320,
         None,
         None,
-        hinst,
+        Some(hinst.into()),
         None,
     )
     .expect("CreateWindowExW");

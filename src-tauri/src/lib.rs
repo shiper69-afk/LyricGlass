@@ -486,12 +486,13 @@ fn run_wallpaper_toggle_on_main(
     let (tx, rx) = mpsc::sync_channel(1);
     let window_for_main = window.clone();
     let app = app.clone();
+    let window_in_closure = window_for_main.clone();
     if window_for_main
         .run_on_main_thread(move || {
             let flags = app.state::<SharedFlags>();
             let service = app.state::<SharedLyricsService>();
             let result = set_wallpaper_mode_inner(
-                &window_for_main,
+                &window_in_closure,
                 flags.inner(),
                 &service,
                 enabled,
