@@ -35,7 +35,7 @@ impl LyricsCache {
             );",
         )
         .map_err(|e| e.to_string())?;
-        migrate_sync_offsets_v061(&conn)?;
+        Self::migrate_sync_offsets_v061(&conn)?;
         Ok(Self { conn: Some(conn) })
     }
 
@@ -495,7 +495,7 @@ mod settings_tests {
              INSERT INTO sync_offset (cache_key, offset_ms) VALUES ('x|y|z|200', 100);",
         )
         .expect("schema");
-        super::migrate_sync_offsets_v061(&conn).expect("migrate");
+        LyricsCache::migrate_sync_offsets_v061(&conn).expect("migrate");
         let a: i64 = conn
             .query_row(
                 "SELECT offset_ms FROM sync_offset WHERE cache_key = 'a|b|c|120'",

@@ -1,4 +1,7 @@
 import { LyricsView } from "../lyrics-view";
+import { setBuiltinSyncLagOverride } from "../sync-lag";
+
+setBuiltinSyncLagOverride(0);
 
 const HEBREW_LRC = `[00:00.00] <00:00.00>שלום <00:00.60>עולם <00:01.20>יפה
 [00:04.00] <00:04.00>שורה <00:04.60>שניה <00:05.20>כאן`;

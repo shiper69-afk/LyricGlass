@@ -19,7 +19,7 @@ import {
   plainScrollOffsetPx,
   textLooksHebrew,
 } from "./plain-scroll";
-import { BUILTIN_SYNC_LAG_MS, effectiveSyncOffsetMs } from "./sync-lag";
+import { effectiveSyncOffsetMs, getBuiltinSyncLagMs } from "./sync-lag";
 
 export interface MediaState extends PlaybackClockMedia {
   spotifyRunning: boolean;
@@ -168,7 +168,7 @@ export class LyricsView {
   }
 
   getBuiltinSyncLagMs() {
-    return BUILTIN_SYNC_LAG_MS;
+    return getBuiltinSyncLagMs();
   }
 
   getEffectiveSyncOffsetMs() {

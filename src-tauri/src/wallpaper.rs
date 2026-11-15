@@ -52,15 +52,16 @@ mod imp {
     use super::*;
     use windows::core::{w, BOOL};
     use windows::Win32::Foundation::{GetLastError, HWND, LPARAM, RECT, WPARAM};
-    use windows::Win32::UI::HiDpi::{GetDpiForWindow, MONITOR_DEFAULTTOPRIMARY};
+    use windows::Win32::Graphics::Gdi::{
+        GetMonitorInfoW, MonitorFromWindow, MONITOR_DEFAULTTOPRIMARY, MONITORINFO,
+    };
+    use windows::Win32::UI::HiDpi::GetDpiForWindow;
     use windows::Win32::UI::WindowsAndMessaging::{
         EnumWindows, FindWindowExW, FindWindowW, GetClassNameW, GetParent,
         GetWindowLongPtrW, GetWindowRect, IsWindow, SendMessageTimeoutW, SetParent,
         SetWindowLongPtrW, SetWindowPos, ShowWindow, GWL_EXSTYLE, GWL_STYLE, SMTO_ABORTIFHUNG,
         SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_HIDE, SW_SHOW,
     };
-    use windows::Win32::Graphics::Gdi::MonitorFromWindow;
-    use windows::Win32::UI::WindowsAndMessaging::{GetMonitorInfoW, MONITORINFO};
 
     const PROGMAN_DESKTOP_MSG: u32 = 0x052C;
     const WS_CHILD: u32 = 0x4000_0000;
@@ -127,7 +128,7 @@ mod imp {
             };
             diag.push_str(&format!(
                 "spawn attempt {attempt}: msg=0x{PROGMAN_DESKTOP_MSG:x} wParam=0x{wp:x} lParam=0x{lp:x} ok={} result=0x{result:x} lastError={}\n",
-                r.is_ok(),
+                r.0 != 0,
                 last_error_code()
             ));
         }
@@ -199,7 +200,7 @@ mod imp {
             if let Some((host, layout)) =
                 choose_wallpaper_parent(&list, hwnd_to_u64(progman))
             {
-                let hwnd = HWND(host as isize);
+                let hwnd = HWND(host as *mut core::ffi::c_void);
                 if hwnd_valid(hwnd) {
                     diag.push_str(&format!(
                         "workerw retry {retry}: host=0x{host:x} layout={layout:?}\n"
@@ -239,7 +240,7 @@ mod imp {
     fn monitor_rect_for_window(hwnd: HWND) -> (RECT, u32) {
         let dpi = unsafe { GetDpiForWindow(hwnd) };
         let dpi = if dpi == 0 { 96 } else { dpi };
-        let monitor = unsafe { MonitorFromWindow(Some(hwnd), MONITOR_DEFAULTTOPRIMARY) };
+        let monitor = unsafe { MonitorFromWindow(hwnd, MONITOR_DEFAULTTOPRIMARY) };
         let mut info = MONITORINFO {
             cbSize: std::mem::size_of::<MONITORINFO>() as u32,
             ..Default::default()

@@ -1,4 +1,7 @@
 import { LyricsView } from "../lyrics-view";
+import { setBuiltinSyncLagOverride } from "../sync-lag";
+
+setBuiltinSyncLagOverride(0);
 
 const THREE_LINE_LRC = `[00:00.00] <00:00.00>One <00:00.40>two <00:00.80>three <00:01.10>end
 [00:03.00] <00:03.00>Four <00:03.40>five <00:03.80>six <00:04.10>end
