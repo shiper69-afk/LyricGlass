@@ -777,7 +777,7 @@ mod imp {
                 force_clear_topmost(host, diag);
                 let hs = GetWindowLongPtrW(host, GWL_STYLE) as u32 | WS_VISIBLE;
                 set_window_long_ptr_logged(host, GWL_STYLE, hs as isize, "host style show", diag);
-                let _ = ShowWindow(host, SW_SHOWNA);
+                let _ = ShowWindow(host, SHOW_WINDOW_CMD(SW_SHOWNA as u32));
                 let _ = SetWindowPos(
                     host,
                     Some(defview),
