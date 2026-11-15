@@ -1,7 +1,12 @@
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+static MAIN_HEARTBEAT_MS: AtomicU64 = AtomicU64::new(0);
+static WATCHDOG_STARTED: OnceLock<()> = OnceLock::new();
 
 static LOG_PATH: OnceLock<Mutex<PathBuf>> = OnceLock::new();
 
@@ -32,7 +37,54 @@ pub fn log_path_display() -> String {
     ensure_log_file().display().to_string()
 }
 
+pub fn log_diagnostic(block: &str) {
+    let path = ensure_log_file();
+    let ts = time::OffsetDateTime::now_utc().unix_timestamp();
+    let body = format!("{ts} [diagnostics]\n{block}\n---\n");
+    if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
+        let _ = file.write_all(body.as_bytes());
+    }
+}
+
+fn unix_ms() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0)
+}
+
+/// Updated on the UI / main-thread path (tray, commands, setup) — not the media watcher.
+pub fn main_heartbeat() {
+    MAIN_HEARTBEAT_MS.store(unix_ms(), Ordering::Relaxed);
+}
+
+fn start_main_watchdog() {
+    WATCHDOG_STARTED.get_or_init(|| {
+        main_heartbeat();
+        std::thread::spawn(|| loop {
+            std::thread::sleep(Duration::from_secs(2));
+            let last = MAIN_HEARTBEAT_MS.load(Ordering::Relaxed);
+            let now = unix_ms();
+            if now.saturating_sub(last) > 2000 {
+                let path = ensure_log_file();
+                let ts = time::OffsetDateTime::now_utc().unix_timestamp();
+                let line = format!(
+                    "{ts} [watchdog] main thread stall suspected (>2s since heartbeat; last={last} now={now})\n"
+                );
+                if let Ok(mut file) = OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(&path)
+                {
+                    let _ = file.write_all(line.as_bytes());
+                }
+            }
+        });
+    });
+}
+
 pub fn step(message: &str) {
+    main_heartbeat();
     let path = ensure_log_file();
     let ts = time::OffsetDateTime::now_utc().unix_timestamp();
     let line = format!("{ts} [startup] {message}\n");
@@ -110,4 +162,5 @@ pub fn log_fatal_error(context: &str, err: impl std::fmt::Display) {
 pub fn init_logging() {
     step("logging initialized");
     step(&format!("log file: {}", log_path_display()));
+    start_main_watchdog();
 }

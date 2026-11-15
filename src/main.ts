@@ -1,183 +1,349 @@
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { formatMs, smoothedPositionMs } from "./clock";
-
-interface MediaState {
-  spotifyRunning: boolean;
-  sourceAppId: string;
-  title: string;
-  artist: string;
-  album: string;
-  durationMs: number;
-  positionReportedMs: number;
-  positionReportedAtMs: number;
-  playbackStatus: string;
-  lastEventKind: string;
-  timelineUpdates: number;
-  message: string;
-}
+import { formatMs, timelineAnchorAgeMs } from "./clock";
+import {
+  createPlaybackAnchor,
+  playbackClockMs,
+  type PlaybackAnchor,
+} from "./playback-clock";
+import {
+  buildDiagnosticsBlock,
+  buildSyncMarkBlock,
+  type FullMediaState,
+} from "./diagnostics";
+import {
+  LyricsView,
+  type LyricsResponse,
+} from "./lyrics-view";
 
 interface UiState {
-  clickThrough: boolean;
+  alwaysOnTop: boolean;
   wallpaperMode: boolean;
+  debugVisible: boolean;
 }
+
+interface AppearanceState {
+  overlayOpacity: number;
+}
+
+const lyricsRoot = document.getElementById("lyrics-root")!;
+const lyricsView = new LyricsView(lyricsRoot);
+const appRoot = document.getElementById("app")!;
 
 const els = {
   mediaStatus: document.getElementById("media-status")!,
-  title: document.getElementById("m-title")!,
-  artist: document.getElementById("m-artist")!,
   album: document.getElementById("m-album")!,
   status: document.getElementById("m-status")!,
-  duration: document.getElementById("m-duration")!,
   posRaw: document.getElementById("m-position-raw")!,
+  lutTicks: document.getElementById("m-lut-ticks")!,
+  posAge: document.getElementById("m-position-age")!,
+  wallAge: document.getElementById("m-wall-age")!,
   posSmooth: document.getElementById("m-position-smooth")!,
+  playbackRate: document.getElementById("m-playback-rate")!,
+  lineIndex: document.getElementById("m-line-index")!,
   timelineCount: document.getElementById("m-timeline-count")!,
   lastEvent: document.getElementById("m-last-event")!,
-  btnClick: document.getElementById("btn-click") as HTMLButtonElement,
+  btnAlwaysOnTop: document.getElementById("btn-always-on-top") as HTMLButtonElement,
   btnWallpaper: document.getElementById("btn-wallpaper") as HTMLButtonElement,
-  animEnabled: document.getElementById("anim-enabled") as HTMLInputElement,
-  canvas: document.getElementById("karaoke-canvas") as HTMLCanvasElement,
-  fps: document.getElementById("fps-label")!,
+  btnSettings: document.getElementById("btn-settings") as HTMLButtonElement,
+  settingsPopover: document.getElementById("settings-popover") as HTMLDivElement,
+  titlebarTools: document.querySelector(".titlebar-tools")!,
+  debugPanel: document.getElementById("debug-panel")!,
+  plainBadge: document.getElementById("plain-badge")!,
+  btnCopyDiag: document.getElementById("btn-copy-diag") as HTMLButtonElement,
+  opacitySlider: document.getElementById("opacity-slider") as HTMLInputElement,
+  timingSlider: document.getElementById("timing-slider") as HTMLInputElement,
+  timingReset: document.getElementById("timing-reset") as HTMLButtonElement,
+  timingReadout: document.getElementById("timing-readout")!,
 };
 
-let latestMedia: MediaState | null = null;
+let latestMedia: FullMediaState | null = null;
+let playbackAnchor: PlaybackAnchor | null = null;
+let latestLyrics: LyricsResponse | null = null;
+let fetchGeneration = 0;
+let debugVisible = false;
+let timingPersistTimer = 0;
+let lastDebugClockRenderMs = 0;
+const DEBUG_PANEL_HZ_MS = 200;
 
-function renderMedia(state: MediaState) {
+function applyAppearance(backgroundOpacity: number) {
+  const bg = Math.max(0, Math.min(1, backgroundOpacity));
+  appRoot.style.setProperty("--bg-alpha", String(bg));
+  els.opacitySlider.value = String(Math.round(bg * 100));
+}
+
+function updateTimingReadout(ms: number) {
+  els.timingReadout.textContent = `${ms >= 0 ? "+" : ""}${(ms / 1000).toFixed(1)}s`;
+  els.timingSlider.value = String(ms);
+}
+
+async function persistSyncOffset(ms: number) {
+  if (!latestMedia?.title && !latestMedia?.artist) return;
+  try {
+    const total = await invoke<number>("set_sync_offset", {
+      artist: latestMedia.artist,
+      track: latestMedia.title,
+      album: latestMedia.album,
+      durationMs: latestMedia.durationMs,
+      offsetMs: ms,
+    });
+    lyricsView.setSyncOffsetAbsolute(total);
+    updateTimingReadout(total);
+  } catch {
+    /* ignore */
+  }
+}
+
+function schedulePersistTiming() {
+  clearTimeout(timingPersistTimer);
+  timingPersistTimer = window.setTimeout(() => {
+    void persistSyncOffset(Number(els.timingSlider.value));
+  }, 200);
+}
+
+function renderDebugStatic(media: FullMediaState) {
+  els.mediaStatus.textContent = media.message;
+  els.album.textContent = media.album || "—";
+  els.status.textContent = media.playbackStatus;
+  els.posRaw.textContent = formatMs(media.positionReportedMs);
+  els.lutTicks.textContent = String(media.lastUpdatedRawTicks ?? 0);
+  els.playbackRate.textContent = (media.playbackRate ?? 1).toFixed(2);
+  els.timelineCount.textContent = String(media.timelineUpdates);
+  els.lastEvent.textContent = media.lastEventKind;
+}
+
+function renderDebugClock(force = false) {
+  if (!latestMedia || !debugVisible) return;
+  const perf = performance.now();
+  if (!force && perf - lastDebugClockRenderMs < DEBUG_PANEL_HZ_MS) return;
+  lastDebugClockRenderMs = perf;
+  const now = Date.now();
+  const computed = playbackClockMs(latestMedia, playbackAnchor, now);
+  const line = lyricsView.getLineDiagnostics(computed);
+  els.posSmooth.textContent = formatMs(computed);
+  els.posAge.textContent = `${timelineAnchorAgeMs(latestMedia.positionReportedAtMs, now)} ms`;
+  const wall = latestMedia.positionExtrapolationWallMs ?? 0;
+  els.wallAge.textContent =
+    wall > 0 ? `${timelineAnchorAgeMs(wall, now)} ms` : "—";
+  els.lineIndex.textContent =
+    line.index >= 0 ? `${line.index} @ ${formatMs(line.lineTimeMs)}` : "—";
+}
+
+async function loadSyncOffset(media: FullMediaState) {
+  try {
+    const off = await invoke<number>("get_sync_offset", {
+      artist: media.artist,
+      track: media.title,
+      album: media.album,
+      durationMs: media.durationMs,
+    });
+    lyricsView.setSyncOffsetAbsolute(off);
+    updateTimingReadout(off);
+  } catch {
+    lyricsView.setSyncOffsetAbsolute(0);
+    updateTimingReadout(0);
+  }
+}
+
+async function logDiagnosticsToFile(reason: string) {
+  const block = buildDiagnosticsBlock(
+    latestMedia,
+    latestLyrics,
+    lyricsView,
+    playbackAnchor,
+  );
+  const full = `${reason}\n\n${block}`;
+  await invoke("log_diagnostics", { block: full });
+}
+
+async function loadLyrics(media: FullMediaState) {
+  if (!lyricsView.shouldFetchLyrics(media)) return;
+
+  const gen = ++fetchGeneration;
+  lyricsView.onLyricsLoading();
+
+  try {
+    const res = await invoke<LyricsResponse>("fetch_lyrics", {
+      artist: media.artist,
+      track: media.title,
+      album: media.album,
+      durationMs: media.durationMs,
+    });
+    if (gen !== fetchGeneration) return;
+    latestLyrics = res;
+    lyricsView.onLyricsResponse(res);
+    els.plainBadge.classList.toggle("hidden", res.status !== "plain");
+  } catch (e) {
+    if (gen !== fetchGeneration) return;
+    latestLyrics = {
+      status: "error",
+      message: String(e),
+      instrumental: false,
+    };
+    lyricsView.onLyricsResponse(latestLyrics);
+  }
+}
+
+function onMedia(state: FullMediaState) {
+  const prev = latestMedia;
+  const trackKey = (m: FullMediaState) =>
+    `${m.artist}|${m.title}|${m.album}|${m.durationMs}`;
+  const trackChanged =
+    !prev ||
+    state.lastEventKind === "track" ||
+    trackKey(prev) !== trackKey(state);
+
   latestMedia = state;
-  els.mediaStatus.textContent = state.message;
-  els.title.textContent = state.title || "—";
-  els.artist.textContent = state.artist || "—";
-  els.album.textContent = state.album || "—";
-  els.status.textContent = state.playbackStatus;
-  els.duration.textContent = formatMs(state.durationMs);
-  els.posRaw.textContent = formatMs(state.positionReportedMs);
-  els.timelineCount.textContent = String(state.timelineUpdates);
-  els.lastEvent.textContent = state.lastEventKind;
+  playbackAnchor = createPlaybackAnchor(state, Date.now());
+  lyricsView.onMediaHeader(state);
+
+  if (trackChanged) {
+    void loadLyrics(state);
+    void loadSyncOffset(state);
+    void logDiagnosticsToFile(`Track change: ${state.title} — ${state.artist}`);
+  }
+
+  renderDebugStatic(state);
+  if (debugVisible) renderDebugClock(true);
+}
+
+let settingsOpen = false;
+
+function setSettingsOpen(open: boolean) {
+  settingsOpen = open;
+  els.settingsPopover.hidden = !open;
+  els.btnSettings.classList.toggle("active", open);
+  els.btnSettings.setAttribute("aria-expanded", open ? "true" : "false");
 }
 
 function renderUi(state: UiState) {
-  els.btnClick.classList.toggle("active", state.clickThrough);
+  debugVisible = state.debugVisible;
+  els.btnAlwaysOnTop.classList.toggle("active", state.alwaysOnTop);
   els.btnWallpaper.classList.toggle("active", state.wallpaperMode);
+  els.debugPanel.classList.toggle("hidden", !state.debugVisible);
+  els.debugPanel.setAttribute("aria-hidden", state.debugVisible ? "false" : "true");
+  renderDebugClock(true);
 }
-
-function updateSmoothedClock() {
-  if (!latestMedia) return;
-  const now = Date.now();
-  const playing = latestMedia.playbackStatus.toLowerCase() === "playing";
-  const smooth = smoothedPositionMs(
-    latestMedia.positionReportedMs,
-    playing,
-    now - latestMedia.positionReportedAtMs,
-  );
-  els.posSmooth.textContent = formatMs(smooth);
-}
-
-els.btnClick.addEventListener("click", async () => {
-  await invoke("toggle_click_through");
-});
-
-els.btnWallpaper.addEventListener("click", async () => {
-  await invoke("toggle_wallpaper_mode");
-});
 
 let rafId = 0;
-let clockTimer: number | undefined;
 
-const ctx = els.canvas.getContext("2d")!;
-
-function drawBouncingBall(t: number) {
-  const w = els.canvas.width;
-  const h = els.canvas.height;
-  ctx.clearRect(0, 0, w, h);
-
-  const x = (w * 0.1) + (Math.sin(t * 0.0025) * 0.5 + 0.5) * (w * 0.8);
-  const y = h * 0.65 + Math.abs(Math.sin(t * 0.006)) * -18;
-
-  ctx.fillStyle = "rgba(255, 210, 90, 0.95)";
-  ctx.beginPath();
-  ctx.arc(x, y, 9, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
-  ctx.fillRect(0, h - 6, w, 2);
+function tick() {
+  if (latestMedia) {
+    const playbackMs = playbackClockMs(
+      latestMedia,
+      playbackAnchor,
+      Date.now(),
+    );
+    lyricsView.tick(playbackMs);
+    renderDebugClock();
+  }
+  rafId = requestAnimationFrame(tick);
 }
 
-let lastFpsT = 0;
-let frameCount = 0;
-let fpsValue = 0;
-
-function loop(now: number) {
-  if (!els.animEnabled.checked) {
-    rafId = 0;
-    els.fps.textContent = "FPS: idle";
-    return;
-  }
-
-  drawBouncingBall(now);
-  frameCount += 1;
-  if (now - lastFpsT >= 500) {
-    fpsValue = Math.round((frameCount * 1000) / (now - lastFpsT));
-    frameCount = 0;
-    lastFpsT = now;
-    els.fps.textContent = `FPS: ${fpsValue}`;
-  }
-
-  updateSmoothedClock();
-  rafId = requestAnimationFrame(loop);
+function startTicker() {
+  if (!rafId) rafId = requestAnimationFrame(tick);
 }
 
-function startAnimationLoop() {
-  if (rafId) cancelAnimationFrame(rafId);
-  if (els.animEnabled.checked) {
-    lastFpsT = performance.now();
-    frameCount = 0;
-    rafId = requestAnimationFrame(loop);
-  } else {
-    els.fps.textContent = "FPS: idle";
-    if (!clockTimer) {
-      clockTimer = window.setInterval(updateSmoothedClock, 250);
-    }
-  }
-}
-
-els.animEnabled.addEventListener("change", () => {
-  if (els.animEnabled.checked && clockTimer) {
-    clearInterval(clockTimer);
-    clockTimer = undefined;
-  }
-  startAnimationLoop();
+els.btnAlwaysOnTop.addEventListener("click", (e) => {
+  e.stopPropagation();
+  void invoke("toggle_always_on_top");
+});
+els.btnWallpaper.addEventListener("click", (e) => {
+  e.stopPropagation();
+  void invoke("toggle_wallpaper_mode");
 });
 
+els.btnSettings.addEventListener("click", (e) => {
+  e.stopPropagation();
+  setSettingsOpen(!settingsOpen);
+});
+
+document.addEventListener("mousedown", (e) => {
+  if (!settingsOpen) return;
+  const target = e.target as Node;
+  if (els.settingsPopover.contains(target) || els.btnSettings.contains(target)) {
+    return;
+  }
+  setSettingsOpen(false);
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && settingsOpen) {
+    e.preventDefault();
+    setSettingsOpen(false);
+  }
+});
+
+els.opacitySlider.addEventListener("input", () => {
+  const bg = Number(els.opacitySlider.value) / 100;
+  applyAppearance(bg);
+  void invoke("set_overlay_opacity", { opacity: bg });
+});
+
+els.timingSlider.addEventListener("input", () => {
+  const ms = Number(els.timingSlider.value);
+  lyricsView.setSyncOffsetAbsolute(ms);
+  updateTimingReadout(ms);
+  schedulePersistTiming();
+});
+
+els.timingReset.addEventListener("click", () => {
+  void persistSyncOffset(0);
+});
+
+els.btnCopyDiag.addEventListener("click", async () => {
+  const block = buildDiagnosticsBlock(
+    latestMedia,
+    latestLyrics,
+    lyricsView,
+    playbackAnchor,
+  );
+  try {
+    await navigator.clipboard.writeText(block);
+  } catch {
+    await invoke("log_diagnostics", { block });
+  }
+});
+
+async function onSyncMark() {
+  const block = buildSyncMarkBlock(latestMedia, lyricsView, playbackAnchor);
+  await invoke("log_sync_mark", { block });
+}
+
 async function boot() {
-  await listen<MediaState>("media-state", (e) => renderMedia(e.payload));
+  await listen<FullMediaState>("media-state", (e) => onMedia(e.payload));
   await listen<UiState>("ui-state", (e) => renderUi(e.payload));
-
-  const media = await invoke<MediaState>("get_media_state");
-  renderMedia(media);
-  const ui = await invoke<UiState>("get_ui_state");
-  renderUi(ui);
-
-  startAnimationLoop();
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-        rafId = 0;
-      }
-    } else if (els.animEnabled.checked) {
-      startAnimationLoop();
+  await listen<AppearanceState>("appearance-state", (e) =>
+    applyAppearance(e.payload.overlayOpacity),
+  );
+  await listen<number>("sync-offset-absolute", (e) => {
+    lyricsView.setSyncOffsetAbsolute(e.payload);
+    updateTimingReadout(e.payload);
+  });
+  await listen("seek-tick", () => {
+    lyricsView.onSeek();
+    if (latestMedia) {
+      playbackAnchor = createPlaybackAnchor(latestMedia, Date.now());
+      lyricsView.tick(
+        playbackClockMs(latestMedia, playbackAnchor, Date.now()),
+      );
     }
   });
+  await listen("sync-mark-request", () => void onSyncMark());
 
-  void getCurrentWindow().onFocusChanged(({ payload: focused }) => {
-    if (!focused && rafId) {
+  const media = await invoke<FullMediaState>("get_media_state");
+  onMedia(media);
+  renderUi(await invoke<UiState>("get_ui_state"));
+  applyAppearance((await invoke<AppearanceState>("get_appearance")).overlayOpacity);
+
+  startTicker();
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && rafId) {
       cancelAnimationFrame(rafId);
       rafId = 0;
-      els.fps.textContent = "FPS: paused (unfocused)";
-    } else if (focused && els.animEnabled.checked) {
-      startAnimationLoop();
+    } else if (!document.hidden) {
+      startTicker();
     }
   });
 }

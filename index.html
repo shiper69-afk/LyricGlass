@@ -3,41 +3,108 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LyricGlass Phase 0</title>
+    <title>LyricGlass</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div id="app">
-      <header class="titlebar" data-tauri-drag-region>
-        <span>LyricGlass · Phase 0 spike</span>
-        <div class="titlebar-actions">
-          <button type="button" id="btn-click" title="Toggle click-through (Ctrl+Alt+C)">Click-through</button>
-          <button type="button" id="btn-wallpaper" title="Toggle wallpaper attach (Ctrl+Alt+W)">Wallpaper</button>
-          <label class="anim-toggle">
-            <input type="checkbox" id="anim-enabled" checked />
-            Animate
-          </label>
+      <header class="titlebar">
+        <span class="brand" data-tauri-drag-region>
+          LyricGlass <small id="app-version">0.2.4</small>
+        </span>
+        <div class="titlebar-tools">
+          <button
+            type="button"
+            id="btn-settings"
+            class="icon-btn"
+            title="Settings"
+            aria-expanded="false"
+            aria-controls="settings-popover"
+          >
+            ⚙
+          </button>
+          <button
+            type="button"
+            id="btn-always-on-top"
+            class="icon-btn"
+            title="Always on top"
+          >
+            📌
+          </button>
+          <button
+            type="button"
+            id="btn-wallpaper"
+            class="icon-btn"
+            title="Wallpaper (Ctrl+Alt+W)"
+          >
+            🖼
+          </button>
+          <div
+            class="settings-popover"
+            id="settings-popover"
+            role="dialog"
+            aria-label="Settings"
+            hidden
+          >
+            <label class="setting-row">
+              <span>Opacity</span>
+              <input type="range" id="opacity-slider" min="0" max="100" value="38" />
+            </label>
+            <label class="setting-row">
+              <span>Timing</span>
+              <input
+                type="range"
+                id="timing-slider"
+                min="-10000"
+                max="10000"
+                step="100"
+                value="0"
+              />
+              <button type="button" id="timing-reset" class="mini-btn">Reset</button>
+            </label>
+            <span id="timing-readout" class="timing-readout">0.0s</span>
+          </div>
         </div>
       </header>
 
-      <section class="panel media-panel">
-        <h2>Spotify · Windows media session</h2>
-        <p id="media-status" class="muted">Connecting…</p>
+      <section class="lyrics-panel" id="lyrics-root">
+        <p class="np-header">
+          <span id="np-title" class="np-title">—</span>
+          <span id="np-artist" class="np-artist">—</span>
+        </p>
+        <p id="duration-warn" class="duration-warn hidden" role="status"></p>
+        <p id="lyrics-status" class="lyrics-status">Waiting for Spotify…</p>
+        <p id="sync-offset-label" class="sync-offset" aria-live="polite"></p>
+        <div id="lyrics-lines" class="lyrics-lines" aria-live="polite"></div>
+        <div id="lyrics-plain" class="lyrics-plain hidden" dir="auto"></div>
+        <p class="plain-badge hidden" id="plain-badge">Untimed lyrics</p>
+      </section>
+
+      <section class="panel debug-panel hidden" id="debug-panel" aria-hidden="true">
+        <div class="debug-head">
+          <h2>Diagnostics</h2>
+          <button type="button" id="btn-copy-diag" class="mini-btn">Copy diagnostics</button>
+        </div>
+        <p id="media-status" class="muted">—</p>
         <dl class="media-grid">
-          <dt>Title</dt>
-          <dd id="m-title">—</dd>
-          <dt>Artist</dt>
-          <dd id="m-artist">—</dd>
           <dt>Album</dt>
           <dd id="m-album">—</dd>
           <dt>Status</dt>
           <dd id="m-status">—</dd>
-          <dt>Duration</dt>
-          <dd id="m-duration">—</dd>
-          <dt>Position (reported)</dt>
+          <dt>GSMTC position</dt>
           <dd id="m-position-raw">—</dd>
-          <dt>Position (smoothed)</dt>
+          <dt>LastUpdated ticks</dt>
+          <dd id="m-lut-ticks">—</dd>
+          <dt>Timeline age</dt>
+          <dd id="m-position-age">—</dd>
+          <dt>Wall anchor age</dt>
+          <dd id="m-wall-age">—</dd>
+          <dt>Computed clock</dt>
           <dd id="m-position-smooth">—</dd>
+          <dt>Rate</dt>
+          <dd id="m-playback-rate">—</dd>
+          <dt>Line index</dt>
+          <dd id="m-line-index">—</dd>
           <dt>Timeline events</dt>
           <dd id="m-timeline-count">0</dd>
           <dt>Last event</dt>
@@ -45,18 +112,8 @@
         </dl>
       </section>
 
-      <section class="panel demo-panel">
-        <h2>Overlay demo</h2>
-        <div class="lyric-row">
-          <div class="lyric-en" id="lyric-en">Hello world — overlay test line</div>
-          <div class="lyric-he" dir="rtl" lang="he">שלום עולם, זו בדיקה</div>
-        </div>
-        <canvas id="karaoke-canvas" width="520" height="56" aria-hidden="true"></canvas>
-        <p class="fps" id="fps-label">FPS: —</p>
-      </section>
-
       <footer class="hints">
-        <span>Drag title bar · Tray menu · Ctrl+Alt+C click-through · Ctrl+Alt+W wallpaper</span>
+        <span>Ctrl+Alt+W wallpaper · timing Ctrl+Alt+[ / ] ±0.1s · mark Ctrl+Alt+M</span>
       </footer>
     </div>
     <script type="module" src="/src/main.ts"></script>
