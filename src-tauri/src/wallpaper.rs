@@ -137,7 +137,7 @@ mod imp {
     fn set_redraw(hwnd: HWND, on: bool, diag: &mut String) {
         unsafe {
             let wp = WPARAM(if on { 1 } else { 0 } as usize);
-            let _ = SendMessageW(hwnd, WM_SETREDRAW, wp, LPARAM(0));
+            let _ = SendMessageW(hwnd, WM_SETREDRAW, Some(wp), Some(LPARAM(0)));
             diag.push_str(&format!("WM_SETREDRAW={on} hwnd=0x{:x}\n", hwnd_to_u64(hwnd)));
         }
     }
