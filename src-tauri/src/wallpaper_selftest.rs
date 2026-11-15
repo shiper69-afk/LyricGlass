@@ -12,7 +12,7 @@ pub fn run() -> i32 {
     use windows::Win32::System::LibraryLoader::GetModuleHandleW;
     use windows::Win32::UI::WindowsAndMessaging::{
         CreateWindowExW, DefWindowProcW, DestroyWindow, RegisterClassW, ShowWindow, WNDCLASSW,
-        CS_HREDRAW | CS_VREDRAW, SW_SHOW, WM_DESTROY,
+        CS_HREDRAW, CS_VREDRAW, SW_SHOW, WM_DESTROY,
     };
 
     unsafe extern "system" fn wnd_proc(

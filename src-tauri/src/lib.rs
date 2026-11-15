@@ -484,14 +484,14 @@ fn run_wallpaper_toggle_on_main(
     use std::sync::mpsc;
     use std::time::Duration;
     let (tx, rx) = mpsc::sync_channel(1);
-    let window = window.clone();
+    let window_for_main = window.clone();
     let app = app.clone();
-    if window
+    if window_for_main
         .run_on_main_thread(move || {
             let flags = app.state::<SharedFlags>();
             let service = app.state::<SharedLyricsService>();
             let result = set_wallpaper_mode_inner(
-                &window,
+                &window_for_main,
                 flags.inner(),
                 &service,
                 enabled,

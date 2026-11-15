@@ -87,7 +87,6 @@ let fetchGeneration = 0;
 let debugVisible = false;
 let timingPersistTimer = 0;
 let lastDebugClockRenderMs = 0;
-let lastWallpaperError: string | null = null;
 let lastWallpaperStatus: WallpaperStatus | null = null;
 const DEBUG_PANEL_HZ_MS = 200;
 
@@ -313,7 +312,7 @@ function renderUi(state: UiState) {
   els.btnWallpaper.classList.toggle("active", state.wallpaperMode);
   els.wallpaperToggle.checked = state.wallpaperMode;
   applyWallpaperLayout(appRoot, state.wallpaperMode);
-  lastWallpaperError = state.wallpaperError ?? null;
+  void state.wallpaperError;
   els.debugPanel.classList.toggle("hidden", !state.debugVisible);
   els.debugPanel.setAttribute("aria-hidden", state.debugVisible ? "false" : "true");
   renderDebugClock(true);
@@ -350,7 +349,6 @@ els.btnWallpaper.addEventListener("click", (e) => {
 async function refreshWallpaperFromBackend() {
   try {
     lastWallpaperStatus = await fetchWallpaperStatus();
-    lastWallpaperError = lastWallpaperStatus.lastError ?? null;
   } catch {
     /* harness */
   }
@@ -475,14 +473,13 @@ async function boot() {
   });
   await listen("sync-mark-request", () => void onSyncMark());
   await listen<string>("wallpaper-attach-failed", (e) => {
-    lastWallpaperError = e.payload;
+    void e.payload;
     void refreshWallpaperFromBackend();
     void logDiagnosticsToFile(`Wallpaper attach failed: ${e.payload}`);
   });
 
   await listen<WallpaperStatus>("wallpaper-status", (e) => {
     lastWallpaperStatus = e.payload;
-    lastWallpaperError = e.payload.lastError ?? null;
   });
 
   const media = await invoke<FullMediaState>("get_media_state");
