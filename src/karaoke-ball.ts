@@ -376,7 +376,7 @@ export class KaraokeBall {
       if (anchor) {
         this.activeLineEl = line;
         const frag = this.pickFragment(anchor);
-        const hopP = 0.85;
+        const hopP = (timeMs % 900) / 900;
         const restSync: KaraokeSyncState = {
           timeMs,
           activeIndex: lastIdx,

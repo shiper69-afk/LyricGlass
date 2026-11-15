@@ -6,13 +6,14 @@ import {
   type LrcLine,
   type ParsedLrc,
 } from "./lrc";
+import { interLineGapRest } from "./lyrics-gap";
 import {
-  SCROLL_LONG_GAP_MS,
   type LineScrollAnimation,
   scrollDurationMs,
   scrollProgress,
   scrollStartTimeMs,
 } from "./lyrics-scroll";
+import { lineVocalEndMs } from "./line-vocal-end";
 import type { TimedWord } from "./word-timing";
 import {
   plainScrollOffsetPx,
@@ -478,19 +479,7 @@ export class LyricsView {
         words: lines[0].words,
       };
     }
-    if (idx >= 0 && idx + 1 < lines.length) {
-      const next = lines[idx + 1];
-      if (next.timeMs - lines[idx].timeMs >= SCROLL_LONG_GAP_MS) {
-        const vocalEnd = cappedLineVisualEnd(lines[idx], next.timeMs);
-        if (timeMs >= vocalEnd + 40 && timeMs < next.timeMs) {
-          return {
-            lineIndex: idx + 1,
-            hopAtMs: next.timeMs,
-            words: next.words,
-          };
-        }
-      }
-    }
+    void idx;
     return null;
   }
 
@@ -571,19 +560,20 @@ export class LyricsView {
       }
     }
 
+    const introHopEnd = lines[0].timeMs + 500;
     if (
-      idle &&
-      timeMs >= idle.hopAtMs &&
-      timeMs < idle.hopAtMs + 500 &&
-      idx < idle.lineIndex
+      karaokeOn &&
+      !this.scrollAnim &&
+      timeMs >= lines[0].timeMs &&
+      timeMs < introHopEnd
     ) {
-      const lineEl = this.lineByIndex(idle.lineIndex);
+      const lineEl = this.lineByIndex(0);
       if (lineEl) {
         this.karaoke.updateIdleHopToFirstWord(
           lineEl,
-          idle.words,
+          lines[0].words,
           timeMs,
-          idle.hopAtMs,
+          lines[0].timeMs,
           scrollY,
         );
         return;
@@ -618,7 +608,7 @@ export class LyricsView {
       idx >= 0 &&
       idx + 1 < lines.length
     ) {
-      const gapRest = shortInstrumentalRest(lines, idx, timeMs);
+      const gapRest = interLineGapRest(lines, idx, timeMs);
       if (gapRest) {
         const lineEl = this.lineByIndex(idx);
         if (lineEl) {
@@ -720,22 +710,6 @@ export class LyricsView {
   }
 }
 
-/** End of sung content on a line (ignores LRCLIB “held” last tokens through instrumental). */
-export function lineVocalEndMs(line: LrcLine, nextLineStartMs: number): number {
-  if (line.words.length === 0) {
-    return Math.min(nextLineStartMs, line.timeMs + 400);
-  }
-  const last = line.words[line.words.length - 1]!;
-  const gap = nextLineStartMs - last.startMs;
-  const dur = last.endMs - last.startMs;
-  if (dur > 900 && gap > dur * 0.85) {
-    const prev = line.words[line.words.length - 2];
-    if (prev) return prev.endMs;
-    return last.startMs + 280;
-  }
-  return Math.min(last.endMs, nextLineStartMs);
-}
-
 function cappedLineVisualEnd(line: LrcLine, nextStartMs: number): number {
   return lineVocalEndMs(line, nextStartMs);
 }
@@ -751,21 +725,4 @@ function shouldArmScroll(
   const lastEnd = cappedLineVisualEnd(line, next.timeMs);
   const startAt = scrollStartTimeMs(line.timeMs, next.timeMs, lastEnd);
   return timeMs >= startAt && timeMs < next.timeMs;
-}
-
-function shortInstrumentalRest(
-  lines: LrcLine[],
-  idx: number,
-  timeMs: number,
-): boolean {
-  const line = lines[idx];
-  const next = lines[idx + 1];
-  if (!next) return false;
-  const gap = next.timeMs - line.timeMs;
-  if (gap >= SCROLL_LONG_GAP_MS) return false;
-  const lastEnd = cappedLineVisualEnd(line, next.timeMs);
-  const startAt = scrollStartTimeMs(line.timeMs, next.timeMs, lastEnd);
-  if (timeMs < lastEnd) return false;
-  if (timeMs >= startAt) return false;
-  return timeMs >= lastEnd + 80;
 }

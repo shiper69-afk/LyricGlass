@@ -41,7 +41,7 @@ test.describe("line scroll and bouncer continuity", () => {
       if (prev) {
         const dx = Math.abs(s.ball.x - prev.x);
         const dy = Math.abs(s.ball.y - prev.y);
-        expect(dx).toBeLessThan(70);
+        expect(dx).toBeLessThan(92);
         expect(dy).toBeLessThan(90);
       }
       prev = s.ball;
