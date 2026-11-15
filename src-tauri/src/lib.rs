@@ -387,8 +387,9 @@ fn build_tray(app: &AppHandle) {
                     let flags = flags.inner().clone();
                     std::thread::spawn(move || {
                         startup::step("tray toggle_debug: worker spawned");
+                        let app = app_handle.clone();
                         let _ = app_handle.run_on_main_thread(move || {
-                            toggle_debug_visible(&app_handle, &flags, "tray");
+                            toggle_debug_visible(&app, &flags, "tray");
                         });
                     });
                 }
@@ -483,8 +484,9 @@ pub fn run() {
                     std::thread::spawn(move || {
                         std::thread::sleep(std::time::Duration::from_secs(3));
                         startup::step("smoke: scheduling diagnostics toggle");
+                        let app_cb = app.clone();
                         let _ = app.run_on_main_thread(move || {
-                            toggle_debug_visible(&app, &flags, "smoke");
+                            toggle_debug_visible(&app_cb, &flags, "smoke");
                         });
                     });
                 }
