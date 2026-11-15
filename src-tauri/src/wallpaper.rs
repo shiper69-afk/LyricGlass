@@ -608,7 +608,7 @@ mod imp {
             clear_last_error();
             let host = match CreateWindowExW(
                 windows::Win32::UI::WindowsAndMessaging::WINDOW_EX_STYLE(
-                    WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+                    WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
                 ),
                 PCWSTR(class_name.as_ptr()),
                 PCWSTR(class_name.as_ptr()),
@@ -643,6 +643,9 @@ mod imp {
                 hwnd_to_u64(host),
                 hwnd_to_u64(progman)
             ));
+
+            let ex = GetWindowLongPtrW(host, GWL_EXSTYLE) as u32 | WS_EX_LAYERED;
+            set_window_long_ptr_logged(host, GWL_EXSTYLE, ex as isize, "host exstyle layered", diag);
 
             let layered_r = SetLayeredWindowAttributes(
                 host,
@@ -1167,8 +1170,7 @@ mod imp {
     mod attach_integration {
         use super::*;
         use crate::wallpaper_select::{
-            verify_progman_layered_state, ProgmanAttachPath, ProgmanAttachVerifyInput,
-            WallpaperAttachPlan,
+            verify_progman_layered_state, ProgmanAttachPath, WallpaperAttachPlan,
         };
 
         unsafe extern "system" fn fake_wnd_proc(
@@ -1278,6 +1280,7 @@ mod imp {
                     None,
                 )
                 .map_err(|e| format!("fake content: {e}"))?;
+                let _ = ShowWindow(progman, SHOW_WINDOW_CMD(SW_SHOW));
                 Ok(FakeDesktop {
                     progman,
                     defview,
