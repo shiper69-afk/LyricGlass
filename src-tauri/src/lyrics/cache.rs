@@ -208,6 +208,94 @@ impl LyricsCache {
         Ok(enabled)
     }
 
+    pub const DEFAULT_KARAOKE_BALL_COLOR: &'static str = "#ffc857";
+    pub const DEFAULT_SUNG_HIGHLIGHT_COLOR: &'static str = "#ffdc8c";
+
+    fn read_setting_string(conn: &Connection, key: &str) -> Option<String> {
+        conn.query_row(
+            "SELECT value FROM app_settings WHERE key = ?1",
+            params![key],
+            |row| row.get::<_, String>(0),
+        )
+        .ok()
+    }
+
+    fn normalize_hex_color(raw: &str, fallback: &str) -> String {
+        let s = raw.trim();
+        let hex = if let Some(stripped) = s.strip_prefix('#') {
+            stripped
+        } else {
+            s
+        };
+        if hex.len() == 6
+            && hex.chars().all(|c| c.is_ascii_hexdigit())
+        {
+            return format!("#{}", hex.to_ascii_lowercase());
+        }
+        fallback.to_string()
+    }
+
+    pub fn get_karaoke_ball_color(&self) -> String {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Self::DEFAULT_KARAOKE_BALL_COLOR.to_string(),
+        };
+        Self::read_setting_string(conn, "karaoke_ball_color")
+            .map(|v| Self::normalize_hex_color(&v, Self::DEFAULT_KARAOKE_BALL_COLOR))
+            .unwrap_or_else(|| Self::DEFAULT_KARAOKE_BALL_COLOR.to_string())
+    }
+
+    pub fn get_sung_highlight_color(&self) -> String {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Self::DEFAULT_SUNG_HIGHLIGHT_COLOR.to_string(),
+        };
+        Self::read_setting_string(conn, "sung_highlight_color")
+            .map(|v| Self::normalize_hex_color(&v, Self::DEFAULT_SUNG_HIGHLIGHT_COLOR))
+            .unwrap_or_else(|| Self::DEFAULT_SUNG_HIGHLIGHT_COLOR.to_string())
+    }
+
+    pub fn set_karaoke_ball_color(&self, color: &str) -> Result<String, String> {
+        let normalized = Self::normalize_hex_color(color, Self::DEFAULT_KARAOKE_BALL_COLOR);
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(normalized),
+        };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('karaoke_ball_color', ?1)",
+            params![normalized],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(normalized)
+    }
+
+    pub fn set_sung_highlight_color(&self, color: &str) -> Result<String, String> {
+        let normalized = Self::normalize_hex_color(color, Self::DEFAULT_SUNG_HIGHLIGHT_COLOR);
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(normalized),
+        };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('sung_highlight_color', ?1)",
+            params![normalized],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(normalized)
+    }
+
+    pub fn reset_karaoke_colors(&self) -> Result<(), String> {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(()),
+        };
+        conn.execute(
+            "DELETE FROM app_settings WHERE key IN ('karaoke_ball_color', 'sung_highlight_color')",
+            [],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
     pub fn set_overlay_opacity(&self, opacity: f64) -> Result<f64, String> {
         let clamped = opacity.clamp(0.0, 1.0);
         let conn = match &self.conn {

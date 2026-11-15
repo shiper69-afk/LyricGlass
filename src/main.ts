@@ -25,7 +25,12 @@ interface UiState {
 interface AppearanceState {
   overlayOpacity: number;
   karaokeBall: boolean;
+  karaokeBallColor: string;
+  sungHighlightColor: string;
 }
+
+const DEFAULT_BALL_COLOR = "#ffc857";
+const DEFAULT_SUNG_COLOR = "#ffdc8c";
 
 const lyricsRoot = document.getElementById("lyrics-root")!;
 const lyricsView = new LyricsView(lyricsRoot);
@@ -57,6 +62,9 @@ const els = {
   timingReset: document.getElementById("timing-reset") as HTMLButtonElement,
   timingReadout: document.getElementById("timing-readout")!,
   karaokeToggle: document.getElementById("karaoke-ball-toggle") as HTMLInputElement,
+  ballColor: document.getElementById("ball-color") as HTMLInputElement,
+  sungColor: document.getElementById("sung-color") as HTMLInputElement,
+  colorsReset: document.getElementById("colors-reset") as HTMLButtonElement,
 };
 
 let latestMedia: FullMediaState | null = null;
@@ -74,10 +82,19 @@ function applyAppearance(backgroundOpacity: number) {
   els.opacitySlider.value = String(Math.round(bg * 100));
 }
 
+function applyKaraokeColors(ball: string, sung: string) {
+  const ballHex = ball || DEFAULT_BALL_COLOR;
+  const sungHex = sung || DEFAULT_SUNG_COLOR;
+  els.ballColor.value = ballHex;
+  els.sungColor.value = sungHex;
+  lyricsView.setKaraokeColors(ballHex, sungHex);
+}
+
 function applyAppearanceSettings(state: AppearanceState) {
   applyAppearance(state.overlayOpacity);
   els.karaokeToggle.checked = state.karaokeBall;
   lyricsView.setKaraokeEnabled(state.karaokeBall);
+  applyKaraokeColors(state.karaokeBallColor, state.sungHighlightColor);
 }
 
 function updateTimingReadout(ms: number) {
@@ -301,6 +318,21 @@ els.timingReset.addEventListener("click", () => {
 
 els.karaokeToggle.addEventListener("change", () => {
   void invoke("set_karaoke_ball", { enabled: els.karaokeToggle.checked });
+});
+
+els.ballColor.addEventListener("input", () => {
+  applyKaraokeColors(els.ballColor.value, els.sungColor.value);
+  void invoke("set_karaoke_ball_color", { color: els.ballColor.value });
+});
+
+els.sungColor.addEventListener("input", () => {
+  applyKaraokeColors(els.ballColor.value, els.sungColor.value);
+  void invoke("set_sung_highlight_color", { color: els.sungColor.value });
+});
+
+els.colorsReset.addEventListener("click", () => {
+  applyKaraokeColors(DEFAULT_BALL_COLOR, DEFAULT_SUNG_COLOR);
+  void invoke("reset_karaoke_colors");
 });
 
 els.btnCopyDiag.addEventListener("click", async () => {

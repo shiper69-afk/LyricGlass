@@ -68,6 +68,26 @@ impl LyricsService {
         self.cache.lock().set_karaoke_ball(enabled)
     }
 
+    pub fn get_karaoke_ball_color(&self) -> String {
+        self.cache.lock().get_karaoke_ball_color()
+    }
+
+    pub fn get_sung_highlight_color(&self) -> String {
+        self.cache.lock().get_sung_highlight_color()
+    }
+
+    pub fn set_karaoke_ball_color(&self, color: &str) -> Result<String, String> {
+        self.cache.lock().set_karaoke_ball_color(color)
+    }
+
+    pub fn set_sung_highlight_color(&self, color: &str) -> Result<String, String> {
+        self.cache.lock().set_sung_highlight_color(color)
+    }
+
+    pub fn reset_karaoke_colors(&self) -> Result<(), String> {
+        self.cache.lock().reset_karaoke_colors()
+    }
+
     pub fn add_sync_offset(
         &self,
         artist: &str,
