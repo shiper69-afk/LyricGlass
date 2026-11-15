@@ -608,7 +608,7 @@ mod imp {
             clear_last_error();
             let host = match CreateWindowExW(
                 windows::Win32::UI::WindowsAndMessaging::WINDOW_EX_STYLE(
-                    WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+                    WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
                 ),
                 PCWSTR(class_name.as_ptr()),
                 PCWSTR(class_name.as_ptr()),
@@ -644,19 +644,8 @@ mod imp {
                 hwnd_to_u64(progman)
             ));
 
-            let ex = GetWindowLongPtrW(host, GWL_EXSTYLE) as u32 | WS_EX_LAYERED;
-            set_window_long_ptr_logged(host, GWL_EXSTYLE, ex as isize, "host exstyle layered", diag);
-
-            // Layered style must be committed before SetLayeredWindowAttributes (else 0x80070057).
-            let _ = SetWindowPos(
-                host,
-                None,
-                0,
-                0,
-                0,
-                0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
-            );
+            let ex_after = GetWindowLongPtrW(host, GWL_EXSTYLE) as u32;
+            log_exstyle_bits("host exstyle at create", ex_after, diag);
 
             let layered_r = SetLayeredWindowAttributes(
                 host,
