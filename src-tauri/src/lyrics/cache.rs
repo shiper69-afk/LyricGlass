@@ -291,6 +291,11 @@ impl LyricsCache {
         "radial",
         "particles",
         "aurora",
+        "starfield",
+        "mirror",
+        "tunnel",
+        "matrix",
+        "terrain",
     ];
 
     pub const LYRICS_FONT_IDS: &[&str] = &[

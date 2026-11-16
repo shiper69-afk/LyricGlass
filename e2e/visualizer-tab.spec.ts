@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { VISUALIZER_KIND_COUNT, VISUALIZER_OPTIONS } from "../src/visualizer/catalog";
 
 test.describe("visualizer settings tab", () => {
   test.use({
@@ -6,13 +7,20 @@ test.describe("visualizer settings tab", () => {
     deviceScaleFactor: 1.25,
   });
 
-  test("shows six tiles and sliders", async ({ page }) => {
+  test("lists all visualizer tiles and fits viewport", async ({ page }) => {
     await page.goto("/index.html");
     await page.click("#btn-settings");
     await page.locator('[data-settings-tab="visualizer"]').click();
 
     const tiles = page.locator(".visualizer-picker-tile");
-    await expect(tiles).toHaveCount(6);
+    await expect(tiles).toHaveCount(VISUALIZER_KIND_COUNT);
+    for (const opt of VISUALIZER_OPTIONS) {
+      await expect(page.locator(`[data-visualizer="${opt.id}"]`)).toBeVisible();
+      await expect(
+        page.locator(`[data-visualizer="${opt.id}"] .visualizer-picker-icon svg`),
+      ).toBeVisible();
+    }
+
     const intensity = page.locator("#visualizer-intensity");
     const opacity = page.locator("#visualizer-opacity");
     await expect(intensity).toBeVisible();
@@ -20,13 +28,18 @@ test.describe("visualizer settings tab", () => {
     await expect(intensity).toHaveAttribute("max", "300");
     await expect(opacity).toHaveAttribute("max", "100");
 
-    await page.locator('[data-visualizer="spectrum"]').click();
-    await expect(
-      page.locator('[data-visualizer="spectrum"]'),
-    ).toHaveAttribute("aria-pressed", "true");
+    const popover = page.locator("#settings-popover");
+    const box = await popover.boundingBox();
+    expect(box).toBeTruthy();
+    if (box) {
+      expect(box.y + box.height).toBeLessThanOrEqual(550 + 4);
+    }
 
-    await page.locator('[data-visualizer="off"]').click();
-    await expect(page.locator('[data-visualizer="off"]')).toHaveAttribute(
+    const picker = page.locator(".visualizer-picker");
+    await expect(picker).toBeVisible();
+
+    await page.locator('[data-visualizer="particles"]').click();
+    await expect(page.locator('[data-visualizer="particles"]')).toHaveAttribute(
       "aria-pressed",
       "true",
     );
