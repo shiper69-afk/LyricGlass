@@ -6,13 +6,14 @@ pub fn sync_webview_controller(window: &tauri::WebviewWindow, diag: &mut String)
         diag.push_str("sync_webview: hwnd unavailable\n");
         return;
     };
+    let host_usize = hwnd_raw.0 as usize;
 
     let _ = window.with_webview(|platform| {
         unsafe {
             use windows::Win32::Foundation::HWND;
             use windows::Win32::UI::WindowsAndMessaging::GetClientRect;
 
-            let host = HWND(hwnd_raw.0 as _);
+            let host = HWND(host_usize as _);
             let mut client = windows::Win32::Foundation::RECT::default();
             if GetClientRect(host, &mut client).is_err() {
                 diag.push_str("sync_webview: GetClientRect failed\n");
