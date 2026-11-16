@@ -12,16 +12,17 @@ mod imp {
     use tauri::{AppHandle, Manager, WebviewWindowBuilder};
     use windows::core::PCWSTR;
     use windows::Win32::Foundation::HWND;
-    use windows::Win32::Storage::FileSystem::{
-        GetFileVersionInfoSizeW, GetFileVersionInfoW,
+    use windows::Win32::Graphics::Gdi::{
+        GetMonitorInfoW, MonitorFromWindow, MONITOR_DEFAULTTOPRIMARY, MONITORINFO,
     };
-    use windows::Win32::System::Diagnostics::Debug::VerQueryValueW;
+    use windows::Win32::Storage::FileSystem::{
+        GetFileVersionInfoSizeW, GetFileVersionInfoW, VerQueryValueW,
+    };
     use windows::Win32::System::Threading::GetCurrentProcessId;
     use windows::Win32::UI::WindowsAndMessaging::{
-        AllowSetForegroundWindow, BringWindowToTop, GetMonitorInfoW, GetWindowPlacement,
-        GetWindowRect, IsIconic, IsWindowVisible, MonitorFromWindow, SetForegroundWindow,
-        SetWindowPlacement, ShowWindow, MONITORINFO,
-        MONITOR_DEFAULTTOPRIMARY, SW_RESTORE, SW_SHOW, WINDOWPLACEMENT,
+        AllowSetForegroundWindow, BringWindowToTop, GetWindowPlacement, GetWindowRect, IsIconic,
+        IsWindowVisible, SetForegroundWindow, SetWindowPlacement, ShowWindow, SW_RESTORE, SW_SHOW,
+        WINDOWPLACEMENT,
     };
 
     use crate::wallpaper_placement::{
@@ -30,7 +31,10 @@ mod imp {
     };
 
     fn wide(path: &str) -> Vec<u16> {
-        std::os::windows::prelude::OsStrExt::encode_wide(path)
+        use std::os::windows::prelude::OsStrExt;
+        std::path::Path::new(path)
+            .as_os_str()
+            .encode_wide()
             .chain(std::iter::once(0))
             .collect()
     }
@@ -45,7 +49,7 @@ mod imp {
             let mut data = vec![0u8; size as usize];
             GetFileVersionInfoW(
                 PCWSTR(path.as_ptr()),
-                0,
+                Some(0),
                 size,
                 data.as_mut_ptr() as _,
             )
@@ -156,7 +160,17 @@ mod imp {
             return Some(w);
         }
         startup::step("focus: main webview missing — recreating from config");
-        match WebviewWindowBuilder::from_config(app, "main") {
+        let Some(main_cfg) = app
+            .config()
+            .app
+            .windows
+            .iter()
+            .find(|w| w.label == "main")
+        else {
+            startup::step("focus: main window config missing");
+            return None;
+        };
+        match WebviewWindowBuilder::from_config(app, main_cfg) {
             Ok(builder) => match builder.build() {
                 Ok(w) => {
                     let flags = app.state::<SharedFlags>();
@@ -252,19 +266,19 @@ mod imp {
             None => "focus-existing-no-incoming-version",
         };
         startup::step(&format!("single-instance: decision={decision}"));
-        let app = app.clone();
         let exe = args.first().cloned();
         let incoming = incoming_ver.clone();
         let decision = decision.to_string();
-        let _ = app.run_on_main_thread(move || {
+        let app_main = app.clone();
+        let _ = app.clone().run_on_main_thread(move || {
             if decision == "upgrade-handoff" {
                 if let Some(exe) = exe {
                     let incoming = incoming.as_deref().unwrap_or("?");
-                    request_version_handoff(&app, &exe, incoming, running);
+                    request_version_handoff(&app_main, &exe, incoming, running);
                     return;
                 }
             }
-            reveal_main_window(&app, "single-instance");
+            reveal_main_window(&app_main, "single-instance");
         });
     }
 }

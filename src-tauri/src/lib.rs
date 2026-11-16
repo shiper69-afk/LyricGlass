@@ -789,9 +789,9 @@ fn build_tray(app: &AppHandle) {
             let app_handle = app.clone();
             move |app, event| match event.id.as_ref() {
                 "show_window" => {
-                    let app_handle = app.clone();
-                    let _ = app_handle.run_on_main_thread(move || {
-                        window_focus::reveal_main_window(&app_handle, "tray-menu-show");
+                    let focus_app = app.clone();
+                    let _ = app.clone().run_on_main_thread(move || {
+                        window_focus::reveal_main_window(&focus_app, "tray-menu-show");
                     });
                 }
                 "toggle_wallpaper" => {
@@ -827,9 +827,9 @@ fn build_tray(app: &AppHandle) {
             } = event
             {
                 let app = tray.app_handle();
-                let app_handle = app.clone();
-                let _ = app_handle.run_on_main_thread(move || {
-                    window_focus::reveal_main_window(&app_handle, "tray-left-click");
+                let focus_app = app.clone();
+                let _ = app.clone().run_on_main_thread(move || {
+                    window_focus::reveal_main_window(&focus_app, "tray-left-click");
                 });
             }
         })
