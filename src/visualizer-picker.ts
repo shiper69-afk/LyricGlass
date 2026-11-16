@@ -23,10 +23,13 @@ export function buildVisualizerPicker(
     btn.setAttribute("role", "option");
     btn.setAttribute("aria-pressed", "false");
     btn.title = opt.blurb;
+    const icon = document.createElement("span");
+    icon.className = "visualizer-picker-icon";
+    icon.innerHTML = opt.icon;
     const title = document.createElement("span");
     title.className = "visualizer-picker-label";
     title.textContent = opt.label;
-    btn.append(title);
+    btn.append(icon, title);
     btn.addEventListener("click", () => onSelect(opt.id));
     grid.appendChild(btn);
   }
