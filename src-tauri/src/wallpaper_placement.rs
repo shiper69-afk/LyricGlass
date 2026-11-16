@@ -30,7 +30,7 @@ mod imp {
                 length: std::mem::size_of::<WINDOWPLACEMENT>() as u32,
                 ..Default::default()
             };
-            let ok = GetWindowPlacement(hwnd, &mut placement).as_bool();
+            let ok = GetWindowPlacement(hwnd, &mut placement).is_ok();
             if !ok || !placement_sane(&placement) {
                 return SavedPlacement::default();
             }
@@ -49,7 +49,7 @@ mod imp {
             return Ok(());
         }
         let mut placement = saved.placement;
-        placement.flags &= !WPF_RESTORETOMAXIMIZED;
+        placement.flags &= !WPF_RESTORETOMAXIMIZED as u32;
         placement.showCmd = 1; // SW_SHOWNORMAL
         if !placement_sane(&placement) {
             placement.rcNormalPosition.left = 100;

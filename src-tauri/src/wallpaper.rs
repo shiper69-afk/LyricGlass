@@ -1018,7 +1018,7 @@ mod imp {
             false,
         )?;
         finalize_progman_show(hwnd, insert_after, None, diag)?;
-        sync_webview_bounds_after_reparent(hwnd, diag)?;
+        sync_webview_bounds_after_reparent(hwnd, diag);
         verify_attach(hwnd, &plan, ProgmanAttachPath::A, 0, diag)?;
         diag.push_str("attach: Progman layered success\n");
         Ok((ProgmanAttachPath::A, 0))

@@ -461,13 +461,11 @@ fn get_wallpaper_status() -> WallpaperStatus {
     build_wallpaper_status()
 }
 
-#[tauri::command]
 #[cfg(windows)]
 #[tauri::command]
 fn get_desktop_wallpaper_url() -> Result<String, String> {
     use std::ffi::OsString;
     use std::os::windows::prelude::OsStringExt;
-    use windows::core::PWSTR;
     use windows::Win32::UI::WindowsAndMessaging::{SystemParametersInfoW, SPI_GETDESKWALLPAPER};
 
     let mut buf = vec![0u16; 4096];
