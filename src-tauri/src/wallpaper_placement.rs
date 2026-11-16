@@ -49,7 +49,7 @@ mod imp {
             return Ok(());
         }
         let mut placement = saved.placement;
-        placement.flags &= !WPF_RESTORETOMAXIMIZED as u32;
+        placement.flags.0 &= !WPF_RESTORETOMAXIMIZED;
         placement.showCmd = 1; // SW_SHOWNORMAL
         if !placement_sane(&placement) {
             placement.rcNormalPosition.left = 100;
