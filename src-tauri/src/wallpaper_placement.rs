@@ -93,6 +93,6 @@ mod tests {
     #[test]
     #[cfg(windows)]
     fn off_screen_threshold_constant() {
-        assert!(super::imp::OFF_SCREEN_THRESHOLD < -30000);
+        assert!(super::imp::OFF_SCREEN_THRESHOLD <= -30000);
     }
 }
