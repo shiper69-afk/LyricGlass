@@ -75,9 +75,9 @@ describe("wallpaper surface lyrics layout", () => {
     const count = view.getRenderedLineCount();
     expect(count).toBeGreaterThan(3);
 
-    const lineEls = [
-      ...root.querySelectorAll<HTMLElement>(".lyric-line"),
-    ];
+    const lineEls = Array.from(
+      root.querySelectorAll<HTMLElement>(".lyric-line"),
+    );
     const activeIdx = lineEls.findIndex((el) =>
       el.classList.contains("active"),
     );

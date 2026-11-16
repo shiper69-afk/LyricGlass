@@ -57,6 +57,18 @@ const lyricsRoot = document.getElementById("lyrics-root")!;
 const lyricsView = new LyricsView(lyricsRoot);
 const appRoot = document.getElementById("app")!;
 
+/** E2e / `?mode=wallpaper` harness: chrome before async Tauri boot. */
+function primeWallpaperSurfaceChrome() {
+  applyWallpaperSurfaceChrome(appRoot);
+  applyWallpaperLayout(appRoot, true);
+  installWallpaperLayoutVars(appRoot);
+  lyricsView.setWallpaperLayout(true);
+}
+
+if (wallpaperSurface) {
+  primeWallpaperSurfaceChrome();
+}
+
 const els = {
   mediaStatus: document.getElementById("media-status")!,
   album: document.getElementById("m-album")!,
@@ -487,10 +499,7 @@ async function boot() {
   buildBouncerPicker();
 
   if (wallpaperSurface) {
-    applyWallpaperSurfaceChrome(appRoot);
-    applyWallpaperLayout(appRoot, true);
-    installWallpaperLayoutVars(appRoot);
-    lyricsView.setWallpaperLayout(true);
+    primeWallpaperSurfaceChrome();
     try {
       const payload = await invoke<DesktopWallpaperPayload>(
         "get_desktop_wallpaper_payload",

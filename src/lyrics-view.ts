@@ -533,6 +533,10 @@ export class LyricsView {
       if (i < active) el.classList.add("past");
       else if (i === active) el.classList.add("active");
       else el.classList.add("upcoming");
+      if (this.isWallpaperLayout()) {
+        const anchor = active < 0 ? 0 : active;
+        el.style.opacity = String(lineFadeOpacity(Math.abs(i - anchor)));
+      }
     });
 
     if (end - start + 1 > existing.size) {
