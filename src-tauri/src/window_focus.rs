@@ -47,32 +47,41 @@ mod imp {
                 return None;
             }
             let mut data = vec![0u8; size as usize];
-            GetFileVersionInfoW(
+            if GetFileVersionInfoW(
                 PCWSTR(path.as_ptr()),
                 Some(0),
                 size,
                 data.as_mut_ptr() as _,
             )
-            .ok()?;
+            .is_err()
+            {
+                return None;
+            }
             let mut value_ptr = std::ptr::null_mut();
             let mut value_len = 0u32;
             let subblock = wide(r"\StringFileInfo\040904b0\FileVersion");
-            VerQueryValueW(
+            if VerQueryValueW(
                 data.as_ptr() as _,
                 PCWSTR(subblock.as_ptr()),
                 &mut value_ptr,
                 &mut value_len,
             )
-            .ok()?;
+            .is_err()
+            {
+                return None;
+            }
             if value_ptr.is_null() || value_len == 0 {
                 let subblock = wide(r"\StringFileInfo\040904e4\FileVersion");
-                VerQueryValueW(
+                if VerQueryValueW(
                     data.as_ptr() as _,
                     PCWSTR(subblock.as_ptr()),
                     &mut value_ptr,
                     &mut value_len,
                 )
-                .ok()?;
+                .is_err()
+                {
+                    return None;
+                }
             }
             if value_ptr.is_null() {
                 return None;
