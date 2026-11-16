@@ -60,25 +60,25 @@ mod imp {
             let mut value_ptr = std::ptr::null_mut();
             let mut value_len = 0u32;
             let subblock = wide(r"\StringFileInfo\040904b0\FileVersion");
-            if VerQueryValueW(
+            if !VerQueryValueW(
                 data.as_ptr() as _,
                 PCWSTR(subblock.as_ptr()),
                 &mut value_ptr,
                 &mut value_len,
             )
-            .is_err()
+            .as_bool()
             {
                 return None;
             }
             if value_ptr.is_null() || value_len == 0 {
                 let subblock = wide(r"\StringFileInfo\040904e4\FileVersion");
-                if VerQueryValueW(
+                if !VerQueryValueW(
                     data.as_ptr() as _,
                     PCWSTR(subblock.as_ptr()),
                     &mut value_ptr,
                     &mut value_len,
                 )
-                .is_err()
+                .as_bool()
                 {
                     return None;
                 }
