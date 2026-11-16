@@ -16,7 +16,7 @@ use std::sync::Arc;
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, WebviewWindow,
+    AppHandle, Emitter, Manager, RunEvent, WebviewWindow,
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
@@ -688,7 +688,17 @@ pub fn run() {
 
     startup::step("creating tauri builder");
     startup::step("entering tauri event loop");
-    let run_result = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+        startup::step("single-instance: second launch — focusing existing window");
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.unminimize();
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    }));
+    let run_result = builder
         .plugin({
             startup::step("loading global-shortcut plugin");
             tauri_plugin_global_shortcut::Builder::new().build()
@@ -748,21 +758,39 @@ pub fn run() {
                     .emit("appearance-state", appearance_from_service(&appearance));
                 startup::step("tauri setup complete — WebView2 loading");
                 if service.get_wallpaper_mode() {
+                    let flags_deferred = flags.clone();
+                    let app_h = app.handle().clone();
                     if let Some(window) = app.get_webview_window("main") {
-                        let flags = flags.clone();
-                        let service = app.state::<SharedLyricsService>();
-                        let app_h = app.handle().clone();
-                        if set_wallpaper_mode_inner(&window, &flags, &service, true, true, "startup")
-                            .is_err()
-                        {
-                            startup::step(
-                                "wallpaper: startup attach failed — clearing persisted flag, overlay mode",
-                            );
-                            let _ = service.set_wallpaper_mode(false);
-                            let _ = apply_wallpaper_shell(&window, false);
-                            apply_topmost(&window, &flags.lock());
-                        }
-                        let _ = app_h.emit("ui-state", current_ui_state(&flags));
+                        let window_deferred = window.clone();
+                        std::thread::spawn(move || {
+                            // Let the event loop pump once so GSMTC watcher is not blocked by sync Win32 attach.
+                            std::thread::sleep(std::time::Duration::from_millis(250));
+                            let app_inner = app_h.clone();
+                            let win_inner = window_deferred.clone();
+                            let flags_inner = flags_deferred.clone();
+                            let _ = app_h.run_on_main_thread(move || {
+                                startup::step("wallpaper: startup attach (deferred)");
+                                let service = app_inner.state::<SharedLyricsService>();
+                                if set_wallpaper_mode_inner(
+                                    &win_inner,
+                                    &flags_inner,
+                                    &service,
+                                    true,
+                                    true,
+                                    "startup",
+                                )
+                                .is_err()
+                                {
+                                    startup::step(
+                                        "wallpaper: startup attach failed — clearing persisted flag, overlay mode",
+                                    );
+                                    let _ = service.set_wallpaper_mode(false);
+                                    let _ = apply_wallpaper_shell(&win_inner, false);
+                                    apply_topmost(&win_inner, &flags_inner.lock());
+                                }
+                                let _ = app_inner.emit("ui-state", current_ui_state(&flags_inner));
+                            });
+                        });
                     }
                 }
                 if std::env::var("LYRICGLASS_SMOKE_DIAG").is_ok() {
@@ -780,10 +808,22 @@ pub fn run() {
                 Ok(())
             }
         })
-        .run(tauri::generate_context!());
+        .build(tauri::generate_context!());
 
     match run_result {
-        Ok(()) => startup::step("tauri exited normally"),
-        Err(e) => startup::log_fatal_error("tauri run", e),
+        Ok(app) => {
+            app.run(|_app_handle, event| {
+                match &event {
+                    RunEvent::Ready => {
+                        startup::step("tauri event loop Ready");
+                        startup::arm_main_watchdog();
+                    }
+                    RunEvent::MainEventsCleared => startup::main_heartbeat(),
+                    _ => {}
+                }
+            });
+            startup::step("tauri exited normally");
+        }
+        Err(e) => startup::log_fatal_error("tauri build", e),
     }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "lyricglass"
-version = "0.6.6"
+version = "0.6.7"
 description = "LyricGlass — synced lyrics overlay for Spotify on Windows"
 authors = ["LyricGlass"]
 edition = "2021"
@@ -40,6 +40,9 @@ windows = { version = "0.62", features = [
   "Win32_UI_HiDpi",
   "Win32_System_LibraryLoader",
 ] }
+
+[target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = "2.5.5"
 
 [profile.release]
 codegen-units = 1

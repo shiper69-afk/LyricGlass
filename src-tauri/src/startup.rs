@@ -1,12 +1,13 @@
 use std::fs::{create_dir_all, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 static MAIN_HEARTBEAT_MS: AtomicU64 = AtomicU64::new(0);
 static WATCHDOG_STARTED: OnceLock<()> = OnceLock::new();
+static WATCHDOG_ARMED: AtomicBool = AtomicBool::new(false);
 
 static LOG_PATH: OnceLock<Mutex<PathBuf>> = OnceLock::new();
 
@@ -53,16 +54,24 @@ fn unix_ms() -> u64 {
         .unwrap_or(0)
 }
 
-/// Updated on the UI / main-thread path (tray, commands, setup) — not the media watcher.
+/// Updated only from the Tauri main event loop (`RunEvent`), not from background threads.
 pub fn main_heartbeat() {
     MAIN_HEARTBEAT_MS.store(unix_ms(), Ordering::Relaxed);
 }
 
+/// Begin stall detection after the event loop is running (avoids false positives during setup).
+pub fn arm_main_watchdog() {
+    WATCHDOG_ARMED.store(true, Ordering::Relaxed);
+    main_heartbeat();
+}
+
 fn start_main_watchdog() {
     WATCHDOG_STARTED.get_or_init(|| {
-        main_heartbeat();
         std::thread::spawn(|| loop {
             std::thread::sleep(Duration::from_secs(2));
+            if !WATCHDOG_ARMED.load(Ordering::Relaxed) {
+                continue;
+            }
             let last = MAIN_HEARTBEAT_MS.load(Ordering::Relaxed);
             let now = unix_ms();
             if now.saturating_sub(last) > 2000 {
@@ -83,16 +92,24 @@ fn start_main_watchdog() {
     });
 }
 
-pub fn step(message: &str) {
-    main_heartbeat();
+/// Background-thread logging (media watcher) — does not touch the main-loop heartbeat.
+pub fn watcher_log(message: &str) {
+    append_log_line("media", message);
+}
+
+fn append_log_line(kind: &str, message: &str) {
     let path = ensure_log_file();
     let ts = time::OffsetDateTime::now_utc().unix_timestamp();
-    let line = format!("{ts} [startup] {message}\n");
+    let line = format!("{ts} [{kind}] {message}\n");
     if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
         let _ = file.write_all(line.as_bytes());
     }
     #[cfg(debug_assertions)]
     eprintln!("{line}");
+}
+
+pub fn step(message: &str) {
+    append_log_line("startup", message);
 }
 
 pub fn log_panic(payload: &str, location: &str, backtrace: &std::backtrace::Backtrace) {

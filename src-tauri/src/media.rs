@@ -93,7 +93,7 @@ mod imp {
         GlobalSystemMediaTransportControlsSessionManager,
         GlobalSystemMediaTransportControlsSessionPlaybackStatus,
     };
-    use windows::Win32::System::Com::{CoInitializeEx, COINIT_APARTMENTTHREADED};
+    use windows::Win32::System::Com::{CoInitializeEx, COINIT_MULTITHREADED};
 
     struct Snapshot {
         title: String,
@@ -143,26 +143,46 @@ mod imp {
         (value.Duration / 10_000) as u64
     }
 
-    macro_rules! wait_async {
-        ($op:expr) => {{
-            let operation = $op;
-            let mut value = None;
-            for _ in 0..200 {
-                if let Ok(result) = operation.GetResults() {
-                    value = Some(result);
-                    break;
+    const GSMTC_REQUEST_TIMEOUT_MS: u64 = 8_000;
+    const GSMTC_POLL_TIMEOUT_MS: u64 = 3_000;
+
+    /// Poll WinRT `GetResults` without blocking unbounded; safe from the watcher thread (MTA).
+    fn wait_async_operation<T: Clone + std::fmt::Debug>(
+        label: &str,
+        operation: &windows::Foundation::IAsyncOperation<T>,
+        timeout_ms: u64,
+    ) -> Option<T> {
+        crate::startup::watcher_log(&format!("{label}: begin (timeout={timeout_ms}ms)"));
+        let started = std::time::Instant::now();
+        let mut last_err: Option<String> = None;
+        while started.elapsed() < Duration::from_millis(timeout_ms) {
+            match operation.GetResults() {
+                Ok(result) => {
+                    crate::startup::watcher_log(&format!(
+                        "{label}: completed in {}ms",
+                        started.elapsed().as_millis()
+                    ));
+                    return Some(result);
                 }
-                std::thread::sleep(Duration::from_millis(10));
+                Err(e) => {
+                    last_err = Some(format!("{e:?}"));
+                }
             }
-            value.or_else(|| operation.GetResults().ok())
-        }};
+            std::thread::sleep(Duration::from_millis(25));
+        }
+        crate::startup::watcher_log(&format!(
+            "{label}: TIMEOUT after {}ms last_err={}",
+            timeout_ms,
+            last_err.unwrap_or_else(|| "none".into())
+        ));
+        None
     }
 
     fn read_properties(session: &GlobalSystemMediaTransportControlsSession) -> (String, String, String) {
         session
             .TryGetMediaPropertiesAsync()
             .ok()
-            .and_then(|op| wait_async!(op))
+            .and_then(|op| wait_async_operation("TryGetMediaPropertiesAsync", &op, GSMTC_POLL_TIMEOUT_MS))
             .map(|props| {
                 (
                     props.Title().unwrap_or_default().to_string(),
@@ -238,22 +258,38 @@ mod imp {
     }
 
     fn request_manager() -> Option<GlobalSystemMediaTransportControlsSessionManager> {
-        let op = GlobalSystemMediaTransportControlsSessionManager::RequestAsync().ok()?;
-        wait_async!(op)
+        let op = match GlobalSystemMediaTransportControlsSessionManager::RequestAsync() {
+            Ok(op) => op,
+            Err(e) => {
+                crate::startup::watcher_log(&format!(
+                    "GSMTC RequestAsync() failed immediately: {e:?}"
+                ));
+                return None;
+            }
+        };
+        wait_async_operation(
+            "GSMTC RequestAsync",
+            &op,
+            GSMTC_REQUEST_TIMEOUT_MS,
+        )
     }
 
     fn watcher_loop(app: AppHandle, shared: SharedMediaState) {
         unsafe {
-            let hr = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
-            crate::startup::step(&format!("media watcher: CoInitializeEx -> {hr:?}"));
+            let hr = CoInitializeEx(None, COINIT_MULTITHREADED);
+            crate::startup::watcher_log(&format!(
+                "CoInitializeEx(MTA) -> {hr:?} (watcher thread; never blocks on main thread)"
+            ));
         }
 
         let mut last: Option<Snapshot> = None;
         let mut extrapolation: Option<ExtrapolationTracker> = None;
         let mut last_publish_ms: u64 = 0;
 
+        let mut gsmtc_fail_streak: u32 = 0;
         loop {
                 let message = if let Some(manager) = request_manager() {
+                    gsmtc_fail_streak = 0;
                     if let Some(session) = find_spotify_session(&manager) {
                         let snap = capture_snapshot(&session);
                         let changed = last.as_ref().map_or(true, |p| snapshots_differ(p, &snap));
@@ -352,7 +388,13 @@ mod imp {
                         Some("Spotify not in media sessions (launch Spotify and play)".to_string())
                     }
                 } else {
+                    gsmtc_fail_streak = gsmtc_fail_streak.saturating_add(1);
                     last = None;
+                    if gsmtc_fail_streak == 1 || gsmtc_fail_streak % 20 == 0 {
+                        crate::startup::watcher_log(&format!(
+                            "GSMTC session manager unavailable (streak={gsmtc_fail_streak})"
+                        ));
+                    }
                     Some("GSMTC unavailable".to_string())
                 };
 
@@ -372,14 +414,24 @@ mod imp {
 
     pub fn start_media_watcher(app: AppHandle, shared: SharedMediaState) {
         std::thread::spawn(move || {
-            crate::startup::step("media watcher thread spawned");
+            crate::startup::watcher_log("media watcher thread spawned");
             match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
                 watcher_loop(app, shared);
             })) {
-                Ok(_) => crate::startup::step("media watcher thread ended"),
-                Err(_) => crate::startup::step("media watcher thread panicked (caught)"),
+                Ok(_) => crate::startup::watcher_log("media watcher thread ended"),
+                Err(_) => crate::startup::watcher_log("media watcher thread panicked (caught)"),
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod media_tests {
+    #[test]
+    fn gsmtc_timeout_constants_sanity() {
+        // Keep in sync with watcher `GSMTC_*_TIMEOUT_MS` values.
+        assert!(8_000 >= 1_000);
+        assert!(3_000 >= 100);
     }
 }
 
