@@ -102,7 +102,9 @@ mod tests {
         let next = vec![1.0; 4];
         let up = smooth_bands(&prev, &next, 0.5, 0.1);
         let down = smooth_bands(&next, &prev, 0.5, 0.1);
-        assert!(up[0] > down[0]);
+        let rise = up[0] - prev[0];
+        let fall = next[0] - down[0];
+        assert!(rise > fall, "attack should move bands up faster than release pulls down");
     }
 
     #[test]
