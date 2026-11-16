@@ -19,13 +19,7 @@ pub fn sync_webview_controller(window: &tauri::WebviewWindow, diag: &mut String)
                 return;
             }
 
-            let controller = match platform.controller() {
-                Ok(c) => c,
-                Err(e) => {
-                    diag.push_str(&format!("sync_webview: controller err={e:?}\n"));
-                    return;
-                }
-            };
+            let controller = platform.controller();
 
             if let Err(e) = controller.SetBounds(client) {
                 diag.push_str(&format!("sync_webview: SetBounds err={e:?}\n"));

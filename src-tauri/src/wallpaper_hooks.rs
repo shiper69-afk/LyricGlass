@@ -2,37 +2,35 @@
 
 #[cfg(windows)]
 mod imp {
+    use std::sync::atomic::{AtomicU32, Ordering};
     use std::sync::{Arc, OnceLock};
 
     use parking_lot::Mutex;
     use tauri::AppHandle;
     use windows::core::{w, BOOL};
     use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
-    use windows::Win32::UI::Accessibility::{
-        SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK, EVENT_OBJECT_DESTROY,
-        WINEVENT_OUTOFCONTEXT,
-    };
-    use windows::Win32::UI::Controls::{DefSubclassProc, SetWindowSubclass};
+    use windows::Win32::UI::Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK};
     use windows::Win32::UI::WindowsAndMessaging::{
-        FindWindowExW, FindWindowW, GetClassNameW, RegisterWindowMessageW,
+        DefSubclassProc, FindWindowExW, FindWindowW, GetClassNameW, RegisterWindowMessageW,
+        SetWindowSubclass, RemoveWindowSubclass,
     };
 
+    const EVENT_OBJECT_DESTROY: u32 = 0x8001;
+    const WINEVENT_OUTOFCONTEXT: u32 = 0x0000;
+
     const HOOK_SUBCLASS_ID: usize = 0x4c47_0002;
-    static TASKBAR_CREATED_MSG: std::sync::atomic::AtomicU32 =
-        std::sync::atomic::AtomicU32::new(0);
+    static TASKBAR_CREATED_MSG: AtomicU32 = AtomicU32::new(0);
     static REATTACH: OnceLock<Arc<dyn Fn(&str) + Send + Sync>> = OnceLock::new();
-    static APP: OnceLock<AppHandle> = OnceLock::new();
     static WIN_EVENT_HOOK: Mutex<Option<HWINEVENTHOOK>> = Mutex::new(None);
 
     pub fn set_reattach_handler(handler: Arc<dyn Fn(&str) + Send + Sync>) {
         let _ = REATTACH.set(handler);
     }
 
-    pub fn install(main_hwnd: HWND, app: AppHandle) {
-        let _ = APP.set(app);
+    pub fn install(main_hwnd: HWND, _app: AppHandle) {
         unsafe {
             let msg = RegisterWindowMessageW(w!("TaskbarCreated"));
-            TASKBAR_CREATED_MSG.store(msg, msg != 0);
+            TASKBAR_CREATED_MSG.store(msg, Ordering::Relaxed);
             let _ = SetWindowSubclass(
                 main_hwnd,
                 Some(main_hook_subclass),
@@ -89,7 +87,7 @@ mod imp {
             if let Some(h) = WIN_EVENT_HOOK.lock().take() {
                 let _ = UnhookWinEvent(h);
             }
-            let _ = windows::Win32::UI::Controls::RemoveWindowSubclass(
+            let _ = RemoveWindowSubclass(
                 main_hwnd,
                 Some(main_hook_subclass),
                 HOOK_SUBCLASS_ID,
@@ -105,7 +103,7 @@ mod imp {
         _id: usize,
         _data: usize,
     ) -> LRESULT {
-        let taskbar = TASKBAR_CREATED_MSG.load(std::sync::atomic::Ordering::Relaxed);
+        let taskbar = TASKBAR_CREATED_MSG.load(Ordering::Relaxed);
         if taskbar != 0 && msg == taskbar {
             schedule_reattach("taskbar-created");
         }
@@ -118,7 +116,6 @@ mod imp {
         }
     }
 
-    /// Used from diagnostics / selftest.
     pub fn workerw_present() -> bool {
         unsafe {
             let progman = FindWindowW(w!("Progman"), None);

@@ -81,7 +81,7 @@ mod imp {
         ShowWindow, WNDCLASSEXW, GWL_EXSTYLE, GWL_STYLE, GW_CHILD, GW_HWNDNEXT, HWND_BOTTOM,
         HWND_NOTOPMOST,
         SHOW_WINDOW_CMD,
-        LWA_ALPHA, SMTO_ABORTIFHUNG, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOREDRAW,
+        LWA_ALPHA, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOREDRAW,
         SWP_NOSIZE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_RESTORE, SW_SHOW, IsIconic, IsZoomed,
         SMTO_NORMAL,
     };
@@ -1059,7 +1059,7 @@ mod imp {
     ) -> Result<(ProgmanAttachPath, u64), String> {
         let parent = HWND(plan.parent_hwnd as *mut core::ffi::c_void);
         let insert_after = HWND(plan.z_insert_after_hwnd as *mut core::ffi::c_void);
-        let (x, y, w, h) = child_screen_rect(parent, hwnd);
+        let (_x, _y, _w, _h) = child_screen_rect(parent, hwnd);
 
         force_clear_topmost(hwnd, diag);
         diag.push_str("attach: wallpaper webview direct Progman child (WS_EX_LAYERED alpha 255)\n");

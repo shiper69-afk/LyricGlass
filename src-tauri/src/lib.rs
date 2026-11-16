@@ -392,6 +392,7 @@ fn set_wallpaper_mode_inner(
             }
         } else {
             let was_fallback = wallpaper::is_fallback_overlay();
+            let main_hwnd = main.hwnd().map_err(|e| e.to_string())?;
             let wp_hwnd = wallpaper.hwnd().map_err(|e| e.to_string())?;
             wallpaper::detach_wallpaper(wp_hwnd, main_hwnd, trigger)?;
             if was_fallback {

@@ -4,16 +4,15 @@
 mod imp {
     use std::sync::atomic::{AtomicBool, Ordering};
 
-    use windows::core::BOOL;
     use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
     use windows::Win32::Graphics::Gdi::{
         GetMonitorInfoW, MonitorFromWindow, MONITOR_DEFAULTTOPRIMARY, MONITORINFO,
     };
-    use windows::Win32::UI::Controls::{DefSubclassProc, RemoveWindowSubclass, SetWindowSubclass};
     use windows::Win32::UI::WindowsAndMessaging::{
-        GetWindowRect, SetParent, SetWindowPos, ShowWindow, WINDOWPOS, WM_WINDOWPOSCHANGING,
-        GWL_EXSTYLE, GetWindowLongPtrW, SetWindowLongPtrW, HWND_BOTTOM, SWP_NOACTIVATE, SWP_SHOWWINDOW,
-        WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
+        DefSubclassProc, GetWindowLongPtrW, RemoveWindowSubclass, SetParent, SetWindowLongPtrW,
+        SetWindowPos, SetWindowSubclass, ShowWindow, WINDOWPOS, WM_WINDOWPOSCHANGING, GWL_EXSTYLE,
+        HWND_BOTTOM, SHOW_WINDOW_CMD, SWP_NOACTIVATE, SWP_SHOWWINDOW, SW_SHOWNA, WS_EX_NOACTIVATE,
+        WS_EX_TOOLWINDOW,
     };
 
     const FALLBACK_SUBCLASS_ID: usize = 0x4c47_0001;
@@ -60,7 +59,7 @@ mod imp {
         unsafe {
             let _ = SetParent(main_hwnd, None);
             let ex = GetWindowLongPtrW(main_hwnd, GWL_EXSTYLE) as u32;
-            let ex = (ex & !0x8) | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
+            let ex = (ex & !0x8) | WS_EX_TOOLWINDOW.0 | WS_EX_NOACTIVATE.0;
             let _ = SetWindowLongPtrW(main_hwnd, GWL_EXSTYLE, ex as isize);
             let monitor = monitor_rect_for_window(main_hwnd);
             let w = monitor.right - monitor.left;
@@ -85,12 +84,7 @@ mod imp {
             }
             FALLBACK_ACTIVE.store(true, Ordering::Relaxed);
             diag.push_str("fallback: main bottom-most + WM_WINDOWPOSCHANGING subclass\n");
-            let _ = ShowWindow(
-                main_hwnd,
-                windows::Win32::UI::WindowsAndMessaging::SHOW_WINDOW_CMD(
-                    windows::Win32::UI::WindowsAndMessaging::SW_SHOWNA,
-                ),
-            );
+            let _ = ShowWindow(main_hwnd, SHOW_WINDOW_CMD(SW_SHOWNA));
             Ok(())
         }
     }
