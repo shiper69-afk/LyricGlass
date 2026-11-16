@@ -3,7 +3,7 @@
 #[cfg(windows)]
 pub fn sync_webview_controller(window: &tauri::WebviewWindow, diag: &mut String) {
     let host_usize = match window.hwnd() {
-        Ok(h) => h.0,
+        Ok(h) => h.0 as usize,
         Err(_) => {
             diag.push_str("sync_webview: hwnd unavailable\n");
             return;
