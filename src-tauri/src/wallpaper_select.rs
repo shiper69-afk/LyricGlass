@@ -267,9 +267,9 @@ mod tests {
         assert_eq!(host, 0x210);
     }
 
-    /// Ilan 26H2: DefView under Progman; top-level WorkerWs have no DefView — layered plan uses Progman + z-order.
+    /// Win11 26H2 (build 26340): DefView under Progman; top-level WorkerWs have no DefView — layered plan uses Progman + z-order.
     #[test]
-    fn ilan_26340_progman_layered_plan() {
+    fn win11_26h2_progman_layered_plan() {
         let progman = 0x1029e;
         let children = vec![
             w(0xd001, "SHELLDLL_DefView", progman, false, 0),

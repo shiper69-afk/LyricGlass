@@ -1,6 +1,6 @@
 # LyricGlass bouncers
 
-Twelve original karaoke cursors for Ilan’s Windows lyrics overlay, LyricGlass. They hop on top of the sung word in a floating dark or frosted-glass window, in the same family as the **Glass Orb** app icon: clean vector shapes, coral by default (`#FF3F4C`), a white specular sheen, and a soft dark overlay.
+Twelve original karaoke cursors for LyricGlass, a Windows lyrics overlay. They hop on top of the sung word in a floating dark or frosted-glass window, in the same family as the **Glass Orb** app icon: clean vector shapes, coral by default (`#FF3F4C`), a white specular sheen, and a soft dark overlay.
 
 Each file is a 24×24 SVG, drawn to stay readable at 16 and 24 px over lyric text. There are no trademarked characters or logos, and no Spotify green or wordmark.
 
