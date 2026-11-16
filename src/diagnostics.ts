@@ -5,8 +5,12 @@ import {
 } from "./clock";
 import { playbackClockMs, type PlaybackAnchor } from "./playback-clock";
 import type { LyricsView, LyricsResponse, MediaState } from "./lyrics-view";
+import {
+  formatWallpaperDiagnosticsLines,
+  type WallpaperStatus,
+} from "./wallpaper-status";
 
-const APP_VERSION = "0.5.1";
+const APP_VERSION = "0.6.11";
 
 export interface FullMediaState extends MediaState {
   sourceAppId: string;
@@ -19,11 +23,14 @@ export interface FullMediaState extends MediaState {
   computedPositionMs?: number;
 }
 
+export type WallpaperDiag = WallpaperStatus;
+
 export function buildDiagnosticsBlock(
   media: FullMediaState | null,
   lyrics: LyricsResponse | null,
   lyricsView: LyricsView,
   playbackAnchor: PlaybackAnchor | null = null,
+  wallpaper?: WallpaperDiag | null,
 ): string {
   const now = Date.now();
   const computed = media ? playbackClockMs(media, playbackAnchor, now) : 0;
@@ -78,7 +85,12 @@ export function buildDiagnosticsBlock(
     `  serverTimeMs: ${media?.serverTimeMs ?? 0}`,
     `  backendComputedAtEmit: ${media?.computedPositionMs ?? 0} ms`,
     `  computedClock: ${formatMs(computed)} (${computed} ms)`,
-    `  userSyncOffsetMs: ${syncMs}`,
+    `  userSyncOffsetMs: ${syncMs} (slider)`,
+    `  builtinLagCompensationMs: ${lyricsView.getBuiltinSyncLagMs()}`,
+    `  effectiveSyncOffsetMs: ${lyricsView.getEffectiveSyncOffsetMs()}`,
+    "",
+    "Wallpaper",
+    ...formatWallpaperDiagnosticsLines(wallpaper),
     "",
     "Active line",
     `  index: ${line.index}`,

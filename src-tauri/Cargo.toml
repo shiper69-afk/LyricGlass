@@ -1,6 +1,6 @@
 [package]
 name = "lyricglass"
-version = "0.5.1"
+version = "0.6.11"
 description = "LyricGlass — synced lyrics overlay for Spotify on Windows"
 authors = ["LyricGlass"]
 edition = "2021"
@@ -23,6 +23,7 @@ rusqlite = { version = "0.32", features = ["bundled"] }
 time = { version = "0.3", features = ["formatting"] }
 urlencoding = "2"
 regex = "1"
+base64 = "0.22"
 encoding_rs = "0.8"
 
 [target.'cfg(windows)'.dependencies]
@@ -36,7 +37,16 @@ windows = { version = "0.62", features = [
   "Win32_UI_WindowsAndMessaging",
   "Win32_Graphics_Gdi",
   "Win32_System_Com",
+  "Win32_System_SystemInformation",
+  "Win32_UI_HiDpi",
+  "Win32_System_LibraryLoader",
+  "Win32_UI_Accessibility",
+  "Win32_UI_Controls",
 ] }
+webview2-com = "0.39"
+
+[target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]
+tauri-plugin-single-instance = "2.5.5"
 
 [profile.release]
 codegen-units = 1

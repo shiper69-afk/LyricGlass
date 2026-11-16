@@ -2,9 +2,23 @@ mod clock;
 mod lyrics;
 mod media;
 mod startup;
+mod desktop_wallpaper;
 mod wallpaper;
+mod wallpaper_clickthrough;
+mod wallpaper_counters;
+mod wallpaper_fallback;
+mod wallpaper_hooks;
+mod wallpaper_placement;
+mod wallpaper_log;
+mod wallpaper_select;
+mod wallpaper_subclass;
+mod wallpaper_webview;
+#[cfg(windows)]
+mod wallpaper_selftest;
 
 use lyrics::{create_service, LyricsResponse, SharedLyricsService};
+#[cfg(windows)]
+use wallpaper_placement::{restore_main_placement, save_main_placement};
 use media::{now_unix_ms, smoothed_now, MediaState, SharedMediaState, start_media_watcher};
 use parking_lot::Mutex;
 use serde::Serialize;
@@ -12,7 +26,7 @@ use std::sync::Arc;
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Emitter, Manager, WebviewWindow,
+    AppHandle, Emitter, Manager, RunEvent, WebviewWindow,
 };
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, ShortcutState};
 
@@ -29,6 +43,70 @@ struct UiState {
     always_on_top: bool,
     wallpaper_mode: bool,
     debug_visible: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    wallpaper_error: Option<String>,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WallpaperStatus {
+    attached: bool,
+    attempt_count: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    last_timestamp_unix_ms: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    last_trigger: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    last_outcome: Option<String>,
+    last_error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    last_diagnostics: Option<String>,
+    log_file_path: String,
+}
+
+#[cfg(windows)]
+pub fn run_wallpaper_selftest() -> i32 {
+    wallpaper_selftest::run()
+}
+
+#[cfg(not(windows))]
+pub fn run_wallpaper_selftest() -> i32 {
+    eprintln!("--wallpaper-selftest requires Windows");
+    2
+}
+
+fn build_wallpaper_status() -> WallpaperStatus {
+    let attached = wallpaper::is_attached();
+    let log_path = wallpaper_log::log_file_path();
+    let log_file_path = log_path.to_string_lossy().into_owned();
+    let attempt_count = wallpaper_log::attempt_count();
+    match wallpaper_log::last_attempt() {
+        Some(a) => WallpaperStatus {
+            attached,
+            attempt_count,
+            last_timestamp_unix_ms: Some(a.timestamp_unix_ms),
+            last_trigger: Some(a.trigger),
+            last_outcome: Some(a.outcome),
+            last_error: a.error,
+            last_diagnostics: Some(a.trace),
+            log_file_path,
+        },
+        None => WallpaperStatus {
+            attached,
+            attempt_count,
+            last_timestamp_unix_ms: None,
+            last_trigger: None,
+            last_outcome: None,
+            last_error: None,
+            last_diagnostics: None,
+            log_file_path,
+        },
+    }
+}
+
+fn emit_wallpaper_status(app: &AppHandle) {
+    let status = build_wallpaper_status();
+    let _ = app.emit("wallpaper-status", status.clone());
 }
 
 #[derive(Clone, Serialize)]
@@ -65,6 +143,7 @@ fn ui_state_from_flags(flags: &AppFlags) -> UiState {
         always_on_top: flags.always_on_top,
         wallpaper_mode: wallpaper::is_attached(),
         debug_visible: flags.debug_visible,
+        wallpaper_error: wallpaper::last_attach_error(),
     }
 }
 
@@ -240,26 +319,112 @@ fn toggle_debug(
     Ok(flags.lock().debug_visible)
 }
 
+fn apply_wallpaper_shell(wallpaper: &WebviewWindow, enabled: bool) -> Result<(), String> {
+    if enabled {
+        wallpaper
+            .set_skip_taskbar(true)
+            .map_err(|e| e.to_string())?;
+        wallpaper
+            .set_ignore_cursor_events(true)
+            .map_err(|e| e.to_string())?;
+        let _ = wallpaper.set_always_on_top(false);
+        let _ = wallpaper.set_focusable(false);
+    } else {
+        wallpaper
+            .set_skip_taskbar(true)
+            .map_err(|e| e.to_string())?;
+        wallpaper
+            .set_ignore_cursor_events(true)
+            .map_err(|e| e.to_string())?;
+        let _ = wallpaper.set_focusable(false);
+    }
+    Ok(())
+}
+
 fn set_wallpaper_mode_inner(
-    window: &WebviewWindow,
+    main: &WebviewWindow,
     flags: &SharedFlags,
+    service: &SharedLyricsService,
     enabled: bool,
+    persist: bool,
+    trigger: &str,
 ) -> Result<(), String> {
     #[cfg(windows)]
     {
-        let hwnd = window.hwnd().map_err(|e| e.to_string())?;
-
+        let app = main.app_handle();
+        let wallpaper = app
+            .get_webview_window("wallpaper")
+            .ok_or_else(|| "wallpaper webview missing".to_string())?;
         if enabled {
-            wallpaper::attach_wallpaper(hwnd)?;
+            let main_hwnd = main.hwnd().map_err(|e| e.to_string())?;
+            let saved = save_main_placement(main_hwnd);
+            wallpaper::remember_main_placement(saved);
+            let _ = main.hide();
+            let _ = wallpaper.show();
+            apply_wallpaper_shell(&wallpaper, true)?;
+            let wp_hwnd = wallpaper.hwnd().map_err(|e| e.to_string())?;
+            if let Err(e) = wallpaper::attach_wallpaper(wp_hwnd, main_hwnd, trigger) {
+                if persist {
+                    let _ = service.set_wallpaper_mode(false);
+                }
+                let _ = wallpaper.hide();
+                let saved = wallpaper::take_main_placement();
+                let _ = restore_main_placement(main_hwnd, &saved);
+                let _ = main.show();
+                let _ = main.unminimize();
+                let _ = main.set_focus();
+                apply_topmost(main, &flags.lock());
+                emit_wallpaper_status(&app);
+                let _ = app.emit("wallpaper-attach-failed", &e);
+                return Err(e);
+            }
+            if wallpaper::is_fallback_overlay() {
+                let _ = wallpaper.hide();
+                let _ = main.show();
+                let _ = main.set_ignore_cursor_events(true);
+                let _ = main.set_always_on_top(false);
+            } else {
+                let mut sync_diag = String::new();
+                wallpaper_webview::sync_webview_controller(&wallpaper, &mut sync_diag);
+                if !sync_diag.is_empty() {
+                    startup::log_diagnostic(&format!("WALLPAPER WEBVIEW2 SYNC\n{sync_diag}"));
+                }
+            }
+            if persist {
+                service.set_wallpaper_mode(true)?;
+            }
         } else {
-            wallpaper::detach_wallpaper(hwnd)?;
+            let was_fallback = wallpaper::is_fallback_overlay();
+            let main_hwnd = main.hwnd().map_err(|e| e.to_string())?;
+            let wp_hwnd = wallpaper.hwnd().map_err(|e| e.to_string())?;
+            wallpaper::detach_wallpaper(wp_hwnd, main_hwnd, trigger)?;
+            if was_fallback {
+                let _ = main.set_ignore_cursor_events(false);
+            }
+            let _ = wallpaper.hide();
+            let main_hwnd = main.hwnd().map_err(|e| e.to_string())?;
+            let saved = wallpaper::take_main_placement();
+            restore_main_placement(main_hwnd, &saved)?;
+            let _ = main.show();
+            let _ = main.unminimize();
+            let _ = main.set_focus();
+            apply_wallpaper_shell(&wallpaper, false)?;
+            if persist {
+                service.set_wallpaper_mode(false)?;
+            }
         }
-        apply_topmost(window, &flags.lock());
+        apply_topmost(main, &flags.lock());
+        emit_wallpaper_status(&app);
+        if enabled {
+            let _ = app.emit("media-state", app.state::<SharedMediaState>().read().clone());
+            emit_appearance(&service, &app);
+            let _ = app.emit("ui-state", current_ui_state(flags));
+        }
     }
 
     #[cfg(not(windows))]
     {
-        let _ = (window, flags, enabled);
+        let _ = (main, flags, service, enabled, persist);
         return Err("Wallpaper mode is Windows-only".into());
     }
 
@@ -289,9 +454,15 @@ fn set_wallpaper_mode(
     window: WebviewWindow,
     enabled: bool,
     flags: tauri::State<SharedFlags>,
+    service: tauri::State<SharedLyricsService>,
     app: AppHandle,
 ) -> Result<(), String> {
-    set_wallpaper_mode_inner(&window, flags.inner(), enabled)?;
+    if let Err(e) =
+        set_wallpaper_mode_inner(&window, flags.inner(), &service, enabled, true, "gear")
+    {
+        let _ = app.emit("ui-state", current_ui_state(flags.inner()));
+        return Err(e);
+    }
     let _ = app.emit("ui-state", current_ui_state(flags.inner()));
     Ok(())
 }
@@ -300,12 +471,170 @@ fn set_wallpaper_mode(
 fn toggle_wallpaper_mode(
     window: WebviewWindow,
     flags: tauri::State<SharedFlags>,
+    service: tauri::State<SharedLyricsService>,
     app: AppHandle,
 ) -> Result<bool, String> {
     let next = !wallpaper::is_attached();
-    set_wallpaper_mode_inner(&window, flags.inner(), next)?;
+    if let Err(e) =
+        set_wallpaper_mode_inner(&window, flags.inner(), &service, next, true, "gear")
+    {
+        let _ = app.emit("ui-state", current_ui_state(flags.inner()));
+        return Err(e);
+    }
     let _ = app.emit("ui-state", current_ui_state(flags.inner()));
     Ok(next)
+}
+
+#[tauri::command]
+fn get_wallpaper_status() -> WallpaperStatus {
+    build_wallpaper_status()
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WallpaperSurfaceState {
+    media: MediaState,
+    appearance: AppearanceState,
+    sync_offset_ms: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    lyrics: Option<LyricsResponse>,
+}
+
+#[tauri::command]
+fn get_wallpaper_surface_state(
+    media: tauri::State<SharedMediaState>,
+    service: tauri::State<SharedLyricsService>,
+) -> WallpaperSurfaceState {
+    let snap = media.read().clone();
+    let appearance = appearance_from_service(&service);
+    let sync_offset_ms = if snap.title.is_empty() && snap.artist.is_empty() {
+        0
+    } else {
+        service.get_sync_offset(
+            &snap.artist,
+            &snap.title,
+            &snap.album,
+            snap.duration_ms,
+        )
+    };
+    let lyrics = if snap.title.is_empty() && snap.artist.is_empty() {
+        None
+    } else {
+        Some(service.fetch(
+            &snap.artist,
+            &snap.title,
+            &snap.album,
+            snap.duration_ms,
+        ))
+    };
+    WallpaperSurfaceState {
+        media: snap,
+        appearance,
+        sync_offset_ms,
+        lyrics,
+    }
+}
+
+#[tauri::command]
+fn get_desktop_wallpaper_payload() -> desktop_wallpaper::DesktopWallpaperPayload {
+    desktop_wallpaper::desktop_wallpaper_payload()
+}
+
+#[cfg(windows)]
+#[tauri::command]
+fn get_desktop_wallpaper_url() -> Result<String, String> {
+    use std::ffi::OsString;
+    use std::os::windows::prelude::OsStringExt;
+    use windows::Win32::UI::WindowsAndMessaging::{SystemParametersInfoW, SPI_GETDESKWALLPAPER};
+
+    let mut buf = vec![0u16; 4096];
+    unsafe {
+        SystemParametersInfoW(
+            SPI_GETDESKWALLPAPER,
+            buf.len() as u32,
+            Some(buf.as_mut_ptr() as *mut _),
+            Default::default(),
+        )
+        .map_err(|e| format!("SPI_GETDESKWALLPAPER: {e}"))?;
+    }
+    let len = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
+  Ok(OsString::from_wide(&buf[..len])
+        .to_string_lossy()
+        .into_owned())
+}
+
+#[cfg(not(windows))]
+#[tauri::command]
+fn get_desktop_wallpaper_url() -> Result<String, String> {
+    Err("desktop wallpaper path is Windows-only".into())
+}
+
+#[tauri::command]
+fn open_lyricglass_log_folder() -> Result<String, String> {
+    let path = wallpaper_log::log_folder();
+    std::fs::create_dir_all(&path).map_err(|e| e.to_string())?;
+    let path_str = path.to_string_lossy().into_owned();
+    #[cfg(windows)]
+    {
+        std::process::Command::new("explorer")
+            .arg(&path)
+            .spawn()
+            .map_err(|e| format!("explorer: {e}"))?;
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = path_str.as_str();
+    }
+    Ok(path_str)
+}
+
+#[cfg(not(windows))]
+fn run_wallpaper_toggle_on_main(
+    _window: &WebviewWindow,
+    _app: &AppHandle,
+    _enabled: bool,
+    _trigger: &'static str,
+) {
+}
+
+#[cfg(windows)]
+fn run_wallpaper_toggle_on_main(
+    window: &WebviewWindow,
+    app: &AppHandle,
+    enabled: bool,
+    trigger: &'static str,
+) {
+    use std::sync::mpsc;
+    use std::time::Duration;
+    let (tx, rx) = mpsc::sync_channel(1);
+    let window_for_main = window.clone();
+    let app = app.clone();
+    let window_in_closure = window_for_main.clone();
+    if window_for_main
+        .run_on_main_thread(move || {
+            let flags = app.state::<SharedFlags>();
+            let service = app.state::<SharedLyricsService>();
+            let result = set_wallpaper_mode_inner(
+                &window_in_closure,
+                flags.inner(),
+                &service,
+                enabled,
+                true,
+                trigger,
+            );
+            let _ = app.emit("ui-state", current_ui_state(flags.inner()));
+            emit_wallpaper_status(&app);
+            if let Err(ref e) = result {
+                let _ = app.emit("wallpaper-attach-failed", e.clone());
+            }
+            let _ = tx.send(result);
+        })
+        .is_err()
+    {
+        startup::step(&format!("wallpaper: run_on_main_thread failed trigger={trigger}"));
+        return;
+    }
+    let _ = rx.recv_timeout(Duration::from_secs(60));
 }
 
 enum ShortcutAction {
@@ -361,16 +690,12 @@ fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, action: ShortcutAc
             }
             ShortcutAction::ToggleWallpaper => {
                 if let Some(window) = app_handle.get_webview_window("main") {
-                    let flags = app_handle.state::<SharedFlags>();
-                    if set_wallpaper_mode_inner(
+                    run_wallpaper_toggle_on_main(
                         &window,
-                        flags.inner(),
+                        &app_handle,
                         !wallpaper::is_attached(),
-                    )
-                    .is_ok()
-                    {
-                        let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
-                    }
+                        "hotkey",
+                    );
                 }
             }
         }
@@ -425,16 +750,12 @@ fn build_tray(app: &AppHandle) {
             move |app, event| match event.id.as_ref() {
                 "toggle_wallpaper" => {
                     if let Some(window) = app.get_webview_window("main") {
-                        let flags = app.state::<SharedFlags>();
-                        if set_wallpaper_mode_inner(
+                        run_wallpaper_toggle_on_main(
                             &window,
-                            flags.inner(),
+                            &app_handle,
                             !wallpaper::is_attached(),
-                        )
-                        .is_ok()
-                        {
-                            let _ = app_handle.emit("ui-state", current_ui_state(flags.inner()));
-                        }
+                            "tray",
+                        );
                     }
                 }
                 "toggle_debug" => {
@@ -474,6 +795,38 @@ fn build_tray(app: &AppHandle) {
     }
 }
 
+#[cfg(windows)]
+fn wallpaper_reattach_from_explorer(app: &AppHandle, trigger: &str) {
+    if !wallpaper::is_attached() || wallpaper::is_fallback_overlay() {
+        return;
+    }
+    startup::step(&format!("wallpaper: explorer reattach requested ({trigger})"));
+    let Some(main) = app.get_webview_window("main") else {
+        return;
+    };
+    let Some(wallpaper) = app.get_webview_window("wallpaper") else {
+        return;
+    };
+    let Ok(main_hwnd) = main.hwnd() else {
+        return;
+    };
+    let Ok(wp_hwnd) = wallpaper.hwnd() else {
+        return;
+    };
+    use windows::Win32::Foundation::HWND;
+    let main_native = HWND(main_hwnd.0 as _);
+    let wp_native = HWND(wp_hwnd.0 as _);
+    if wallpaper::reattach_desktop(wp_native, main_native, trigger).is_err() {
+        startup::step(&format!("wallpaper: reattach failed ({trigger})"));
+        return;
+    }
+    if !wallpaper::is_fallback_overlay() {
+        let mut sync_diag = String::new();
+        wallpaper_webview::sync_webview_controller(&wallpaper, &mut sync_diag);
+    }
+    emit_wallpaper_status(app);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     startup::install_panic_hook();
@@ -489,7 +842,17 @@ pub fn run() {
 
     startup::step("creating tauri builder");
     startup::step("entering tauri event loop");
-    let run_result = tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(desktop)]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+        startup::step("single-instance: second launch — focusing existing window");
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.unminimize();
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    }));
+    let run_result = builder
         .plugin({
             startup::step("loading global-shortcut plugin");
             tauri_plugin_global_shortcut::Builder::new().build()
@@ -518,6 +881,11 @@ pub fn run() {
             toggle_always_on_top,
             set_wallpaper_mode,
             toggle_wallpaper_mode,
+            get_wallpaper_status,
+            open_lyricglass_log_folder,
+            get_desktop_wallpaper_url,
+            get_desktop_wallpaper_payload,
+            get_wallpaper_surface_state,
         ])
         .setup({
             let flags = flags.clone();
@@ -546,11 +914,61 @@ pub fn run() {
                     .handle()
                     .emit("appearance-state", appearance_from_service(&appearance));
                 startup::step("tauri setup complete — WebView2 loading");
+                #[cfg(windows)]
+                {
+                    use std::sync::Arc;
+                    let app_hooks = app.handle().clone();
+                    wallpaper_hooks::set_reattach_handler(Arc::new(move |trigger| {
+                        wallpaper_reattach_from_explorer(&app_hooks, trigger);
+                    }));
+                    if let Some(main_w) = app.get_webview_window("main") {
+                        if let Ok(hwnd) = main_w.hwnd() {
+                            use windows::Win32::Foundation::HWND;
+                            wallpaper_hooks::install(HWND(hwnd.0 as _), app.handle().clone());
+                        }
+                    }
+                }
+                if service.get_wallpaper_mode() {
+                    let flags_deferred = flags.clone();
+                    let app_h = app.handle().clone();
+                    if let Some(window) = app.get_webview_window("main") {
+                        let window_deferred = window.clone();
+                        std::thread::spawn(move || {
+                            // Let the event loop pump once so GSMTC watcher is not blocked by sync Win32 attach.
+                            std::thread::sleep(std::time::Duration::from_millis(250));
+                            let app_inner = app_h.clone();
+                            let win_inner = window_deferred.clone();
+                            let flags_inner = flags_deferred.clone();
+                            let _ = app_h.run_on_main_thread(move || {
+                                startup::step("wallpaper: startup attach (deferred)");
+                                let service = app_inner.state::<SharedLyricsService>();
+                                if set_wallpaper_mode_inner(
+                                    &win_inner,
+                                    &flags_inner,
+                                    &service,
+                                    true,
+                                    true,
+                                    "startup",
+                                )
+                                .is_err()
+                                {
+                                    startup::step(
+                                        "wallpaper: startup attach failed — clearing persisted flag, overlay mode",
+                                    );
+                                    let _ = service.set_wallpaper_mode(false);
+                                    let _ = apply_wallpaper_shell(&win_inner, false);
+                                    apply_topmost(&win_inner, &flags_inner.lock());
+                                }
+                                let _ = app_inner.emit("ui-state", current_ui_state(&flags_inner));
+                            });
+                        });
+                    }
+                }
                 if std::env::var("LYRICGLASS_SMOKE_DIAG").is_ok() {
                     let app = app.handle().clone();
                     let flags = flags.clone();
                     std::thread::spawn(move || {
-                        std::thread::sleep(std::time::Duration::from_secs(3));
+                        std::thread::sleep(std::time::Duration::from_secs(5));
                         startup::step("smoke: scheduling diagnostics toggle");
                         let app_cb = app.clone();
                         let _ = app.run_on_main_thread(move || {
@@ -561,10 +979,22 @@ pub fn run() {
                 Ok(())
             }
         })
-        .run(tauri::generate_context!());
+        .build(tauri::generate_context!());
 
     match run_result {
-        Ok(()) => startup::step("tauri exited normally"),
-        Err(e) => startup::log_fatal_error("tauri run", e),
+        Ok(app) => {
+            app.run(|_app_handle, event| {
+                match &event {
+                    RunEvent::Ready => {
+                        startup::step("tauri event loop Ready");
+                        startup::arm_main_watchdog();
+                        startup::start_main_heartbeat_pinger(_app_handle.clone());
+                    }
+                    _ => {}
+                }
+            });
+            startup::step("tauri exited normally");
+        }
+        Err(e) => startup::log_fatal_error("tauri build", e),
     }
 }

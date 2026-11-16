@@ -10,7 +10,7 @@
     <div id="app">
       <header class="titlebar">
         <span class="brand" data-tauri-drag-region>
-          LyricGlass <small id="app-version">0.5.1</small>
+          LyricGlass <small id="app-version">0.6.11</small>
         </span>
         <div class="titlebar-tools">
           <button
@@ -67,6 +67,10 @@
               <input type="checkbox" id="karaoke-ball-toggle" checked />
               <span>Karaoke</span>
             </label>
+            <label class="setting-toggle">
+              <input type="checkbox" id="wallpaper-toggle" />
+              <span>Wallpaper mode</span>
+            </label>
             <p class="bouncer-picker-label">Bouncer</p>
             <div
               id="bouncer-picker"
@@ -84,6 +88,9 @@
             </label>
             <button type="button" id="colors-reset" class="mini-btn">
               Reset colors
+            </button>
+            <button type="button" id="btn-open-log-folder" class="mini-btn">
+              Open log folder
             </button>
           </div>
         </div>

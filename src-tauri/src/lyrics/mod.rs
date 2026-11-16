@@ -75,6 +75,14 @@ impl LyricsService {
         self.cache.lock().set_always_on_top(enabled)
     }
 
+    pub fn get_wallpaper_mode(&self) -> bool {
+        self.cache.lock().get_wallpaper_mode()
+    }
+
+    pub fn set_wallpaper_mode(&self, enabled: bool) -> Result<bool, String> {
+        self.cache.lock().set_wallpaper_mode(enabled)
+    }
+
     pub fn get_karaoke_ball(&self) -> bool {
         self.cache.lock().get_karaoke_ball()
     }

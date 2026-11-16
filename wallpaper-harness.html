@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wallpaper UI e2e</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="titlebar"><span class="brand">Harness</span></header>
+      <section class="lyrics-panel" id="lyrics-root">
+        <p class="np-header"><span class="np-title">Test</span></p>
+        <div id="lyrics-lines" class="lyrics-lines"></div>
+      </section>
+      <footer class="hints"><span>hint</span></footer>
+      <label class="setting-toggle">
+        <input type="checkbox" id="wallpaper-toggle" />
+        <span>Wallpaper mode</span>
+      </label>
+    </div>
+    <script type="module" src="/src/e2e/wallpaper-harness.ts"></script>
+  </body>
+</html>

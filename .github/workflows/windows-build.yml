@@ -46,7 +46,7 @@ jobs:
           Write-Host "Launching $exe for smoke test (diagnostics toggle)..."
           $env:LYRICGLASS_SMOKE_DIAG = "1"
           $proc = Start-Process -FilePath $exe -PassThru
-          Start-Sleep -Seconds 12
+          Start-Sleep -Seconds 18
           if ($proc.HasExited) {
             throw "lyricglass.exe exited early with code $($proc.ExitCode)"
           }
@@ -61,6 +61,15 @@ jobs:
           }
           if ($text -notmatch "diag toggle \(smoke\): after ui-state emit") {
             throw "Diagnostics toggle did not complete emit in log"
+          }
+          if ($text -match '\[watchdog\] main thread stall suspected') {
+            throw "Watchdog reported main-thread stall during smoke run (false positive regression)"
+          }
+          if ($text -notmatch 'GSMTC RequestAsync') {
+            throw "Media watcher never reached GSMTC RequestAsync in log"
+          }
+          if ($text -notmatch 'GSMTC RequestAsync: (completed|TIMEOUT)') {
+            throw "Media watcher did not complete or time out GSMTC RequestAsync"
           }
           Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
           Write-Host "Smoke test passed (alive 12s, diagnostics toggle logged)"

@@ -1,5 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { formatMs, timelineAnchorAgeMs } from "./clock";
 import {
   createPlaybackAnchor,
@@ -16,6 +17,18 @@ import {
   type LyricsResponse,
 } from "./lyrics-view";
 import { plainSourceLabel } from "./plain-scroll";
+import { applyWallpaperLayout } from "./wallpaper-ui";
+import {
+  applyDesktopWallpaperCss,
+  applyWallpaperSurfaceChrome,
+  type DesktopWallpaperPayload,
+  type WallpaperSurfaceState,
+} from "./wallpaper-surface";
+import { installWallpaperLayoutVars } from "./wallpaper-layout";
+import {
+  fetchWallpaperStatus,
+  type WallpaperStatus,
+} from "./wallpaper-status";
 import { BOUNCER_META, normalizeBouncerId } from "./bouncers/ids";
 import { bouncerSvgMarkup } from "./bouncers/svg-store";
 
@@ -23,6 +36,7 @@ interface UiState {
   alwaysOnTop: boolean;
   wallpaperMode: boolean;
   debugVisible: boolean;
+  wallpaperError?: string | null;
 }
 
 interface AppearanceState {
@@ -36,9 +50,24 @@ interface AppearanceState {
 const DEFAULT_BALL_COLOR = "#ffc857";
 const DEFAULT_SUNG_COLOR = "#ffdc8c";
 
+let wallpaperSurface =
+  new URLSearchParams(window.location.search).get("mode") === "wallpaper";
+
 const lyricsRoot = document.getElementById("lyrics-root")!;
 const lyricsView = new LyricsView(lyricsRoot);
 const appRoot = document.getElementById("app")!;
+
+/** E2e / `?mode=wallpaper` harness: chrome before async Tauri boot. */
+function primeWallpaperSurfaceChrome() {
+  applyWallpaperSurfaceChrome(appRoot);
+  applyWallpaperLayout(appRoot, true);
+  installWallpaperLayoutVars(appRoot);
+  lyricsView.setWallpaperLayout(true);
+}
+
+if (wallpaperSurface) {
+  primeWallpaperSurfaceChrome();
+}
 
 const els = {
   mediaStatus: document.getElementById("media-status")!,
@@ -66,9 +95,11 @@ const els = {
   timingReset: document.getElementById("timing-reset") as HTMLButtonElement,
   timingReadout: document.getElementById("timing-readout")!,
   karaokeToggle: document.getElementById("karaoke-ball-toggle") as HTMLInputElement,
+  wallpaperToggle: document.getElementById("wallpaper-toggle") as HTMLInputElement,
   ballColor: document.getElementById("ball-color") as HTMLInputElement,
   sungColor: document.getElementById("sung-color") as HTMLInputElement,
   colorsReset: document.getElementById("colors-reset") as HTMLButtonElement,
+  btnOpenLogFolder: document.getElementById("btn-open-log-folder") as HTMLButtonElement,
   bouncerPicker: document.getElementById("bouncer-picker") as HTMLDivElement,
 };
 
@@ -79,6 +110,7 @@ let fetchGeneration = 0;
 let debugVisible = false;
 let timingPersistTimer = 0;
 let lastDebugClockRenderMs = 0;
+let lastWallpaperStatus: WallpaperStatus | null = null;
 const DEBUG_PANEL_HZ_MS = 200;
 
 function applyAppearance(backgroundOpacity: number) {
@@ -212,12 +244,22 @@ async function loadSyncOffset(media: FullMediaState) {
   }
 }
 
+async function resolveWallpaperForDiagnostics(): Promise<WallpaperStatus | null> {
+  try {
+    return await fetchWallpaperStatus();
+  } catch {
+    return lastWallpaperStatus;
+  }
+}
+
 async function logDiagnosticsToFile(reason: string) {
+  const wallpaper = await resolveWallpaperForDiagnostics();
   const block = buildDiagnosticsBlock(
     latestMedia,
     latestLyrics,
     lyricsView,
     playbackAnchor,
+    wallpaper,
   );
   const full = `${reason}\n\n${block}`;
   await invoke("log_diagnostics", { block: full });
@@ -291,6 +333,9 @@ function renderUi(state: UiState) {
   debugVisible = state.debugVisible;
   els.btnAlwaysOnTop.classList.toggle("active", state.alwaysOnTop);
   els.btnWallpaper.classList.toggle("active", state.wallpaperMode);
+  els.wallpaperToggle.checked = state.wallpaperMode;
+  applyWallpaperLayout(appRoot, state.wallpaperMode);
+  void state.wallpaperError;
   els.debugPanel.classList.toggle("hidden", !state.debugVisible);
   els.debugPanel.setAttribute("aria-hidden", state.debugVisible ? "false" : "true");
   renderDebugClock(true);
@@ -322,6 +367,24 @@ els.btnAlwaysOnTop.addEventListener("click", (e) => {
 els.btnWallpaper.addEventListener("click", (e) => {
   e.stopPropagation();
   void invoke("toggle_wallpaper_mode");
+});
+
+async function refreshWallpaperFromBackend() {
+  try {
+    lastWallpaperStatus = await fetchWallpaperStatus();
+  } catch {
+    /* harness */
+  }
+}
+
+els.wallpaperToggle.addEventListener("change", async () => {
+  const want = els.wallpaperToggle.checked;
+  try {
+    await invoke("set_wallpaper_mode", { enabled: want });
+    await refreshWallpaperFromBackend();
+  } catch {
+    await refreshWallpaperFromBackend();
+  }
 });
 
 els.btnSettings.addEventListener("click", (e) => {
@@ -386,12 +449,18 @@ els.colorsReset.addEventListener("click", () => {
   void invoke("reset_karaoke_colors");
 });
 
+els.btnOpenLogFolder.addEventListener("click", () => {
+  void invoke("open_lyricglass_log_folder");
+});
+
 els.btnCopyDiag.addEventListener("click", async () => {
+  const wallpaper = await resolveWallpaperForDiagnostics();
   const block = buildDiagnosticsBlock(
     latestMedia,
     latestLyrics,
     lyricsView,
     playbackAnchor,
+    wallpaper,
   );
   try {
     await navigator.clipboard.writeText(block);
@@ -405,8 +474,48 @@ async function onSyncMark() {
   await invoke("log_sync_mark", { block });
 }
 
+async function bootstrapWallpaperFromBackend() {
+  const boot = await invoke<WallpaperSurfaceState>("get_wallpaper_surface_state");
+  onMedia(boot.media);
+  applyAppearanceSettings(boot.appearance);
+  lyricsView.setSyncOffsetAbsolute(boot.syncOffsetMs);
+  updateTimingReadout(boot.syncOffsetMs);
+  if (boot.lyrics) {
+    latestLyrics = boot.lyrics;
+    lyricsView.onLyricsResponse(boot.lyrics);
+  }
+}
+
 async function boot() {
+  try {
+    const label = (await getCurrentWebviewWindow()).label;
+    if (label === "wallpaper") {
+      wallpaperSurface = true;
+    }
+  } catch {
+    /* non-tauri harness */
+  }
+
   buildBouncerPicker();
+
+  if (wallpaperSurface) {
+    primeWallpaperSurfaceChrome();
+    try {
+      const payload = await invoke<DesktopWallpaperPayload>(
+        "get_desktop_wallpaper_payload",
+      );
+      applyDesktopWallpaperCss(payload);
+      if (payload.readError) {
+        void logDiagnosticsToFile(
+          `Wallpaper bg error: ${payload.readError} path=${payload.path}`,
+        );
+      }
+    } catch (e) {
+      void logDiagnosticsToFile(`Wallpaper bg invoke failed: ${e}`);
+    }
+    await bootstrapWallpaperFromBackend();
+  }
+
   await listen<FullMediaState>("media-state", (e) => onMedia(e.payload));
   await listen<UiState>("ui-state", (e) => renderUi(e.payload));
   await listen<AppearanceState>("appearance-state", (e) =>
@@ -426,6 +535,15 @@ async function boot() {
     }
   });
   await listen("sync-mark-request", () => void onSyncMark());
+  await listen<string>("wallpaper-attach-failed", (e) => {
+    void e.payload;
+    void refreshWallpaperFromBackend();
+    void logDiagnosticsToFile(`Wallpaper attach failed: ${e.payload}`);
+  });
+
+  await listen<WallpaperStatus>("wallpaper-status", (e) => {
+    lastWallpaperStatus = e.payload;
+  });
 
   const media = await invoke<FullMediaState>("get_media_state");
   onMedia(media);

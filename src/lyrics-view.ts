@@ -19,6 +19,15 @@ import {
   plainScrollOffsetPx,
   textLooksHebrew,
 } from "./plain-scroll";
+import { effectiveSyncOffsetMs, getBuiltinSyncLagMs } from "./sync-lag";
+import {
+  contextLineCount,
+  estimateLineBlockPx,
+  lineFadeOpacity,
+  lineWindowForActive,
+  wallpaperPanelHeight,
+  wallpaperSafeBottomPx,
+} from "./wallpaper-layout";
 
 export interface MediaState extends PlaybackClockMedia {
   spotifyRunning: boolean;
@@ -99,6 +108,7 @@ export class LyricsView {
   private snapScroll = true;
   private scrollAnim: LineScrollAnimation | null = null;
   private renderedCenterIndex = -2;
+  private wallpaperLayoutEnabled = false;
 
   constructor(root: HTMLElement) {
     this.headerTitle = root.querySelector("#np-title")!;
@@ -118,9 +128,81 @@ export class LyricsView {
     this.linesEl.appendChild(this.scrollInner);
     this.karaoke = new KaraokeBall(this.linesEl);
     if (typeof ResizeObserver !== "undefined") {
-      this.resizeObserver = new ResizeObserver(() => this.karaoke.invalidate());
+      this.resizeObserver = new ResizeObserver(() => {
+        this.karaoke.invalidate();
+        this.onWallpaperViewportChange();
+      });
       this.resizeObserver.observe(this.linesEl);
     }
+  }
+
+  setWallpaperLayout(enabled: boolean) {
+    this.wallpaperLayoutEnabled = enabled;
+    this.linesEl.classList.toggle("wallpaper-lyrics-stage", enabled);
+    if (enabled) {
+      this.onWallpaperViewportChange();
+    }
+  }
+
+  private isWallpaperLayout(): boolean {
+    return (
+      this.wallpaperLayoutEnabled ||
+      document.getElementById("app")?.classList.contains("wallpaper-mode") === true
+    );
+  }
+
+  private measureLineBlockPx(): number {
+    const probe = this.scrollInner.querySelector<HTMLElement>(".lyric-line");
+    if (probe) {
+      return probe.offsetHeight + 8;
+    }
+    const fontPx =
+      Number.parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--wallpaper-line-size",
+        ),
+      ) || 18;
+    return estimateLineBlockPx(fontPx, this.karaokeEnabled);
+  }
+
+  private visibleLineCount(): number {
+    if (!this.isWallpaperLayout()) return 6;
+    const panelH =
+      this.linesEl.clientHeight > 0
+        ? this.linesEl.clientHeight
+        : wallpaperPanelHeight(
+            window.innerHeight,
+            wallpaperSafeBottomPx(window.innerHeight),
+          );
+    return contextLineCount(panelH, this.measureLineBlockPx());
+  }
+
+  private lineWindow(active: number, lineCount: number) {
+    if (!this.isWallpaperLayout()) {
+      const start = Math.max(0, active - 2);
+      const end = Math.min(
+        lineCount - 1,
+        Math.max(active + 3, active < 0 ? 1 : active + 1),
+      );
+      return { start, end };
+    }
+    const w = lineWindowForActive(active, lineCount, this.visibleLineCount());
+    return { start: w.start, end: w.end };
+  }
+
+  private onWallpaperViewportChange() {
+    if (!this.isWallpaperLayout() || !this.parsed?.lines.length) return;
+    const idx =
+      this.renderedCenterIndex >= -1
+        ? this.renderedCenterIndex
+        : this.lastLineIndex;
+    const active = idx >= -1 ? idx : -1;
+    this.renderLines(this.parsed.lines, active);
+  }
+
+  /** Test hook: rendered lyric line count in the DOM. */
+  getRenderedLineCount(): number {
+    return this.scrollInner.querySelectorAll(".lyric-line").length;
   }
 
   /** Test hook: current scroll-inner translateY (px). */
@@ -164,6 +246,14 @@ export class LyricsView {
 
   getSyncOffsetMs() {
     return this.syncOffsetMs;
+  }
+
+  getBuiltinSyncLagMs() {
+    return getBuiltinSyncLagMs();
+  }
+
+  getEffectiveSyncOffsetMs() {
+    return effectiveSyncOffsetMs(this.syncOffsetMs);
   }
 
   getLastLyrics() {
@@ -327,7 +417,7 @@ export class LyricsView {
     if (!this.parsed?.lines.length) {
       return { index: -1, lineTimeMs: 0, nextLineTimeMs: -1, computedMs };
     }
-    const timeMs = computedMs + this.syncOffsetMs;
+    const timeMs = computedMs + effectiveSyncOffsetMs(this.syncOffsetMs);
     const idx = findActiveLineIndex(this.parsed.lines, timeMs);
     const lineTimeMs = idx >= 0 ? this.parsed.lines[idx].timeMs : 0;
     const nextLineTimeMs =
@@ -433,8 +523,7 @@ export class LyricsView {
   }
 
   private promoteLineClasses(active: number, lines: LrcLine[]) {
-    const start = Math.max(0, active - 2);
-    const end = Math.min(lines.length - 1, Math.max(active + 3, active + 1));
+    const { start, end } = this.lineWindow(active, lines.length);
     const karaokeOn = this.karaokeEnabled;
     const existing = new Set<number>();
     this.scrollInner.querySelectorAll<HTMLElement>(".lyric-line").forEach((el) => {
@@ -444,6 +533,10 @@ export class LyricsView {
       if (i < active) el.classList.add("past");
       else if (i === active) el.classList.add("active");
       else el.classList.add("upcoming");
+      if (this.isWallpaperLayout()) {
+        const anchor = active < 0 ? 0 : active;
+        el.style.opacity = String(lineFadeOpacity(Math.abs(i - anchor)));
+      }
     });
 
     if (end - start + 1 > existing.size) {
@@ -490,7 +583,7 @@ export class LyricsView {
     }
     if (!this.parsed || this.parsed.lines.length === 0) return;
 
-    const timeMs = playbackMs + this.syncOffsetMs;
+    const timeMs = playbackMs + effectiveSyncOffsetMs(this.syncOffsetMs);
     const idx = findActiveLineIndex(this.parsed.lines, timeMs);
     const lines = this.parsed.lines;
     const seek = this.isSeekLike(playbackMs, idx);
@@ -629,22 +722,28 @@ export class LyricsView {
     active: number,
     options?: RenderOptions,
   ) {
-    const start = Math.max(0, active - 2);
-    const end = Math.min(lines.length - 1, Math.max(active + 3, active + 1));
+    const { start, end } = this.lineWindow(active, lines.length);
     const frag = document.createDocumentFragment();
     const karaokeOn = this.karaokeEnabled;
     const wordLines = options?.wordLineIndices ?? new Set<number>();
 
     if (active >= 0) wordLines.add(active);
 
+    const applyWallpaperFade = (p: HTMLElement, i: number) => {
+      if (!this.isWallpaperLayout()) return;
+      const anchor = active < 0 ? 0 : active;
+      const dist = Math.abs(i - anchor);
+      p.style.opacity = String(lineFadeOpacity(dist));
+    };
+
     if (active < 0) {
-      for (let i = 0; i <= Math.min(1, lines.length - 1); i += 1) {
+      for (let i = start; i <= end; i += 1) {
         const p = document.createElement("p");
         p.className = "lyric-line";
         p.dir = "auto";
         p.dataset.line = String(i);
-        if (i === 0) p.classList.add("upcoming");
-        else p.classList.add("upcoming");
+        p.classList.add("upcoming");
+        applyWallpaperFade(p, i);
         const useWords =
           karaokeOn && i === 0 && lines[0].words.length > 0 && wordLines.has(0);
         if (useWords) {
@@ -668,6 +767,7 @@ export class LyricsView {
         if (i < active) p.classList.add("past");
         else if (i === active) p.classList.add("active");
         else p.classList.add("upcoming");
+        applyWallpaperFade(p, i);
 
         const useWords =
           karaokeOn && lines[i].words.length > 0 && wordLines.has(i);
@@ -699,7 +799,7 @@ export class LyricsView {
 
   private tickPlainScroll(playbackMs: number, durationMs: number) {
     if (durationMs <= 0) return;
-    const timeMs = playbackMs + this.syncOffsetMs;
+    const timeMs = playbackMs + effectiveSyncOffsetMs(this.syncOffsetMs);
     const contentH = this.plainScrollInner.scrollHeight;
     const viewH = this.plainEl.clientHeight;
     const target = plainScrollOffsetPx(timeMs, durationMs, contentH, viewH);
