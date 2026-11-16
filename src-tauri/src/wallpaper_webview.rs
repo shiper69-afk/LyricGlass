@@ -18,7 +18,7 @@ pub fn sync_webview_controller(window: &tauri::WebviewWindow, diag: &mut String)
             use windows::Win32::Foundation::HWND;
             use windows::Win32::UI::WindowsAndMessaging::GetClientRect;
 
-            let host = HWND(host_usize);
+            let host = HWND(host_usize as _);
             let mut client = windows::Win32::Foundation::RECT::default();
             if GetClientRect(host, &mut client).is_err() {
                 local.push_str("sync_webview: GetClientRect failed\n");
