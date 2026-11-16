@@ -35,6 +35,9 @@ import "./fonts/faces";
 import { applyLyricsFont, setLyricsFontChangeHook } from "./fonts/apply";
 import { buildFontPicker, setFontPickerSelection } from "./font-picker";
 import { initSettingsTabs } from "./settings-tabs";
+import { buildVisualizerPicker, setVisualizerPickerSelection } from "./visualizer-picker";
+import { accentFromTheme, VisualizerEngine } from "./visualizer/engine";
+import { normalizeVisualizerKind, type VisualizerKind } from "./visualizer/catalog";
 
 interface UiState {
   alwaysOnTop: boolean;
@@ -50,6 +53,9 @@ interface AppearanceState {
   sungHighlightColor: string;
   karaokeBouncer: string;
   lyricsFont: string;
+  visualizerKind: string;
+  visualizerIntensity: number;
+  visualizerOpacity: number;
 }
 
 const DEFAULT_BALL_COLOR = "#ffc857";
@@ -60,6 +66,7 @@ let wallpaperSurface =
 
 const lyricsRoot = document.getElementById("lyrics-root")!;
 const lyricsView = new LyricsView(lyricsRoot);
+const visualizerEngine = new VisualizerEngine(lyricsRoot);
 setLyricsFontChangeHook(() => lyricsView.onLyricsFontChanged());
 const appRoot = document.getElementById("app")!;
 
@@ -108,6 +115,9 @@ const els = {
   btnOpenLogFolder: document.getElementById("btn-open-log-folder") as HTMLButtonElement,
   bouncerPicker: document.getElementById("bouncer-picker") as HTMLDivElement,
   fontPicker: document.getElementById("font-picker") as HTMLDivElement,
+  visualizerPicker: document.getElementById("visualizer-picker") as HTMLDivElement,
+  visualizerIntensity: document.getElementById("visualizer-intensity") as HTMLInputElement,
+  visualizerOpacity: document.getElementById("visualizer-opacity") as HTMLInputElement,
 };
 
 let latestMedia: FullMediaState | null = null;
@@ -189,6 +199,22 @@ function buildFontPickerUi() {
   });
 }
 
+function applyVisualizerAppearance(state: AppearanceState) {
+  const kind = normalizeVisualizerKind(state.visualizerKind ?? "off");
+  const intensity = state.visualizerIntensity ?? 0.85;
+  const opacity = state.visualizerOpacity ?? 0.35;
+  els.visualizerIntensity.value = String(Math.round(intensity * 100));
+  els.visualizerOpacity.value = String(Math.round(opacity * 100));
+  setVisualizerPickerSelection(els.visualizerPicker, kind);
+  lyricsRoot.classList.toggle("visualizer-on", kind !== "off");
+  visualizerEngine.setOptions({
+    kind,
+    intensity,
+    opacity,
+    accentRgb: accentFromTheme(state.karaokeBallColor || DEFAULT_BALL_COLOR),
+  });
+}
+
 function applyAppearanceSettings(state: AppearanceState) {
   applyAppearance(state.overlayOpacity);
   els.karaokeToggle.checked = state.karaokeBall;
@@ -196,6 +222,25 @@ function applyAppearanceSettings(state: AppearanceState) {
   applyKaraokeColors(state.karaokeBallColor, state.sungHighlightColor);
   applyBouncerSelection(state.karaokeBouncer ?? "glow-orb");
   void applyLyricsFontSelection(state.lyricsFont ?? "default");
+  applyVisualizerAppearance(state);
+}
+
+function buildVisualizerPickerUi() {
+  buildVisualizerPicker(els.visualizerPicker, (id: VisualizerKind) => {
+    setVisualizerPickerSelection(els.visualizerPicker, id);
+    applyVisualizerAppearance({
+      overlayOpacity: Number(els.opacitySlider.value) / 100,
+      karaokeBall: els.karaokeToggle.checked,
+      karaokeBallColor: els.ballColor.value,
+      sungHighlightColor: els.sungColor.value,
+      karaokeBouncer: "glow-orb",
+      lyricsFont: "default",
+      visualizerKind: id,
+      visualizerIntensity: Number(els.visualizerIntensity.value) / 100,
+      visualizerOpacity: Number(els.visualizerOpacity.value) / 100,
+    });
+    void invoke("set_visualizer_kind", { kind: id });
+  });
 }
 
 function updateTimingReadout(ms: number) {
@@ -525,6 +570,7 @@ async function boot() {
 
   buildBouncerPicker();
   buildFontPickerUi();
+  buildVisualizerPickerUi();
   initSettingsTabs(els.settingsPopover);
 
   if (wallpaperSurface) {
@@ -574,12 +620,33 @@ async function boot() {
     lastWallpaperStatus = e.payload;
   });
 
+  await listen<{ b: number[]; l: number; bt: boolean }>("visualizer-frame", (e) => {
+    visualizerEngine.pushFrame(e.payload);
+  });
+
   const media = await invoke<FullMediaState>("get_media_state");
   onMedia(media);
   renderUi(await invoke<UiState>("get_ui_state"));
   applyAppearanceSettings(await invoke<AppearanceState>("get_appearance"));
 
   startTicker();
+
+  els.visualizerIntensity.addEventListener("input", () => {
+    const intensity = Number(els.visualizerIntensity.value) / 100;
+    visualizerEngine.setOptions({ intensity });
+    void invoke("set_visualizer_intensity", { intensity });
+  });
+
+  els.visualizerOpacity.addEventListener("input", () => {
+    const opacity = Number(els.visualizerOpacity.value) / 100;
+    visualizerEngine.setOptions({ opacity });
+    void invoke("set_visualizer_opacity", { opacity });
+  });
+
+  const syncVisualizerUiActive = () => {
+    const active = !document.hidden;
+    void invoke("set_visualizer_ui_active", { active }).catch(() => undefined);
+  };
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && rafId) {
@@ -588,7 +655,9 @@ async function boot() {
     } else if (!document.hidden) {
       startTicker();
     }
+    syncVisualizerUiActive();
   });
+  syncVisualizerUiActive();
 }
 
 void boot();

@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use parse::{parse_lyrics_html, pick_best_search_hit, search_hits_from_html, SearchHit};
 use std::sync::LazyLock;
 
-const USER_AGENT: &str = "LyricGlass/0.7.2 https://github.com/shiper69-afk/LyricGlass";
+const USER_AGENT: &str = "LyricGlass/0.8.0 https://github.com/shiper69-afk/LyricGlass";
 const BASE: &str = "https://shironet.mako.co.il";
 const SEARCH_PATH: &str = "/searchSongs?type=lyrics&q=";
 const LYRICS_PATH: &str = "/artist?type=lyrics&lang=1";

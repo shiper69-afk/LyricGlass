@@ -1,5 +1,7 @@
 mod app_version;
 mod clock;
+mod visualizer;
+mod visualizer_dsp;
 mod lyrics;
 mod media;
 mod startup;
@@ -120,6 +122,9 @@ struct AppearanceState {
     sung_highlight_color: String,
     karaoke_bouncer: String,
     lyrics_font: String,
+    visualizer_kind: String,
+    visualizer_intensity: f64,
+    visualizer_opacity: f64,
 }
 
 fn appearance_from_service(service: &SharedLyricsService) -> AppearanceState {
@@ -130,6 +135,9 @@ fn appearance_from_service(service: &SharedLyricsService) -> AppearanceState {
         sung_highlight_color: service.get_sung_highlight_color(),
         karaoke_bouncer: service.get_karaoke_bouncer(),
         lyrics_font: service.get_lyrics_font(),
+        visualizer_kind: service.get_visualizer_kind(),
+        visualizer_intensity: service.get_visualizer_intensity(),
+        visualizer_opacity: service.get_visualizer_opacity(),
     }
 }
 
@@ -311,6 +319,39 @@ fn set_lyrics_font(
     app: AppHandle,
 ) -> Result<String, String> {
     let value = service.set_lyrics_font(&font_id)?;
+    emit_appearance(&service, &app);
+    Ok(value)
+}
+
+#[tauri::command]
+fn set_visualizer_kind(
+    service: tauri::State<SharedLyricsService>,
+    kind: String,
+    app: AppHandle,
+) -> Result<String, String> {
+    let value = service.set_visualizer_kind(&kind)?;
+    emit_appearance(&service, &app);
+    Ok(value)
+}
+
+#[tauri::command]
+fn set_visualizer_intensity(
+    service: tauri::State<SharedLyricsService>,
+    intensity: f64,
+    app: AppHandle,
+) -> Result<f64, String> {
+    let value = service.set_visualizer_intensity(intensity)?;
+    emit_appearance(&service, &app);
+    Ok(value)
+}
+
+#[tauri::command]
+fn set_visualizer_opacity(
+    service: tauri::State<SharedLyricsService>,
+    opacity: f64,
+    app: AppHandle,
+) -> Result<f64, String> {
+    let value = service.set_visualizer_opacity(opacity)?;
     emit_appearance(&service, &app);
     Ok(value)
 }
@@ -926,6 +967,10 @@ pub fn run() {
             reset_karaoke_colors,
             set_karaoke_bouncer,
             set_lyrics_font,
+            set_visualizer_kind,
+            set_visualizer_intensity,
+            set_visualizer_opacity,
+            visualizer::set_visualizer_ui_active,
             log_diagnostics,
             log_sync_mark,
             toggle_debug,
@@ -958,6 +1003,11 @@ pub fn run() {
                 register_shortcuts(app.handle());
                 startup::step("tauri setup: starting media watcher (optional)");
                 start_media_watcher(app.handle().clone(), media_state.clone());
+                visualizer::start(
+                    app.handle().clone(),
+                    media_state.clone(),
+                    app.state::<SharedLyricsService>().inner().clone(),
+                );
                 startup::step("startup: overlay mode (do not restore wallpaper)");
                 service.ensure_overlay_at_startup();
                 startup::step("tauri setup: emitting initial UI state");

@@ -131,6 +131,30 @@ impl LyricsService {
         self.cache.lock().set_lyrics_font(font_id)
     }
 
+    pub fn get_visualizer_kind(&self) -> String {
+        self.cache.lock().get_visualizer_kind()
+    }
+
+    pub fn set_visualizer_kind(&self, kind: &str) -> Result<String, String> {
+        self.cache.lock().set_visualizer_kind(kind)
+    }
+
+    pub fn get_visualizer_intensity(&self) -> f64 {
+        self.cache.lock().get_visualizer_intensity()
+    }
+
+    pub fn set_visualizer_intensity(&self, value: f64) -> Result<f64, String> {
+        self.cache.lock().set_visualizer_intensity(value)
+    }
+
+    pub fn get_visualizer_opacity(&self) -> f64 {
+        self.cache.lock().get_visualizer_opacity()
+    }
+
+    pub fn set_visualizer_opacity(&self, value: f64) -> Result<f64, String> {
+        self.cache.lock().set_visualizer_opacity(value)
+    }
+
     pub fn add_sync_offset(
         &self,
         artist: &str,
