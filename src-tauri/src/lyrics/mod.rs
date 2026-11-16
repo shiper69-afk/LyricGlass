@@ -83,6 +83,10 @@ impl LyricsService {
         self.cache.lock().set_wallpaper_mode(enabled)
     }
 
+    pub fn ensure_overlay_at_startup(&self) {
+        self.cache.lock().ensure_overlay_at_startup();
+    }
+
     pub fn get_karaoke_ball(&self) -> bool {
         self.cache.lock().get_karaoke_ball()
     }

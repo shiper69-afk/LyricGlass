@@ -921,6 +921,8 @@ pub fn run() {
                 register_shortcuts(app.handle());
                 startup::step("tauri setup: starting media watcher (optional)");
                 start_media_watcher(app.handle().clone(), media_state.clone());
+                startup::step("startup: overlay mode (do not restore wallpaper)");
+                service.ensure_overlay_at_startup();
                 startup::step("tauri setup: emitting initial UI state");
                 let _ = app.handle().emit("ui-state", current_ui_state(&flags));
                 let appearance = app.state::<SharedLyricsService>();
@@ -940,42 +942,6 @@ pub fn run() {
                             use windows::Win32::Foundation::HWND;
                             wallpaper_hooks::install(HWND(hwnd.0 as _), app.handle().clone());
                         }
-                    }
-                }
-                if service.get_wallpaper_mode() {
-                    let flags_deferred = flags.clone();
-                    let app_h = app.handle().clone();
-                    if let Some(window) = app.get_webview_window("main") {
-                        let window_deferred = window.clone();
-                        std::thread::spawn(move || {
-                            // Let the event loop pump once so GSMTC watcher is not blocked by sync Win32 attach.
-                            std::thread::sleep(std::time::Duration::from_millis(250));
-                            let app_inner = app_h.clone();
-                            let win_inner = window_deferred.clone();
-                            let flags_inner = flags_deferred.clone();
-                            let _ = app_h.run_on_main_thread(move || {
-                                startup::step("wallpaper: startup attach (deferred)");
-                                let service = app_inner.state::<SharedLyricsService>();
-                                if set_wallpaper_mode_inner(
-                                    &win_inner,
-                                    &flags_inner,
-                                    &service,
-                                    true,
-                                    true,
-                                    "startup",
-                                )
-                                .is_err()
-                                {
-                                    startup::step(
-                                        "wallpaper: startup attach failed — clearing persisted flag, overlay mode",
-                                    );
-                                    let _ = service.set_wallpaper_mode(false);
-                                    let _ = apply_wallpaper_shell(&win_inner, false);
-                                    apply_topmost(&win_inner, &flags_inner.lock());
-                                }
-                                let _ = app_inner.emit("ui-state", current_ui_state(&flags_inner));
-                            });
-                        });
                     }
                 }
                 if std::env::var("LYRICGLASS_SMOKE_DIAG").is_ok() {

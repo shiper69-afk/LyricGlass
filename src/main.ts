@@ -34,6 +34,7 @@ import { bouncerSvgMarkup } from "./bouncers/svg-store";
 import "./fonts/faces";
 import { applyLyricsFont, setLyricsFontChangeHook } from "./fonts/apply";
 import { buildFontPicker, setFontPickerSelection } from "./font-picker";
+import { initSettingsTabs } from "./settings-tabs";
 
 interface UiState {
   alwaysOnTop: boolean;
@@ -524,6 +525,7 @@ async function boot() {
 
   buildBouncerPicker();
   buildFontPickerUi();
+  initSettingsTabs(els.settingsPopover);
 
   if (wallpaperSurface) {
     primeWallpaperSurfaceChrome();

@@ -10,7 +10,7 @@ import {
   type WallpaperStatus,
 } from "./wallpaper-status";
 
-const APP_VERSION = "0.7.0";
+const APP_VERSION = "0.7.1";
 
 export interface FullMediaState extends MediaState {
   sourceAppId: string;

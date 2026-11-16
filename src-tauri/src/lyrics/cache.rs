@@ -223,6 +223,13 @@ impl LyricsCache {
         .unwrap_or(false)
     }
 
+    /// Launch always in overlay mode even when `wallpaper_mode` was left on in settings.
+    pub fn ensure_overlay_at_startup(&self) {
+        if self.get_wallpaper_mode() {
+            let _ = self.set_wallpaper_mode(false);
+        }
+    }
+
     pub fn set_wallpaper_mode(&self, enabled: bool) -> Result<bool, String> {
         let conn = match &self.conn {
             Some(c) => c,
@@ -580,6 +587,15 @@ mod settings_tests {
         cache.set_wallpaper_mode(true).expect("set");
         assert!(cache.get_wallpaper_mode());
         cache.set_wallpaper_mode(false).expect("clear");
+        assert!(!cache.get_wallpaper_mode());
+    }
+
+    #[test]
+    fn ensure_overlay_at_startup_clears_saved_wallpaper_mode() {
+        let cache = open_memory();
+        cache.set_wallpaper_mode(true).expect("set");
+        assert!(cache.get_wallpaper_mode());
+        cache.ensure_overlay_at_startup();
         assert!(!cache.get_wallpaper_mode());
     }
 }

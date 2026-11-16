@@ -200,8 +200,11 @@ body.wallpaper-mode,
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
-  min-width: 300px;
-  padding: 10px 12px;
+  width: min(300px, calc(100vw - 24px));
+  min-width: 248px;
+  max-height: calc(100vh - var(--settings-popover-offset, 52px));
+  max-height: calc(100dvh - var(--settings-popover-offset, 52px));
+  padding: 8px 10px 10px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(12, 14, 22, 0.96);
@@ -209,7 +212,53 @@ body.wallpaper-mode,
   z-index: 30;
   display: flex;
   flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.settings-tab-bar {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-tab {
+  flex: 1;
+  font-size: 10px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.settings-tab.active {
+  background: rgba(130, 170, 255, 0.22);
+  border-color: rgba(130, 170, 255, 0.45);
+}
+
+.settings-body {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  padding-right: 2px;
+}
+
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-panel[hidden] {
+  display: none !important;
 }
 
 .settings-popover[hidden] {
@@ -469,9 +518,18 @@ button.active {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  max-height: 160px;
-  overflow-y: auto;
   margin-bottom: 4px;
+}
+
+.bouncer-picker--settings {
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 0;
+}
+
+@media (min-width: 280px) {
+  .bouncer-picker--settings {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .bouncer-picker-btn {
@@ -506,44 +564,47 @@ button.active {
   overflow: visible;
 }
 
-.font-picker-label {
-  font-size: 11px;
-  opacity: 0.75;
-  margin: 8px 0 2px;
-}
-
 .font-picker {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-height: 200px;
-  overflow-y: auto;
-  margin-bottom: 6px;
-  padding-right: 2px;
+  gap: 8px;
 }
 
 .font-picker-category {
-  font-size: 9px;
+  font-size: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  opacity: 0.55;
-  margin: 2px 0 0;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+  margin: 0 0 2px;
 }
 
 .font-picker-group {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 5px;
+  margin-bottom: 2px;
+}
+
+@media (min-width: 268px) {
+  .font-picker-group {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .font-picker-btn {
-  text-align: left;
-  padding: 5px 8px;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1.25;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 34px;
+  padding: 4px 5px;
+  border-radius: 7px;
+  font-size: 11px;
+  line-height: 1.15;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(0, 0, 0, 0.2);
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .font-picker-btn[aria-pressed="true"] {
