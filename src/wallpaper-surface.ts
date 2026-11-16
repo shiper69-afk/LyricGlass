@@ -15,6 +15,7 @@ export interface WallpaperSurfaceAppearance {
   karaokeBallColor: string;
   sungHighlightColor: string;
   karaokeBouncer: string;
+  lyricsFont: string;
 }
 
 export interface WallpaperSurfaceState {

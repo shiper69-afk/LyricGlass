@@ -19,6 +19,7 @@ export default defineConfig(() => ({
         hebrewHarness: "hebrew-harness.html",
         gapHarness: "gap-harness.html",
         wallpaperHarness: "wallpaper-harness.html",
+        fontHarness: "font-harness.html",
       },
     },
   },

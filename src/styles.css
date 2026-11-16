@@ -1,6 +1,6 @@
 :root {
   color-scheme: dark;
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: var(--lyrics-font-family, "Segoe UI", system-ui, sans-serif);
   font-size: 15px;
   line-height: 1.45;
 }
@@ -200,7 +200,7 @@ body.wallpaper-mode,
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
-  min-width: 280px;
+  min-width: 300px;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -504,6 +504,51 @@ button.active {
   height: 22px;
   display: block;
   overflow: visible;
+}
+
+.font-picker-label {
+  font-size: 11px;
+  opacity: 0.75;
+  margin: 8px 0 2px;
+}
+
+.font-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 6px;
+  padding-right: 2px;
+}
+
+.font-picker-category {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.55;
+  margin: 2px 0 0;
+}
+
+.font-picker-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.font-picker-btn {
+  text-align: left;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.25;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.font-picker-btn[aria-pressed="true"] {
+  background: rgba(130, 170, 255, 0.35);
+  border-color: rgba(130, 170, 255, 0.65);
 }
 
 .setting-row input[type="color"] {

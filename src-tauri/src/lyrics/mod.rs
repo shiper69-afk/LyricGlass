@@ -119,6 +119,14 @@ impl LyricsService {
         self.cache.lock().set_karaoke_bouncer(bouncer_id)
     }
 
+    pub fn get_lyrics_font(&self) -> String {
+        self.cache.lock().get_lyrics_font()
+    }
+
+    pub fn set_lyrics_font(&self, font_id: &str) -> Result<String, String> {
+        self.cache.lock().set_lyrics_font(font_id)
+    }
+
     pub fn add_sync_offset(
         &self,
         artist: &str,
