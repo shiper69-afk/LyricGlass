@@ -279,6 +279,20 @@ impl LyricsCache {
 
     pub const DEFAULT_LYRICS_FONT: &'static str = "default";
 
+    pub const DEFAULT_VISUALIZER_KIND: &'static str = "off";
+    pub const DEFAULT_VISUALIZER_INTENSITY: f64 = 1.5;
+    pub const DEFAULT_VISUALIZER_OPACITY: f64 = 0.8;
+    const MAX_VISUALIZER_INTENSITY: f64 = 3.0;
+
+    pub const VISUALIZER_KIND_IDS: &[&str] = &[
+        "off",
+        "spectrum",
+        "waveform",
+        "radial",
+        "particles",
+        "aurora",
+    ];
+
     pub const LYRICS_FONT_IDS: &[&str] = &[
         "default",
         "rubik",
@@ -457,6 +471,104 @@ impl LyricsCache {
         )
         .map_err(|e| e.to_string())?;
         Ok(normalized)
+    }
+
+    pub fn get_visualizer_kind(&self) -> String {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Self::DEFAULT_VISUALIZER_KIND.to_string(),
+        };
+        Self::read_setting_string(conn, "visualizer_kind")
+            .map(|v| {
+                let id = v.trim().to_lowercase();
+                if Self::VISUALIZER_KIND_IDS.contains(&id.as_str()) {
+                    id
+                } else {
+                    Self::DEFAULT_VISUALIZER_KIND.to_string()
+                }
+            })
+            .unwrap_or_else(|| Self::DEFAULT_VISUALIZER_KIND.to_string())
+    }
+
+    pub fn set_visualizer_kind(&self, kind: &str) -> Result<String, String> {
+        let id = kind.trim().to_lowercase();
+        let normalized = if Self::VISUALIZER_KIND_IDS.contains(&id.as_str()) {
+            id
+        } else {
+            Self::DEFAULT_VISUALIZER_KIND.to_string()
+        };
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(normalized),
+        };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('visualizer_kind', ?1)",
+            params![normalized],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(normalized)
+    }
+
+    pub fn get_visualizer_intensity(&self) -> f64 {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Self::DEFAULT_VISUALIZER_INTENSITY,
+        };
+        let raw = Self::read_setting_f64(conn, "visualizer_intensity")
+            .unwrap_or(Self::DEFAULT_VISUALIZER_INTENSITY);
+        let migrated = if raw <= 1.0 + 1e-6 {
+            (raw * 1.75).min(Self::MAX_VISUALIZER_INTENSITY)
+        } else {
+            raw
+        };
+        migrated.clamp(0.0, Self::MAX_VISUALIZER_INTENSITY)
+    }
+
+    pub fn set_visualizer_intensity(&self, value: f64) -> Result<f64, String> {
+        let clamped = value.clamp(0.0, Self::MAX_VISUALIZER_INTENSITY);
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(clamped),
+        };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('visualizer_intensity', ?1)",
+            params![clamped.to_string()],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(clamped)
+    }
+
+    pub fn get_visualizer_opacity(&self) -> f64 {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Self::DEFAULT_VISUALIZER_OPACITY,
+        };
+        let raw = Self::read_setting_f64(conn, "visualizer_opacity")
+            .unwrap_or(Self::DEFAULT_VISUALIZER_OPACITY);
+        let migrated = if raw <= 0.551 {
+            if (raw - 0.35).abs() < 0.02 {
+                0.8
+            } else {
+                (raw / 0.55).clamp(0.0, 1.0)
+            }
+        } else {
+            raw
+        };
+        migrated.clamp(0.0, 1.0)
+    }
+
+    pub fn set_visualizer_opacity(&self, value: f64) -> Result<f64, String> {
+        let clamped = value.clamp(0.0, 1.0);
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(clamped),
+        };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('visualizer_opacity', ?1)",
+            params![clamped.to_string()],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(clamped)
     }
 
     pub fn reset_karaoke_colors(&self) -> Result<(), String> {

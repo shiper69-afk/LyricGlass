@@ -24,6 +24,7 @@ body {
 
 #app {
   --bg-alpha: 0.38;
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -331,6 +332,91 @@ button.active {
   padding: 12px 16px 8px;
   min-height: 0;
   overflow: hidden;
+  position: relative;
+}
+
+.visualizer-canvas {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+#app .titlebar {
+  position: relative;
+  z-index: 12;
+}
+
+#app .lyrics-panel,
+#app .hints,
+#app .debug-panel {
+  position: relative;
+  z-index: 2;
+}
+
+#app.visualizer-on .lyrics-lines,
+#app.visualizer-on .lyrics-plain,
+#app.visualizer-on .np-header,
+#app.visualizer-on .lyrics-status,
+#lyrics-root.visualizer-on .lyrics-lines,
+#lyrics-root.visualizer-on .lyrics-plain,
+#lyrics-root.visualizer-on .np-header,
+#lyrics-root.visualizer-on .lyrics-status {
+  position: relative;
+  z-index: 2;
+}
+
+#app.visualizer-on .lyrics-lines,
+#app.visualizer-on .lyrics-plain,
+#lyrics-root.visualizer-on .lyrics-lines,
+#lyrics-root.visualizer-on .lyrics-plain {
+  text-shadow:
+    0 0 2px rgba(0, 0, 0, 1),
+    0 0 10px rgba(0, 0, 0, 1),
+    0 2px 4px rgba(0, 0, 0, 1),
+    0 4px 20px rgba(0, 0, 0, 0.95),
+    0 0 32px rgba(0, 0, 0, 0.85);
+}
+
+#app.visualizer-on .lyric-line.active,
+#lyrics-root.visualizer-on .lyric-line.active {
+  background: rgba(0, 0, 0, 0.38);
+  border-radius: 8px;
+  box-shadow:
+    0 0 24px rgba(0, 0, 0, 0.75),
+    inset 0 0 12px rgba(0, 0, 0, 0.35);
+  text-shadow:
+    0 0 2px #000,
+    0 0 8px #000,
+    0 0 16px #000,
+    0 2px 6px #000,
+    0 0 24px rgba(255, 220, 140, 0.35);
+}
+
+.visualizer-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.visualizer-picker-tile {
+  min-height: 44px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.visualizer-picker-tile.active {
+  border-color: rgba(255, 100, 120, 0.55);
+  background: rgba(255, 90, 110, 0.18);
 }
 
 .np-header {

@@ -10,7 +10,7 @@
     <div id="app">
       <header class="titlebar">
         <span class="brand" data-tauri-drag-region>
-          LyricGlass <small id="app-version">0.7.2</small>
+          LyricGlass <small id="app-version">0.8.1</small>
         </span>
         <div class="titlebar-tools">
           <button
@@ -75,6 +75,16 @@
                 tabindex="-1"
               >
                 Font
+              </button>
+              <button
+                type="button"
+                class="settings-tab"
+                role="tab"
+                data-settings-tab="visualizer"
+                aria-selected="false"
+                tabindex="-1"
+              >
+                Visualizer
               </button>
             </div>
             <div class="settings-body" id="settings-body">
@@ -143,6 +153,39 @@
                 hidden
               >
                 <div id="font-picker" class="font-picker"></div>
+              </div>
+              <div
+                class="settings-panel"
+                data-settings-panel="visualizer"
+                role="tabpanel"
+                hidden
+              >
+                <div
+                  id="visualizer-picker"
+                  class="visualizer-picker"
+                  role="listbox"
+                  aria-label="Music visualizer"
+                ></div>
+                <label class="setting-row">
+                  <span>Intensity</span>
+                  <input
+                    type="range"
+                    id="visualizer-intensity"
+                    min="0"
+                    max="300"
+                    value="150"
+                  />
+                </label>
+                <label class="setting-row">
+                  <span>Opacity</span>
+                  <input
+                    type="range"
+                    id="visualizer-opacity"
+                    min="0"
+                    max="100"
+                    value="80"
+                  />
+                </label>
               </div>
             </div>
           </div>
