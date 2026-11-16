@@ -36,9 +36,19 @@ body {
 
 body.wallpaper-surface,
 #app.wallpaper-surface {
-  background: var(--desktop-wallpaper-url, #1a1a2e) center / cover no-repeat;
+  background: var(
+      --desktop-wallpaper-url,
+      linear-gradient(var(--desktop-wallpaper-fallback, #1a1a2e), var(--desktop-wallpaper-fallback, #1a1a2e))
+    )
+    center / cover no-repeat;
   width: 100vw;
   height: 100vh;
+}
+
+#app.wallpaper-surface .titlebar,
+#app.wallpaper-surface .hints,
+#app.wallpaper-surface .titlebar-tools {
+  display: none !important;
 }
 
 body.wallpaper-mode,

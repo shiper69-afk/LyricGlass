@@ -1,4 +1,5 @@
 use crate::startup;
+use crate::wallpaper_clickthrough;
 use crate::wallpaper_counters;
 use crate::wallpaper_fallback;
 use crate::wallpaper_log;
@@ -290,7 +291,6 @@ mod imp {
         ));
     }
 
-    const HOST_CLASS: &str = "LyricGlassWallpaperHost";
     const FAKE_PROGMAN_CLASS: &str = "LgFakeProgman";
     const FAKE_DEFVIEW_CLASS: &str = "LgFakeShellDefView";
     const FAKE_WORKERW_CLASS: &str = "LgFakeWorkerW";
@@ -668,134 +668,6 @@ mod imp {
             return Err(format!("RegisterClassExW({name}): lastError={err}"));
         }
         Ok(())
-    }
-
-    fn register_host_class(diag: &mut String) -> Result<(), String> {
-        unsafe {
-            register_wnd_class(HOST_CLASS, Some(host_wnd_proc))?;
-        }
-        diag.push_str("host class registered (RegisterClassExW)\n");
-        Ok(())
-    }
-
-    unsafe extern "system" fn host_wnd_proc(
-        hwnd: HWND,
-        msg: u32,
-        wparam: WPARAM,
-        lparam: LPARAM,
-    ) -> windows::Win32::Foundation::LRESULT {
-        DefWindowProcW(hwnd, msg, wparam, lparam)
-    }
-
-    fn apply_host_layered_alpha(host: HWND, diag: &mut String) -> Result<(), String> {
-        unsafe {
-            let ex = GetWindowLongPtrW(host, GWL_EXSTYLE) as u32 | WS_EX_LAYERED;
-            set_window_long_ptr_logged(host, GWL_EXSTYLE, ex as isize, "host exstyle layered", diag);
-            let _ = SetWindowPos(
-                host,
-                None,
-                0,
-                0,
-                0,
-                0,
-                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
-            );
-            let layered_r = SetLayeredWindowAttributes(
-                host,
-                windows::Win32::Foundation::COLORREF(0),
-                255,
-                LWA_ALPHA,
-            );
-            diag.push_str(&format!(
-                "SetLayeredWindowAttributes(host) ret={layered_r:?} lastError={}\n",
-                last_error_code()
-            ));
-            layered_r.map_err(|e| format!("{e}"))
-        }
-    }
-
-    fn create_layered_host(
-        progman: HWND,
-        plan: &WallpaperAttachPlan,
-        x: i32,
-        y: i32,
-        w: i32,
-        h: i32,
-        defer_show: bool,
-        diag: &mut String,
-    ) -> Result<HWND, String> {
-        register_host_class(diag)?;
-        unsafe {
-            use std::ffi::OsStr;
-            use std::os::windows::ffi::OsStrExt;
-            use windows::core::PCWSTR;
-
-            let class_name: Vec<u16> = OsStr::new(HOST_CLASS)
-                .encode_wide()
-                .chain(std::iter::once(0))
-                .collect();
-            let hinst = GetModuleHandleW(None).unwrap_or_default();
-
-            clear_last_error();
-            clear_last_error();
-            let host = CreateWindowExW(
-                windows::Win32::UI::WindowsAndMessaging::WINDOW_EX_STYLE(
-                    WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
-                ),
-                PCWSTR(class_name.as_ptr()),
-                PCWSTR(class_name.as_ptr()),
-                windows::Win32::UI::WindowsAndMessaging::WINDOW_STYLE(
-                    WS_CHILD | WS_CLIPSIBLINGS,
-                ),
-                x,
-                y,
-                w,
-                h,
-                Some(progman),
-                None,
-                Some(hinst.into()),
-                None,
-            )
-            .map_err(|e| {
-                format!(
-                    "CreateWindowExW(host): {e} lastError={}",
-                    last_error_code()
-                )
-            })?;
-            if !hwnd_valid(host) {
-                return Err(format!(
-                    "CreateWindowExW(host): NULL lastError={}",
-                    last_error_code()
-                ));
-            }
-
-            diag.push_str(&format!(
-                "path B: host hwnd=0x{:x} parent=0x{:x}\n",
-                hwnd_to_u64(host),
-                hwnd_to_u64(progman)
-            ));
-
-            let ex_after = GetWindowLongPtrW(host, GWL_EXSTYLE) as u32;
-            log_exstyle_bits("host exstyle at create", ex_after, diag);
-
-            // WS_EX_LAYERED child windows often fail CreateWindowExW / SetLayeredWindowAttributes on
-            // headless runners and some 24H2 builds; layering is optional for the host container.
-            match apply_host_layered_alpha(host, diag) {
-                Ok(()) => diag.push_str("host: WS_EX_LAYERED applied\n"),
-                Err(e) => diag.push_str(&format!("host: WS_EX_LAYERED skipped: {e}\n")),
-            }
-
-            let insert_after = HWND(plan.z_insert_after_hwnd as *mut core::ffi::c_void);
-            let flags = SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOREDRAW;
-            let flags = if defer_show {
-                flags
-            } else {
-                flags | SWP_SHOWWINDOW
-            };
-            SetWindowPos(host, Some(insert_after), x, y, w, h, flags)
-                .map_err(|e| format!("SetWindowPos(host): {e}"))?;
-            Ok(host)
-        }
     }
 
     fn monitor_rect_for_window(hwnd: HWND) -> (RECT, u32) {
@@ -1185,6 +1057,7 @@ mod imp {
         let mut attach_result: Result<(), String> = Err("no host".into());
         let mut chosen_path: Option<ProgmanAttachPath> = None;
         let mut host_hwnd: u64 = 0;
+        let attach_plan_used = layered_plan.clone();
 
         if let Some(plan) = layered_plan {
             match attach_progman_layered(wallpaper_hwnd, plan, snapshot.clone(), &mut diag) {
@@ -1234,6 +1107,19 @@ mod imp {
                     diag.push_str(&format!("outcome: success path={p:?}\n"));
                 } else {
                     diag.push_str("outcome: success legacy\n");
+                }
+                if let (Some(progman), Some(ref plan)) =
+                    (progman(), attach_plan_used.as_ref())
+                {
+                    let defview = HWND(plan.defview_hwnd as *mut core::ffi::c_void);
+                    let workerw = progman_workerw(progman).unwrap_or_else(|| {
+                        HWND(plan.wallpaper_workerw_hwnd as *mut core::ffi::c_void)
+                    });
+                    wallpaper_clickthrough::install_wallpaper_input_guard(wallpaper_hwnd);
+                    wallpaper_clickthrough::start_zorder_watch(
+                        progman, defview, workerw, wallpaper_hwnd,
+                    );
+                    diag.push_str("clickthrough+z-order watch armed\n");
                 }
                 finish_attempt(trigger, "success", true, None, diag);
                 Ok(())
@@ -1298,6 +1184,8 @@ mod imp {
         if fallback {
             wallpaper_fallback::leave_main_fallback(main_hwnd, &mut trace);
         } else {
+            wallpaper_clickthrough::remove_wallpaper_input_guard(wallpaper_hwnd);
+            wallpaper_clickthrough::stop_zorder_watch();
             unsafe {
                 let _ = SetParent(wallpaper_hwnd, None);
             }

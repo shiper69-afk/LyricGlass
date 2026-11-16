@@ -1,5 +1,6 @@
 import { listen } from "@tauri-apps/api/event";
-import { convertFileSrc, invoke } from "@tauri-apps/api/core";
+import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { formatMs, timelineAnchorAgeMs } from "./clock";
 import {
   createPlaybackAnchor,
@@ -17,6 +18,12 @@ import {
 } from "./lyrics-view";
 import { plainSourceLabel } from "./plain-scroll";
 import { applyWallpaperLayout } from "./wallpaper-ui";
+import {
+  applyDesktopWallpaperCss,
+  applyWallpaperSurfaceChrome,
+  type DesktopWallpaperPayload,
+  type WallpaperSurfaceState,
+} from "./wallpaper-surface";
 import {
   fetchWallpaperStatus,
   type WallpaperStatus,
@@ -42,7 +49,7 @@ interface AppearanceState {
 const DEFAULT_BALL_COLOR = "#ffc857";
 const DEFAULT_SUNG_COLOR = "#ffdc8c";
 
-const wallpaperSurface =
+let wallpaperSurface =
   new URLSearchParams(window.location.search).get("mode") === "wallpaper";
 
 const lyricsRoot = document.getElementById("lyrics-root")!;
@@ -454,8 +461,49 @@ async function onSyncMark() {
   await invoke("log_sync_mark", { block });
 }
 
+async function bootstrapWallpaperFromBackend() {
+  const boot = await invoke<WallpaperSurfaceState>("get_wallpaper_surface_state");
+  onMedia(boot.media);
+  applyAppearanceSettings(boot.appearance);
+  lyricsView.setSyncOffsetAbsolute(boot.syncOffsetMs);
+  updateTimingReadout(boot.syncOffsetMs);
+  if (boot.lyrics) {
+    latestLyrics = boot.lyrics;
+    lyricsView.onLyricsResponse(boot.lyrics);
+  }
+}
+
 async function boot() {
+  try {
+    const label = (await getCurrentWebviewWindow()).label;
+    if (label === "wallpaper") {
+      wallpaperSurface = true;
+    }
+  } catch {
+    /* non-tauri harness */
+  }
+
   buildBouncerPicker();
+
+  if (wallpaperSurface) {
+    applyWallpaperSurfaceChrome(appRoot);
+    applyWallpaperLayout(appRoot, true);
+    try {
+      const payload = await invoke<DesktopWallpaperPayload>(
+        "get_desktop_wallpaper_payload",
+      );
+      applyDesktopWallpaperCss(payload);
+      if (payload.readError) {
+        void logDiagnosticsToFile(
+          `Wallpaper bg error: ${payload.readError} path=${payload.path}`,
+        );
+      }
+    } catch (e) {
+      void logDiagnosticsToFile(`Wallpaper bg invoke failed: ${e}`);
+    }
+    await bootstrapWallpaperFromBackend();
+  }
+
   await listen<FullMediaState>("media-state", (e) => onMedia(e.payload));
   await listen<UiState>("ui-state", (e) => renderUi(e.payload));
   await listen<AppearanceState>("appearance-state", (e) =>
@@ -489,25 +537,6 @@ async function boot() {
   onMedia(media);
   renderUi(await invoke<UiState>("get_ui_state"));
   applyAppearanceSettings(await invoke<AppearanceState>("get_appearance"));
-
-  if (wallpaperSurface) {
-    document.body.classList.add("wallpaper-surface");
-    appRoot.classList.add("wallpaper-surface");
-    els.titlebarTools.classList.add("hidden");
-    els.debugPanel.classList.add("hidden");
-    try {
-      const bg = await invoke<string>("get_desktop_wallpaper_url");
-      if (bg) {
-        const src = convertFileSrc(bg);
-        document.documentElement.style.setProperty(
-          "--desktop-wallpaper-url",
-          `url("${src.replace(/"/g, "%22")}")`,
-        );
-      }
-    } catch {
-      /* optional */
-    }
-  }
 
   startTicker();
 

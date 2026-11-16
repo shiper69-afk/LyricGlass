@@ -2,7 +2,9 @@ mod clock;
 mod lyrics;
 mod media;
 mod startup;
+mod desktop_wallpaper;
 mod wallpaper;
+mod wallpaper_clickthrough;
 mod wallpaper_counters;
 mod wallpaper_fallback;
 mod wallpaper_hooks;
@@ -413,6 +415,11 @@ fn set_wallpaper_mode_inner(
         }
         apply_topmost(main, &flags.lock());
         emit_wallpaper_status(&app);
+        if enabled {
+            let _ = app.emit("media-state", app.state::<SharedMediaState>().read().clone());
+            emit_appearance(&service, &app);
+            let _ = app.emit("ui-state", current_ui_state(flags));
+        }
     }
 
     #[cfg(not(windows))]
@@ -481,6 +488,56 @@ fn toggle_wallpaper_mode(
 #[tauri::command]
 fn get_wallpaper_status() -> WallpaperStatus {
     build_wallpaper_status()
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct WallpaperSurfaceState {
+    media: MediaState,
+    appearance: AppearanceState,
+    sync_offset_ms: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    lyrics: Option<LyricsResponse>,
+}
+
+#[tauri::command]
+fn get_wallpaper_surface_state(
+    media: tauri::State<SharedMediaState>,
+    service: tauri::State<SharedLyricsService>,
+) -> WallpaperSurfaceState {
+    let snap = media.read().clone();
+    let appearance = appearance_from_service(&service);
+    let sync_offset_ms = if snap.title.is_empty() && snap.artist.is_empty() {
+        0
+    } else {
+        service.get_sync_offset(
+            &snap.artist,
+            &snap.title,
+            &snap.album,
+            snap.duration_ms,
+        )
+    };
+    let lyrics = if snap.title.is_empty() && snap.artist.is_empty() {
+        None
+    } else {
+        Some(service.fetch(
+            &snap.artist,
+            &snap.title,
+            &snap.album,
+            snap.duration_ms,
+        ))
+    };
+    WallpaperSurfaceState {
+        media: snap,
+        appearance,
+        sync_offset_ms,
+        lyrics,
+    }
+}
+
+#[tauri::command]
+fn get_desktop_wallpaper_payload() -> desktop_wallpaper::DesktopWallpaperPayload {
+    desktop_wallpaper::desktop_wallpaper_payload()
 }
 
 #[cfg(windows)]
@@ -827,6 +884,8 @@ pub fn run() {
             get_wallpaper_status,
             open_lyricglass_log_folder,
             get_desktop_wallpaper_url,
+            get_desktop_wallpaper_payload,
+            get_wallpaper_surface_state,
         ])
         .setup({
             let flags = flags.clone();

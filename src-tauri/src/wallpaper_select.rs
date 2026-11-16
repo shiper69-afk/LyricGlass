@@ -69,10 +69,6 @@ pub fn verify_progman_layered_state(input: &ProgmanAttachVerifyInput) -> Result<
     )
 }
 
-pub fn should_try_path_b(path_a: Result<(), &'static str>) -> bool {
-    path_a.is_err()
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WallpaperAttachPlan {
     pub layout: DesktopLayout,
@@ -333,38 +329,6 @@ mod tests {
             z_order_parent: progman,
         };
         verify_progman_layered_state(&input).unwrap();
-    }
-
-    #[test]
-    fn path_b_fallback_when_path_a_z_order_fails() {
-        const LYRIC: u64 = 0x421306;
-        const HOST: u64 = 0xbeef;
-        let progman = 0x1029e;
-        let bad = ProgmanAttachVerifyInput {
-            progman_hwnd: progman,
-            our_hwnd: LYRIC,
-            our_parent: progman,
-            our_parent_expected: progman,
-            defview_hwnd: 0x102ae,
-            wallpaper_workerw_hwnd: 0xfa0f6e,
-            rect_w: 1920,
-            rect_h: 1080,
-            visible: true,
-            siblings_top_to_bottom: vec![(0x102ae, 0), (0xfa0f6e, 1), (LYRIC, 2)],
-            z_order_hwnd: LYRIC,
-            z_order_parent: progman,
-        };
-        assert!(verify_progman_layered_state(&bad).is_err());
-        assert!(should_try_path_b(verify_progman_layered_state(&bad)));
-
-        let good_host = ProgmanAttachVerifyInput {
-            our_parent: HOST,
-            our_parent_expected: HOST,
-            z_order_hwnd: HOST,
-            siblings_top_to_bottom: vec![(0x102ae, 0), (HOST, 1), (0xfa0f6e, 2)],
-            ..bad
-        };
-        verify_progman_layered_state(&good_host).unwrap();
     }
 
     #[test]
