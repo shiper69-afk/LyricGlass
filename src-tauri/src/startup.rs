@@ -65,6 +65,14 @@ pub fn arm_main_watchdog() {
     main_heartbeat();
 }
 
+pub fn start_main_heartbeat_pinger(app: tauri::AppHandle) {
+    std::thread::spawn(move || loop {
+        std::thread::sleep(Duration::from_secs(1));
+        let app = app.clone();
+        let _ = app.run_on_main_thread(|| main_heartbeat());
+    });
+}
+
 fn start_main_watchdog() {
     WATCHDOG_STARTED.get_or_init(|| {
         std::thread::spawn(|| loop {

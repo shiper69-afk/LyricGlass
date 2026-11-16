@@ -1,5 +1,5 @@
 import { listen } from "@tauri-apps/api/event";
-import { invoke } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { formatMs, timelineAnchorAgeMs } from "./clock";
 import {
   createPlaybackAnchor,
@@ -498,9 +498,10 @@ async function boot() {
     try {
       const bg = await invoke<string>("get_desktop_wallpaper_url");
       if (bg) {
+        const src = convertFileSrc(bg);
         document.documentElement.style.setProperty(
           "--desktop-wallpaper-url",
-          `url("${bg.replace(/"/g, "%22")}")`,
+          `url("${src.replace(/"/g, "%22")}")`,
         );
       }
     } catch {

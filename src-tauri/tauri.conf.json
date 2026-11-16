@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "LyricGlass",
-  "version": "0.6.8",
+  "version": "0.6.9",
   "identifier": "com.lyricglass.spike",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -25,7 +25,8 @@
         "resizable": true,
         "shadow": false,
         "visible": true,
-        "noRedirectionBitmap": true
+        "noRedirectionBitmap": true,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows --disable-renderer-backgrounding"
       },
       {
         "label": "wallpaper",
@@ -40,7 +41,8 @@
         "shadow": false,
         "visible": false,
         "skipTaskbar": true,
-        "focusable": false
+        "focusable": false,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection,CalculateNativeWinOcclusion --disable-backgrounding-occluded-windows --disable-renderer-backgrounding"
       }
     ],
     "security": {

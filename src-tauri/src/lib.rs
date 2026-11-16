@@ -3,9 +3,13 @@ mod lyrics;
 mod media;
 mod startup;
 mod wallpaper;
+mod wallpaper_counters;
+mod wallpaper_fallback;
+mod wallpaper_hooks;
 mod wallpaper_placement;
 mod wallpaper_log;
 mod wallpaper_select;
+mod wallpaper_webview;
 #[cfg(windows)]
 mod wallpaper_selftest;
 
@@ -356,7 +360,7 @@ fn set_wallpaper_mode_inner(
             let _ = wallpaper.show();
             apply_wallpaper_shell(&wallpaper, true)?;
             let wp_hwnd = wallpaper.hwnd().map_err(|e| e.to_string())?;
-            if let Err(e) = wallpaper::attach_wallpaper(wp_hwnd, trigger) {
+            if let Err(e) = wallpaper::attach_wallpaper(wp_hwnd, main_hwnd, trigger) {
                 if persist {
                     let _ = service.set_wallpaper_mode(false);
                 }
@@ -371,12 +375,28 @@ fn set_wallpaper_mode_inner(
                 let _ = app.emit("wallpaper-attach-failed", &e);
                 return Err(e);
             }
+            if wallpaper::is_fallback_overlay() {
+                let _ = wallpaper.hide();
+                let _ = main.show();
+                let _ = main.set_ignore_cursor_events(true);
+                let _ = main.set_always_on_top(false);
+            } else {
+                let mut sync_diag = String::new();
+                wallpaper_webview::sync_webview_controller(&wallpaper, &mut sync_diag);
+                if !sync_diag.is_empty() {
+                    startup::log_diagnostic(&format!("WALLPAPER WEBVIEW2 SYNC\n{sync_diag}"));
+                }
+            }
             if persist {
                 service.set_wallpaper_mode(true)?;
             }
         } else {
+            let was_fallback = wallpaper::is_fallback_overlay();
             let wp_hwnd = wallpaper.hwnd().map_err(|e| e.to_string())?;
-            wallpaper::detach_wallpaper(wp_hwnd, trigger)?;
+            wallpaper::detach_wallpaper(wp_hwnd, main_hwnd, trigger)?;
+            if was_fallback {
+                let _ = main.set_ignore_cursor_events(false);
+            }
             let _ = wallpaper.hide();
             let main_hwnd = main.hwnd().map_err(|e| e.to_string())?;
             let saved = wallpaper::take_main_placement();
@@ -716,6 +736,38 @@ fn build_tray(app: &AppHandle) {
     }
 }
 
+#[cfg(windows)]
+fn wallpaper_reattach_from_explorer(app: &AppHandle, trigger: &str) {
+    if !wallpaper::is_attached() || wallpaper::is_fallback_overlay() {
+        return;
+    }
+    startup::step(&format!("wallpaper: explorer reattach requested ({trigger})"));
+    let Some(main) = app.get_webview_window("main") else {
+        return;
+    };
+    let Some(wallpaper) = app.get_webview_window("wallpaper") else {
+        return;
+    };
+    let Ok(main_hwnd) = main.hwnd() else {
+        return;
+    };
+    let Ok(wp_hwnd) = wallpaper.hwnd() else {
+        return;
+    };
+    use windows::Win32::Foundation::HWND;
+    let main_native = HWND(main_hwnd.0 as _);
+    let wp_native = HWND(wp_hwnd.0 as _);
+    if wallpaper::reattach_desktop(wp_native, main_native, trigger).is_err() {
+        startup::step(&format!("wallpaper: reattach failed ({trigger})"));
+        return;
+    }
+    if !wallpaper::is_fallback_overlay() {
+        let mut sync_diag = String::new();
+        wallpaper_webview::sync_webview_controller(&wallpaper, &mut sync_diag);
+    }
+    emit_wallpaper_status(app);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     startup::install_panic_hook();
@@ -801,6 +853,20 @@ pub fn run() {
                     .handle()
                     .emit("appearance-state", appearance_from_service(&appearance));
                 startup::step("tauri setup complete — WebView2 loading");
+                #[cfg(windows)]
+                {
+                    use std::sync::Arc;
+                    let app_hooks = app.handle().clone();
+                    wallpaper_hooks::set_reattach_handler(Arc::new(move |trigger| {
+                        wallpaper_reattach_from_explorer(&app_hooks, trigger);
+                    }));
+                    if let Some(main_w) = app.get_webview_window("main") {
+                        if let Ok(hwnd) = main_w.hwnd() {
+                            use windows::Win32::Foundation::HWND;
+                            wallpaper_hooks::install(HWND(hwnd.0 as _), app.handle().clone());
+                        }
+                    }
+                }
                 if service.get_wallpaper_mode() {
                     let flags_deferred = flags.clone();
                     let app_h = app.handle().clone();
@@ -861,8 +927,8 @@ pub fn run() {
                     RunEvent::Ready => {
                         startup::step("tauri event loop Ready");
                         startup::arm_main_watchdog();
+                        startup::start_main_heartbeat_pinger(_app_handle.clone());
                     }
-                    RunEvent::MainEventsCleared => startup::main_heartbeat(),
                     _ => {}
                 }
             });

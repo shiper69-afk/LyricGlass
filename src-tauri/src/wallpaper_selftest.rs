@@ -67,10 +67,10 @@ pub fn run() -> i32 {
         hwnd
     };
 
-    let outcome = wallpaper::attach_wallpaper(hwnd, "selftest");
+    let outcome = wallpaper::attach_wallpaper(hwnd, hwnd, "selftest");
     let code = match &outcome {
         Ok(()) => {
-            let _ = wallpaper::detach_wallpaper(hwnd, "selftest");
+            let _ = wallpaper::detach_wallpaper(hwnd, hwnd, "selftest");
             0
         }
         Err(_) => 1,
