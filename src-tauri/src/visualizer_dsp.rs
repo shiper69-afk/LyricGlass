@@ -34,6 +34,23 @@ pub fn normalize_bands(bands: &mut [f32]) {
     }
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct AgcState {
+    pub peak: f32,
+}
+
+/// Slow AGC so quiet passages still animate without per-frame hard normalization.
+pub fn auto_gain_bands(bands: &mut [f32], state: &mut AgcState) {
+    let instant = bands.iter().copied().fold(0.0f32, f32::max);
+    state.peak = state.peak * 0.94 + instant * 0.06;
+    let floor = 0.06;
+    let target = state.peak.max(floor);
+    let gain = (0.88 / target).min(6.0);
+    for v in bands.iter_mut() {
+        *v = (*v * gain).clamp(0.0, 1.0);
+    }
+}
+
 pub fn smooth_bands(prev: &[f32], next: &[f32], attack: f32, release: f32) -> Vec<f32> {
     let n = prev.len().min(next.len());
     let mut out = vec![0.0; n];
@@ -77,9 +94,14 @@ pub struct BeatState {
 }
 
 pub fn bands_to_u8(bands: &[f32], intensity: f32) -> Vec<u8> {
+    let gain = intensity.clamp(0.0, 3.0);
     bands
         .iter()
-        .map(|v| (v * intensity.clamp(0.0, 1.0) * 255.0).round() as u8)
+        .map(|v| {
+            let x = v * gain;
+            let boosted = 1.0 - (-x * 2.4).exp();
+            (boosted * 255.0).round().clamp(0.0, 255.0) as u8
+        })
         .collect()
 }
 
@@ -113,5 +135,22 @@ mod tests {
         assert!(!detect_beat(0.05, &mut st));
         assert!(detect_beat(0.35, &mut st));
         assert!(!detect_beat(0.36, &mut st));
+    }
+
+    #[test]
+    fn bands_to_u8_respects_high_intensity() {
+        let bands = vec![0.25, 0.5, 0.75];
+        let low = bands_to_u8(&bands, 1.0);
+        let high = bands_to_u8(&bands, 2.5);
+        assert!(high[1] > low[1]);
+        assert!(high[2] >= 200);
+    }
+
+    #[test]
+    fn agc_lifts_quiet_signal() {
+        let mut bands = vec![0.02, 0.03, 0.01];
+        let mut st = AgcState::default();
+        auto_gain_bands(&mut bands, &mut st);
+        assert!(bands[0] > 0.1);
     }
 }

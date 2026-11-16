@@ -280,8 +280,9 @@ impl LyricsCache {
     pub const DEFAULT_LYRICS_FONT: &'static str = "default";
 
     pub const DEFAULT_VISUALIZER_KIND: &'static str = "off";
-    pub const DEFAULT_VISUALIZER_INTENSITY: f64 = 0.85;
-    pub const DEFAULT_VISUALIZER_OPACITY: f64 = 0.35;
+    pub const DEFAULT_VISUALIZER_INTENSITY: f64 = 1.5;
+    pub const DEFAULT_VISUALIZER_OPACITY: f64 = 0.8;
+    const MAX_VISUALIZER_INTENSITY: f64 = 3.0;
 
     pub const VISUALIZER_KIND_IDS: &[&str] = &[
         "off",
@@ -513,13 +514,18 @@ impl LyricsCache {
             Some(c) => c,
             None => return Self::DEFAULT_VISUALIZER_INTENSITY,
         };
-        Self::read_setting_f64(conn, "visualizer_intensity")
-            .unwrap_or(Self::DEFAULT_VISUALIZER_INTENSITY)
-            .clamp(0.0, 1.0)
+        let raw = Self::read_setting_f64(conn, "visualizer_intensity")
+            .unwrap_or(Self::DEFAULT_VISUALIZER_INTENSITY);
+        let migrated = if raw <= 1.0 + 1e-6 {
+            (raw * 1.75).min(Self::MAX_VISUALIZER_INTENSITY)
+        } else {
+            raw
+        };
+        migrated.clamp(0.0, Self::MAX_VISUALIZER_INTENSITY)
     }
 
     pub fn set_visualizer_intensity(&self, value: f64) -> Result<f64, String> {
-        let clamped = value.clamp(0.0, 1.0);
+        let clamped = value.clamp(0.0, Self::MAX_VISUALIZER_INTENSITY);
         let conn = match &self.conn {
             Some(c) => c,
             None => return Ok(clamped),
@@ -537,13 +543,22 @@ impl LyricsCache {
             Some(c) => c,
             None => return Self::DEFAULT_VISUALIZER_OPACITY,
         };
-        Self::read_setting_f64(conn, "visualizer_opacity")
-            .unwrap_or(Self::DEFAULT_VISUALIZER_OPACITY)
-            .clamp(0.0, 0.55)
+        let raw = Self::read_setting_f64(conn, "visualizer_opacity")
+            .unwrap_or(Self::DEFAULT_VISUALIZER_OPACITY);
+        let migrated = if raw <= 0.551 {
+            if (raw - 0.35).abs() < 0.02 {
+                0.8
+            } else {
+                (raw / 0.55).clamp(0.0, 1.0)
+            }
+        } else {
+            raw
+        };
+        migrated.clamp(0.0, 1.0)
     }
 
     pub fn set_visualizer_opacity(&self, value: f64) -> Result<f64, String> {
-        let clamped = value.clamp(0.0, 0.55);
+        let clamped = value.clamp(0.0, 1.0);
         let conn = match &self.conn {
             Some(c) => c,
             None => return Ok(clamped),

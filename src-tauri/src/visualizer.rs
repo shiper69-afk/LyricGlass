@@ -8,8 +8,7 @@ use crate::lyrics::SharedLyricsService;
 use crate::media::SharedMediaState;
 use crate::startup;
 use dsp::{
-    bands_to_u8, detect_beat, magnitudes_to_bands, overall_level, smooth_bands, BeatState,
-    BAND_COUNT, FFT_SIZE,
+    bands_to_u8, detect_beat, magnitudes_to_bands, overall_level, smooth_bands,     auto_gain_bands, AgcState, BeatState, BAND_COUNT, FFT_SIZE,
 };
 use serde::Serialize;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -111,6 +110,7 @@ fn audio_loop(app: AppHandle, media: SharedMediaState, service: SharedLyricsServ
 
     let mut smoothed = vec![0.0f32; BAND_COUNT];
     let mut beat_state = BeatState::default();
+    let mut agc_state = AgcState::default();
     let mut sample_buf: VecDeque<f32> = VecDeque::with_capacity(FFT_SIZE * 2);
     let mut last_loud = Instant::now();
     let mut last_emit = Instant::now() - Duration::from_secs(1);
@@ -150,6 +150,7 @@ fn audio_loop(app: AppHandle, media: SharedMediaState, service: SharedLyricsServ
                 .collect();
             let raw = magnitudes_to_bands(&mags, BAND_COUNT);
             smoothed = smooth_bands(&smoothed, &raw, 0.45, 0.12);
+            auto_gain_bands(&mut smoothed, &mut agc_state);
             let level = overall_level(&smoothed);
             if level > 0.04 {
                 last_loud = Instant::now();

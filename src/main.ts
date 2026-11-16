@@ -64,11 +64,11 @@ const DEFAULT_SUNG_COLOR = "#ffdc8c";
 let wallpaperSurface =
   new URLSearchParams(window.location.search).get("mode") === "wallpaper";
 
+const appRoot = document.getElementById("app")!;
 const lyricsRoot = document.getElementById("lyrics-root")!;
 const lyricsView = new LyricsView(lyricsRoot);
-const visualizerEngine = new VisualizerEngine(lyricsRoot);
+const visualizerEngine = new VisualizerEngine(appRoot);
 setLyricsFontChangeHook(() => lyricsView.onLyricsFontChanged());
-const appRoot = document.getElementById("app")!;
 
 /** E2e / `?mode=wallpaper` harness: chrome before async Tauri boot. */
 function primeWallpaperSurfaceChrome() {
@@ -201,11 +201,12 @@ function buildFontPickerUi() {
 
 function applyVisualizerAppearance(state: AppearanceState) {
   const kind = normalizeVisualizerKind(state.visualizerKind ?? "off");
-  const intensity = state.visualizerIntensity ?? 0.85;
-  const opacity = state.visualizerOpacity ?? 0.35;
+  const intensity = state.visualizerIntensity ?? 1.5;
+  const opacity = state.visualizerOpacity ?? 0.8;
   els.visualizerIntensity.value = String(Math.round(intensity * 100));
   els.visualizerOpacity.value = String(Math.round(opacity * 100));
   setVisualizerPickerSelection(els.visualizerPicker, kind);
+  appRoot.classList.toggle("visualizer-on", kind !== "off");
   lyricsRoot.classList.toggle("visualizer-on", kind !== "off");
   visualizerEngine.setOptions({
     kind,
