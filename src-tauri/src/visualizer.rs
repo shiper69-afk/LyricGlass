@@ -13,9 +13,9 @@ use dsp::{
 };
 use serde::Serialize;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
+use std::collections::VecDeque;
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 pub static UI_ACTIVE: AtomicBool = AtomicBool::new(true);
 
@@ -75,7 +75,8 @@ fn should_run(app: &AppHandle, service: &SharedLyricsService, media: &crate::med
 }
 
 pub fn start(app: AppHandle, media: SharedMediaState, service: SharedLyricsService) {
-    std::thread::spawn(move || visibility_poll_loop(app.clone()));
+    let poll_app = app.clone();
+    std::thread::spawn(move || visibility_poll_loop(poll_app));
     std::thread::spawn(move || {
         startup::step("visualizer: coordinator thread started");
         #[cfg(windows)]
@@ -181,7 +182,7 @@ fn audio_loop(app: AppHandle, media: SharedMediaState, service: SharedLyricsServ
 fn read_loopback_chunk() -> Result<Vec<f32>, String> {
     use std::cell::RefCell;
     use wasapi::{
-        initialize_mta, DeviceEnumerator, Direction, SampleType, StreamMode, WaveFormat,
+        get_default_device, initialize_mta, Direction, SampleType, StreamMode, WaveFormat,
     };
 
     thread_local! {
@@ -197,20 +198,19 @@ fn read_loopback_chunk() -> Result<Vec<f32>, String> {
 
     CAPTURE.with(|cell| {
         if cell.borrow().is_none() {
-            initialize_mta().map_err(|e| e.to_string())?;
-            let enumerator = DeviceEnumerator::new().map_err(|e| e.to_string())?;
-            let device = enumerator
-                .get_default_device(Direction::Render)
-                .map_err(|e| e.to_string())?;
+            initialize_mta()
+                .ok()
+                .map_err(|e| format!("initialize_mta: {e}"))?;
+            let device = get_default_device(&Direction::Render).map_err(|e| e.to_string())?;
             let mut audio_client = device.get_iaudioclient().map_err(|e| e.to_string())?;
-            let format = WaveFormat::new(32, 32, SampleType::Float, 48_000, 2, None);
+            let format = WaveFormat::new(32, 32, &SampleType::Float, 48_000, 2, None);
             let (_, min_time) = audio_client.get_device_period().map_err(|e| e.to_string())?;
             let mode = StreamMode::PollingShared {
                 autoconvert: true,
                 buffer_duration_hns: min_time,
             };
             audio_client
-                .initialize_client(&format, Direction::Capture, mode, None)
+                .initialize_client(&format, &Direction::Capture, &mode)
                 .map_err(|e| e.to_string())?;
             audio_client.start_stream().map_err(|e| e.to_string())?;
             let capture = audio_client.get_audiocaptureclient().map_err(|e| e.to_string())?;
