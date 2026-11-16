@@ -42,6 +42,9 @@ interface AppearanceState {
 const DEFAULT_BALL_COLOR = "#ffc857";
 const DEFAULT_SUNG_COLOR = "#ffdc8c";
 
+const wallpaperSurface =
+  new URLSearchParams(window.location.search).get("mode") === "wallpaper";
+
 const lyricsRoot = document.getElementById("lyrics-root")!;
 const lyricsView = new LyricsView(lyricsRoot);
 const appRoot = document.getElementById("app")!;
@@ -486,6 +489,24 @@ async function boot() {
   onMedia(media);
   renderUi(await invoke<UiState>("get_ui_state"));
   applyAppearanceSettings(await invoke<AppearanceState>("get_appearance"));
+
+  if (wallpaperSurface) {
+    document.body.classList.add("wallpaper-surface");
+    appRoot.classList.add("wallpaper-surface");
+    els.titlebarTools.classList.add("hidden");
+    els.debugPanel.classList.add("hidden");
+    try {
+      const bg = await invoke<string>("get_desktop_wallpaper_url");
+      if (bg) {
+        document.documentElement.style.setProperty(
+          "--desktop-wallpaper-url",
+          `url("${bg.replace(/"/g, "%22")}")`,
+        );
+      }
+    } catch {
+      /* optional */
+    }
+  }
 
   startTicker();
 

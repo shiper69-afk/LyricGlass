@@ -1,5 +1,6 @@
 use crate::startup;
 use crate::wallpaper_log;
+use crate::wallpaper_placement::{ensure_restored_visible, SavedPlacement};
 use crate::wallpaper_select::{
     choose_wallpaper_parent, plan_progman_layered_attach, verify_progman_layered_state,
     DesktopLayout, DesktopWindowInfo,
@@ -50,6 +51,10 @@ struct WallpaperRestore {
     host_hwnd: u64,
     #[cfg(windows)]
     attach_path: Option<ProgmanAttachPath>,
+    #[cfg(windows)]
+    main_placement: SavedPlacement,
+    #[cfg(windows)]
+    fallback_overlay: bool,
 }
 
 static WALLPAPER_STATE: LazyLock<Mutex<WallpaperRestore>> =
@@ -71,7 +76,8 @@ mod imp {
         FindWindowExW, FindWindowW, GetClassNameW, GetParent, GetWindow, GetWindowLongPtrW,
         GetWindowRect, IsWindow, IsWindowVisible, RegisterClassExW, SendMessageTimeoutW,
         SendMessageW, SetLayeredWindowAttributes, SetParent, SetWindowLongPtrW, SetWindowPos,
-        ShowWindow, WNDCLASSEXW, GWL_EXSTYLE, GWL_STYLE, GW_CHILD, GW_HWNDNEXT, HWND_NOTOPMOST,
+        ShowWindow, WNDCLASSEXW, GWL_EXSTYLE, GWL_STYLE, GW_CHILD, GW_HWNDNEXT, HWND_BOTTOM,
+        HWND_NOTOPMOST,
         SHOW_WINDOW_CMD,
         LWA_ALPHA, SMTO_ABORTIFHUNG, SWP_FRAMECHANGED, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOREDRAW,
         SWP_NOSIZE, SWP_NOZORDER, SWP_SHOWWINDOW, SW_SHOW, WM_SETREDRAW,
@@ -80,6 +86,7 @@ mod imp {
     const PROGMAN_DESKTOP_MSG: u32 = 0x052C;
     const WS_CHILD: u32 = 0x4000_0000;
     const WS_CLIPSIBLINGS: u32 = 0x0400_0000;
+    const WS_MINIMIZE: u32 = 0x2000_0000;
     const WS_POPUP: u32 = 0x8000_0000;
     const WS_CAPTION: u32 = 0x00C0_0000;
     const WS_THICKFRAME: u32 = 0x0004_0000;
@@ -477,12 +484,45 @@ mod imp {
         ctx.windows
     }
 
+    fn apply_layered_alpha_before_parent(hwnd: HWND, diag: &mut String) -> Result<(), String> {
+        unsafe {
+            let ex = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32 | WS_EX_LAYERED;
+            set_window_long_ptr_logged(hwnd, GWL_EXSTYLE, ex as isize, "layered before parent", diag);
+            let _ = SetWindowPos(
+                hwnd,
+                None,
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED,
+            );
+            let layered_r = SetLayeredWindowAttributes(
+                hwnd,
+                windows::Win32::Foundation::COLORREF(0),
+                255,
+                LWA_ALPHA,
+            );
+            diag.push_str(&format!(
+                "SetLayeredWindowAttributes(255) pre-SetParent ret={layered_r:?} lastError={}\n",
+                last_error_code()
+            ));
+            layered_r.map_err(|e| format!("SetLayeredWindowAttributes: {e}"))?;
+            let ex_after = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
+            if ex_after & WS_EX_LAYERED == 0 {
+                return Err("WS_EX_LAYERED did not stick before SetParent".into());
+            }
+        }
+        Ok(())
+    }
+
     fn apply_wallpaper_styles(
         hwnd: HWND,
         snapshot: &WallpaperRestore,
         diag: &mut String,
         preserve_noredirection: bool,
     ) -> Result<(), String> {
+        ensure_restored_visible(hwnd);
         unsafe {
             let style_before = GetWindowLongPtrW(hwnd, GWL_STYLE);
             let ex_before = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
@@ -498,22 +538,24 @@ mod imp {
                 | WS_MAXIMIZEBOX
                 | WS_SYSMENU
                 | WS_BORDER
-                | WS_DLGFRAME;
-            let style = (style & !strip) | WS_CHILD;
+                | WS_DLGFRAME
+                | WS_MINIMIZE;
+            let style = (style & !strip) | WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE;
             log_style_bits("style requested", style, diag);
             set_window_long_ptr_logged(hwnd, GWL_STYLE, style as isize, "style", diag);
 
             let mut ex = ex_before as u32;
             ex &= !WS_EX_TOPMOST;
             ex &= !WS_EX_APPWINDOW;
-            ex &= !WS_EX_LAYERED;
-            ex |= WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
+            ex &= !WS_EX_NOREDIRECTIONBITMAP;
+            ex |= WS_EX_LAYERED | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
             if preserve_noredirection {
                 ex |= WS_EX_NOREDIRECTIONBITMAP;
             }
             log_exstyle_bits("exstyle requested", ex, diag);
             set_window_long_ptr_logged(hwnd, GWL_EXSTYLE, ex as isize, "exstyle", diag);
             force_clear_topmost(hwnd, diag);
+            apply_layered_alpha_before_parent(hwnd, diag)?;
 
             let style_after = GetWindowLongPtrW(hwnd, GWL_STYLE);
             let ex_after = GetWindowLongPtrW(hwnd, GWL_EXSTYLE) as u32;
@@ -844,14 +886,14 @@ mod imp {
         fill_parent: bool,
     ) -> Result<(), String> {
         unsafe {
+            apply_wallpaper_styles(hwnd, snapshot, diag, false)?;
+
             let sp = SetParent(hwnd, Some(parent));
             diag.push_str(&format!(
                 "SetParent({host_label}) ret={sp:?} lastError={}\n",
                 last_error_code()
             ));
             sp.map_err(|e| format!("SetParent({host_label}): {e}"))?;
-
-            apply_wallpaper_styles(hwnd, snapshot, diag, true)?;
 
             let full = child_screen_rect(parent, hwnd);
             let (x, y, w, h) = if fill_parent {
@@ -963,8 +1005,8 @@ mod imp {
 
         set_redraw(hwnd, false, diag);
         force_clear_topmost(hwnd, diag);
-        diag.push_str("attach path A: direct Progman child (no WS_EX_LAYERED)\n");
-        let path_a_result = reparent_fullscreen(
+        diag.push_str("attach: wallpaper webview direct Progman child (WS_EX_LAYERED alpha 255)\n");
+        reparent_fullscreen(
             hwnd,
             parent,
             "Progman",
@@ -974,55 +1016,61 @@ mod imp {
             Some(insert_after),
             true,
             false,
-        );
-        if let Err(e) = path_a_result {
-            diag.push_str(&format!("path A attach failed: {e} — trying path B\n"));
-        } else if let Err(e) = finalize_progman_show(hwnd, insert_after, None, diag) {
-            diag.push_str(&format!("path A finalize failed: {e} — trying path B\n"));
-        } else {
-            let verify = verify_attach(hwnd, &plan, ProgmanAttachPath::A, 0, diag);
-            match verify {
-                Ok(()) => {
-                    diag.push_str("path A: success\n");
-                    return Ok((ProgmanAttachPath::A, 0));
-                }
-                Err(e) => {
-                    diag.push_str(&format!("path A verify failed: {e} — trying path B\n"));
-                }
-            }
-        }
-
-        let mut snap = snapshot.clone();
-        rollback_attach(hwnd, &snap, diag);
-
-        diag.push_str("attach path B: layered host + reparent content\n");
-        set_redraw(hwnd, false, diag);
-        let host = create_layered_host(parent, &plan, x, y, w, h, true, diag)?;
-        let host_id = hwnd_to_u64(host);
-        reparent_fullscreen(
-            hwnd,
-            host,
-            "LyricGlassHost",
-            Some(DesktopLayout::ProgmanLayered),
-            &snapshot,
-            diag,
-            None,
-            true,
-            true,
         )?;
-        if let Err(e) = finalize_progman_show(hwnd, insert_after, Some(host), diag) {
-            snap.host_hwnd = host_id;
-            rollback_attach(hwnd, &snap, diag);
-            return Err(format!("path B finalize: {e}"));
+        finalize_progman_show(hwnd, insert_after, None, diag)?;
+        sync_webview_bounds_after_reparent(hwnd, diag)?;
+        verify_attach(hwnd, &plan, ProgmanAttachPath::A, 0, diag)?;
+        diag.push_str("attach: Progman layered success\n");
+        Ok((ProgmanAttachPath::A, 0))
+    }
+
+    fn sync_webview_bounds_after_reparent(hwnd: HWND, diag: &mut String) {
+        unsafe {
+            let parent = GetParent(hwnd).unwrap_or(HWND::default());
+            let mut client = RECT::default();
+            if parent.0.is_null() {
+                return;
+            }
+            let _ = GetWindowRect(parent, &mut client);
+            let w = client.right - client.left;
+            let h = client.bottom - client.top;
+            let _ = SetWindowPos(
+                hwnd,
+                None,
+                0,
+                0,
+                w,
+                h,
+                SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW,
+            );
+            let _ = ShowWindow(hwnd, SHOW_WINDOW_CMD(SW_SHOWNA));
+            diag.push_str(&format!(
+                "sync_webview_bounds parent client {w}x{h} lastError={}\n",
+                last_error_code()
+            ));
         }
-        let verify = verify_attach(hwnd, &plan, ProgmanAttachPath::B, host_id, diag);
-        if verify.is_err() {
-            snap.host_hwnd = host_id;
-            rollback_attach(hwnd, &snap, diag);
-            return Err(format!("path B verify: {}", verify.err().unwrap_or_default()));
+    }
+
+    pub fn attach_fallback_overlay(hwnd: HWND, diag: &mut String) -> Result<(), String> {
+        unsafe {
+            ensure_restored_visible(hwnd);
+            let _ = SetParent(hwnd, None);
+            force_clear_topmost(hwnd, diag);
+            let (monitor, _) = monitor_rect_for_window(hwnd);
+            let w = monitor.right - monitor.left;
+            let h = monitor.bottom - monitor.top;
+            let _ = SetWindowPos(
+                hwnd,
+                Some(HWND_BOTTOM),
+                monitor.left,
+                monitor.top,
+                w,
+                h,
+                SWP_NOACTIVATE | SWP_SHOWWINDOW,
+            );
+            diag.push_str("fallback: bottom-most overlay (not reparented)\n");
         }
-        diag.push_str("path B: success\n");
-        Ok((ProgmanAttachPath::B, host_id))
+        Ok(())
     }
 
     pub fn attach_wallpaper(hwnd: HWND, trigger: &str) -> Result<(), String> {
@@ -1130,6 +1178,7 @@ mod imp {
             Ok(()) => {
                 guard.attached = true;
                 guard.host_hwnd = host_hwnd;
+                guard.fallback_overlay = false;
                 guard.attach_path = chosen_path;
                 if let Some(ref p) = chosen_path {
                     diag.push_str(&format!("outcome: success path={p:?}\n"));
@@ -1143,9 +1192,21 @@ mod imp {
                 let mut snap = snapshot;
                 snap.host_hwnd = host_hwnd;
                 rollback_attach(hwnd, &snap, &mut diag);
+                if attach_fallback_overlay(hwnd, &mut diag).is_ok() {
+                    guard.attached = true;
+                    guard.fallback_overlay = true;
+                    guard.host_hwnd = 0;
+                    guard.attach_path = None;
+                    diag.push_str(&format!(
+                        "outcome: fallback overlay after failure ({e})\n"
+                    ));
+                    finish_attempt(trigger, "fallback", true, None, diag);
+                    return Ok(());
+                }
                 guard.attached = false;
                 guard.host_hwnd = 0;
                 guard.attach_path = None;
+                guard.fallback_overlay = false;
                 diag.push_str(&format!("outcome: failure ({e}) — rolled back overlay\n"));
                 finish_attempt(trigger, "failure", false, Some(e.clone()), diag);
                 Err(e.clone())
@@ -1187,6 +1248,19 @@ mod imp {
 
     pub fn is_attached() -> bool {
         WALLPAPER_STATE.lock().attached
+    }
+
+    pub fn remember_main_placement(placement: SavedPlacement) {
+        WALLPAPER_STATE.lock().main_placement = placement;
+    }
+
+    pub fn take_main_placement() -> SavedPlacement {
+        let mut g = WALLPAPER_STATE.lock();
+        std::mem::take(&mut g.main_placement)
+    }
+
+    pub fn is_fallback_overlay() -> bool {
+        WALLPAPER_STATE.lock().fallback_overlay
     }
 
     #[cfg(test)]
@@ -1314,74 +1388,7 @@ mod imp {
         }
 
         #[test]
-        fn layered_host_creates_under_fake_progman() {
-            let fake = create_fake_desktop().expect("fake desktop");
-            let mut diag = String::new();
-            let plan = WallpaperAttachPlan {
-                layout: crate::wallpaper_select::DesktopLayout::ProgmanLayered,
-                parent_hwnd: hwnd_to_u64(fake.progman),
-                z_insert_after_hwnd: hwnd_to_u64(fake.defview),
-                defview_hwnd: hwnd_to_u64(fake.defview),
-                wallpaper_workerw_hwnd: hwnd_to_u64(fake.workerw),
-            };
-            let host = create_layered_host(fake.progman, &plan, 0, 0, 400, 300, false, &mut diag)
-                .expect("host create");
-            assert!(hwnd_valid(host));
-            unsafe {
-                let _ = DestroyWindow(host);
-            }
-        }
-
-        #[test]
-        fn fake_progman_path_b_visible_and_z_order() {
-            let fake = create_fake_desktop().expect("fake desktop");
-            let snapshot = WallpaperRestore::default();
-            let mut diag = String::new();
-            let plan = WallpaperAttachPlan {
-                layout: crate::wallpaper_select::DesktopLayout::ProgmanLayered,
-                parent_hwnd: hwnd_to_u64(fake.progman),
-                z_insert_after_hwnd: hwnd_to_u64(fake.defview),
-                defview_hwnd: hwnd_to_u64(fake.defview),
-                wallpaper_workerw_hwnd: hwnd_to_u64(fake.workerw),
-            };
-            let parent = fake.progman;
-            let insert_after = fake.defview;
-            let (x, y, w, h) = child_screen_rect(parent, fake.content);
-            set_redraw(fake.content, false, &mut diag);
-            let host =
-                create_layered_host(parent, &plan, x, y, w, h, true, &mut diag).expect("host");
-            let host_id = hwnd_to_u64(host);
-            reparent_fullscreen(
-                fake.content,
-                host,
-                "LyricGlassHost",
-                Some(crate::wallpaper_select::DesktopLayout::ProgmanLayered),
-                &snapshot,
-                &mut diag,
-                None,
-                true,
-                true,
-            )
-            .expect("reparent");
-            finalize_progman_show(fake.content, insert_after, Some(host), &mut diag).expect("show");
-            verify_attach(fake.content, &plan, ProgmanAttachPath::B, host_id, &mut diag).expect("verify");
-            let input = collect_verify_input(
-                fake.content,
-                &plan,
-                ProgmanAttachPath::B,
-                host_id,
-                &mut diag,
-            );
-            verify_progman_layered_state(&input).expect("z-order");
-            assert!(input.visible);
-            unsafe {
-                let _ = SetParent(fake.content, None);
-                let _ = DestroyWindow(host);
-            }
-        }
-
-        #[test]
-        fn fake_progman_path_a_visible_and_z_order() {
+        fn fake_wallpaper_webview_layered_z_order() {
             let fake = create_fake_desktop().expect("fake desktop");
             let snapshot = WallpaperRestore::default();
             let mut diag = String::new();
@@ -1394,9 +1401,15 @@ mod imp {
             };
             let (path, host_id) =
                 attach_progman_layered(fake.content, plan.clone(), snapshot, &mut diag)
-                    .expect("path A attach");
+                    .expect("progman layered attach");
             assert_eq!(path, ProgmanAttachPath::A);
             assert_eq!(host_id, 0);
+            unsafe {
+                let ex = GetWindowLongPtrW(fake.content, GWL_EXSTYLE) as u32;
+                assert!(ex & WS_EX_LAYERED != 0, "WS_EX_LAYERED must stick on wallpaper hwnd");
+                let style = GetWindowLongPtrW(fake.content, GWL_STYLE) as u32;
+                assert!(style & WS_MINIMIZE == 0, "must not stay minimized");
+            }
             let verify = verify_attach(
                 fake.content,
                 &plan,
@@ -1444,10 +1457,24 @@ mod imp {
 }
 
 #[cfg(windows)]
-pub use imp::{attach_wallpaper, detach_wallpaper, is_attached, take_overlay_geometry};
+pub use imp::{
+    attach_fallback_overlay, attach_wallpaper, detach_wallpaper, is_attached, is_fallback_overlay,
+    remember_main_placement, take_main_placement, take_overlay_geometry,
+};
 
 #[cfg(not(windows))]
 pub use imp::{attach_wallpaper, detach_wallpaper, is_attached, take_overlay_geometry};
+
+#[cfg(not(windows))]
+pub fn remember_main_placement(_: wallpaper_placement::SavedPlacement) {}
+#[cfg(not(windows))]
+pub fn take_main_placement() -> wallpaper_placement::SavedPlacement {
+    wallpaper_placement::SavedPlacement::default()
+}
+#[cfg(not(windows))]
+pub fn is_fallback_overlay() -> bool {
+    false
+}
 
 #[cfg(test)]
 mod tests {

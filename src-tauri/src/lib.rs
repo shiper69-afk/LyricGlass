@@ -3,12 +3,15 @@ mod lyrics;
 mod media;
 mod startup;
 mod wallpaper;
+mod wallpaper_placement;
 mod wallpaper_log;
 mod wallpaper_select;
 #[cfg(windows)]
 mod wallpaper_selftest;
 
 use lyrics::{create_service, LyricsResponse, SharedLyricsService};
+#[cfg(windows)]
+use wallpaper_placement::{restore_main_placement, save_main_placement};
 use media::{now_unix_ms, smoothed_now, MediaState, SharedMediaState, start_media_watcher};
 use parking_lot::Mutex;
 use serde::Serialize;
@@ -309,40 +312,30 @@ fn toggle_debug(
     Ok(flags.lock().debug_visible)
 }
 
-fn apply_wallpaper_shell(window: &WebviewWindow, enabled: bool) -> Result<(), String> {
-    use tauri::{LogicalSize, Size};
-
+fn apply_wallpaper_shell(wallpaper: &WebviewWindow, enabled: bool) -> Result<(), String> {
     if enabled {
-        // Geometry is applied via Win32 SetParent/SetWindowPos — avoid Tauri resize flicker.
-        window
+        wallpaper
             .set_skip_taskbar(true)
             .map_err(|e| e.to_string())?;
-        window
+        wallpaper
             .set_ignore_cursor_events(true)
             .map_err(|e| e.to_string())?;
-        let _ = window.set_always_on_top(false);
-        let _ = window.set_focusable(false);
+        let _ = wallpaper.set_always_on_top(false);
+        let _ = wallpaper.set_focusable(false);
     } else {
-        window
-            .set_skip_taskbar(false)
+        wallpaper
+            .set_skip_taskbar(true)
             .map_err(|e| e.to_string())?;
-        window
-            .set_ignore_cursor_events(false)
+        wallpaper
+            .set_ignore_cursor_events(true)
             .map_err(|e| e.to_string())?;
-        let _ = window.set_focusable(true);
-        if let Some(geo) = wallpaper::take_overlay_geometry() {
-            use tauri::{PhysicalPosition, PhysicalSize, Position};
-            let _ = window.set_size(Size::Physical(PhysicalSize::new(geo.width, geo.height)));
-            let _ = window.set_position(Position::Physical(PhysicalPosition::new(geo.x, geo.y)));
-        } else {
-            let _ = window.set_size(Size::Logical(LogicalSize::new(520.0, 440.0)));
-        }
+        let _ = wallpaper.set_focusable(false);
     }
     Ok(())
 }
 
 fn set_wallpaper_mode_inner(
-    window: &WebviewWindow,
+    main: &WebviewWindow,
     flags: &SharedFlags,
     service: &SharedLyricsService,
     enabled: bool,
@@ -351,37 +344,58 @@ fn set_wallpaper_mode_inner(
 ) -> Result<(), String> {
     #[cfg(windows)]
     {
+        let app = main.app_handle();
+        let wallpaper = app
+            .get_webview_window("wallpaper")
+            .ok_or_else(|| "wallpaper webview missing".to_string())?;
         if enabled {
-            let _ = window.set_always_on_top(false);
-            let hwnd = window.hwnd().map_err(|e| e.to_string())?;
-            if let Err(e) = wallpaper::attach_wallpaper(hwnd, trigger) {
+            let main_hwnd = main.hwnd().map_err(|e| e.to_string())?;
+            let saved = save_main_placement(main_hwnd);
+            wallpaper::remember_main_placement(saved);
+            let _ = main.hide();
+            let _ = wallpaper.show();
+            apply_wallpaper_shell(&wallpaper, true)?;
+            let wp_hwnd = wallpaper.hwnd().map_err(|e| e.to_string())?;
+            if let Err(e) = wallpaper::attach_wallpaper(wp_hwnd, trigger) {
                 if persist {
                     let _ = service.set_wallpaper_mode(false);
                 }
-                apply_topmost(window, &flags.lock());
-                emit_wallpaper_status(window.app_handle());
-                let _ = window.app_handle().emit("wallpaper-attach-failed", &e);
+                let _ = wallpaper.hide();
+                let saved = wallpaper::take_main_placement();
+                let _ = restore_main_placement(main_hwnd, &saved);
+                let _ = main.show();
+                let _ = main.unminimize();
+                let _ = main.set_focus();
+                apply_topmost(main, &flags.lock());
+                emit_wallpaper_status(&app);
+                let _ = app.emit("wallpaper-attach-failed", &e);
                 return Err(e);
             }
-            apply_wallpaper_shell(window, true)?;
             if persist {
                 service.set_wallpaper_mode(true)?;
             }
         } else {
-            let hwnd = window.hwnd().map_err(|e| e.to_string())?;
-            wallpaper::detach_wallpaper(hwnd, trigger)?;
-            apply_wallpaper_shell(window, false)?;
+            let wp_hwnd = wallpaper.hwnd().map_err(|e| e.to_string())?;
+            wallpaper::detach_wallpaper(wp_hwnd, trigger)?;
+            let _ = wallpaper.hide();
+            let main_hwnd = main.hwnd().map_err(|e| e.to_string())?;
+            let saved = wallpaper::take_main_placement();
+            restore_main_placement(main_hwnd, &saved)?;
+            let _ = main.show();
+            let _ = main.unminimize();
+            let _ = main.set_focus();
+            apply_wallpaper_shell(&wallpaper, false)?;
             if persist {
                 service.set_wallpaper_mode(false)?;
             }
         }
-        apply_topmost(window, &flags.lock());
-        emit_wallpaper_status(window.app_handle());
+        apply_topmost(main, &flags.lock());
+        emit_wallpaper_status(&app);
     }
 
     #[cfg(not(windows))]
     {
-        let _ = (window, flags, service, enabled, persist);
+        let _ = (main, flags, service, enabled, persist);
         return Err("Wallpaper mode is Windows-only".into());
     }
 
@@ -445,6 +459,37 @@ fn toggle_wallpaper_mode(
 #[tauri::command]
 fn get_wallpaper_status() -> WallpaperStatus {
     build_wallpaper_status()
+}
+
+#[tauri::command]
+#[cfg(windows)]
+#[tauri::command]
+fn get_desktop_wallpaper_url() -> Result<String, String> {
+    use std::ffi::OsString;
+    use std::os::windows::prelude::OsStringExt;
+    use windows::core::PWSTR;
+    use windows::Win32::UI::WindowsAndMessaging::{SystemParametersInfoW, SPI_GETDESKWALLPAPER};
+
+    let mut buf = vec![0u16; 4096];
+    unsafe {
+        SystemParametersInfoW(
+            SPI_GETDESKWALLPAPER,
+            buf.len() as u32,
+            Some(buf.as_mut_ptr() as *mut _),
+            Default::default(),
+        )
+        .map_err(|e| format!("SPI_GETDESKWALLPAPER: {e}"))?;
+    }
+    let len = buf.iter().position(|&c| c == 0).unwrap_or(buf.len());
+  Ok(OsString::from_wide(&buf[..len])
+        .to_string_lossy()
+        .into_owned())
+}
+
+#[cfg(not(windows))]
+#[tauri::command]
+fn get_desktop_wallpaper_url() -> Result<String, String> {
+    Err("desktop wallpaper path is Windows-only".into())
 }
 
 #[tauri::command]
@@ -729,6 +774,7 @@ pub fn run() {
             toggle_wallpaper_mode,
             get_wallpaper_status,
             open_lyricglass_log_folder,
+            get_desktop_wallpaper_url,
         ])
         .setup({
             let flags = flags.clone();

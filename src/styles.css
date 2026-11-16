@@ -34,6 +34,13 @@ body {
   color: rgba(244, 246, 251, 0.96);
 }
 
+body.wallpaper-surface,
+#app.wallpaper-surface {
+  background: var(--desktop-wallpaper-url, #1a1a2e) center / cover no-repeat;
+  width: 100vw;
+  height: 100vh;
+}
+
 body.wallpaper-mode,
 #app.wallpaper-mode {
   height: 100vh;
