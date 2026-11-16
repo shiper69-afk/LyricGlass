@@ -46,7 +46,7 @@ jobs:
           Write-Host "Launching $exe for smoke test (diagnostics toggle)..."
           $env:LYRICGLASS_SMOKE_DIAG = "1"
           $proc = Start-Process -FilePath $exe -PassThru
-          Start-Sleep -Seconds 12
+          Start-Sleep -Seconds 18
           if ($proc.HasExited) {
             throw "lyricglass.exe exited early with code $($proc.ExitCode)"
           }

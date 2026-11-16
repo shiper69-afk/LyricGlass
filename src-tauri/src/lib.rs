@@ -909,7 +909,7 @@ pub fn run() {
                     let app = app.handle().clone();
                     let flags = flags.clone();
                     std::thread::spawn(move || {
-                        std::thread::sleep(std::time::Duration::from_secs(3));
+                        std::thread::sleep(std::time::Duration::from_secs(5));
                         startup::step("smoke: scheduling diagnostics toggle");
                         let app_cb = app.clone();
                         let _ = app.run_on_main_thread(move || {
