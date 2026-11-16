@@ -146,43 +146,47 @@ mod imp {
     const GSMTC_REQUEST_TIMEOUT_MS: u64 = 8_000;
     const GSMTC_POLL_TIMEOUT_MS: u64 = 3_000;
 
-    /// Poll WinRT `GetResults` without blocking unbounded; safe from the watcher thread (MTA).
-    fn wait_async_operation<T: Clone + std::fmt::Debug>(
-        label: &str,
-        operation: &windows::Foundation::IAsyncOperation<T>,
-        timeout_ms: u64,
-    ) -> Option<T> {
-        crate::startup::watcher_log(&format!("{label}: begin (timeout={timeout_ms}ms)"));
-        let started = std::time::Instant::now();
-        let mut last_err: Option<String> = None;
-        while started.elapsed() < Duration::from_millis(timeout_ms) {
-            match operation.GetResults() {
-                Ok(result) => {
-                    crate::startup::watcher_log(&format!(
-                        "{label}: completed in {}ms",
-                        started.elapsed().as_millis()
-                    ));
-                    return Some(result);
+    macro_rules! wait_async_logged {
+        ($label:expr, $op:expr, $timeout_ms:expr) => {{
+            let label = $label;
+            let timeout_ms: u64 = $timeout_ms;
+            let operation = $op;
+            crate::startup::watcher_log(&format!("{label}: begin (timeout={timeout_ms}ms)"));
+            let started = std::time::Instant::now();
+            let mut last_err: Option<String> = None;
+            let mut value = None;
+            while started.elapsed() < Duration::from_millis(timeout_ms) {
+                match operation.GetResults() {
+                    Ok(result) => {
+                        crate::startup::watcher_log(&format!(
+                            "{label}: completed in {}ms",
+                            started.elapsed().as_millis()
+                        ));
+                        value = Some(result);
+                        break;
+                    }
+                    Err(e) => {
+                        last_err = Some(format!("{e:?}"));
+                    }
                 }
-                Err(e) => {
-                    last_err = Some(format!("{e:?}"));
-                }
+                std::thread::sleep(Duration::from_millis(25));
             }
-            std::thread::sleep(Duration::from_millis(25));
-        }
-        crate::startup::watcher_log(&format!(
-            "{label}: TIMEOUT after {}ms last_err={}",
-            timeout_ms,
-            last_err.unwrap_or_else(|| "none".into())
-        ));
-        None
+            if value.is_none() {
+                crate::startup::watcher_log(&format!(
+                    "{label}: TIMEOUT after {}ms last_err={}",
+                    timeout_ms,
+                    last_err.unwrap_or_else(|| "none".into())
+                ));
+            }
+            value
+        }};
     }
 
     fn read_properties(session: &GlobalSystemMediaTransportControlsSession) -> (String, String, String) {
         session
             .TryGetMediaPropertiesAsync()
             .ok()
-            .and_then(|op| wait_async_operation("TryGetMediaPropertiesAsync", &op, GSMTC_POLL_TIMEOUT_MS))
+            .and_then(|op| wait_async_logged!("TryGetMediaPropertiesAsync", &op, GSMTC_POLL_TIMEOUT_MS))
             .map(|props| {
                 (
                     props.Title().unwrap_or_default().to_string(),
@@ -267,11 +271,7 @@ mod imp {
                 return None;
             }
         };
-        wait_async_operation(
-            "GSMTC RequestAsync",
-            &op,
-            GSMTC_REQUEST_TIMEOUT_MS,
-        )
+        wait_async_logged!("GSMTC RequestAsync", &op, GSMTC_REQUEST_TIMEOUT_MS)
     }
 
     fn watcher_loop(app: AppHandle, shared: SharedMediaState) {
