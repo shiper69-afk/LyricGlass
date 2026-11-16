@@ -24,6 +24,7 @@ import {
   type DesktopWallpaperPayload,
   type WallpaperSurfaceState,
 } from "./wallpaper-surface";
+import { installWallpaperLayoutVars } from "./wallpaper-layout";
 import {
   fetchWallpaperStatus,
   type WallpaperStatus,
@@ -488,6 +489,8 @@ async function boot() {
   if (wallpaperSurface) {
     applyWallpaperSurfaceChrome(appRoot);
     applyWallpaperLayout(appRoot, true);
+    installWallpaperLayoutVars(appRoot);
+    lyricsView.setWallpaperLayout(true);
     try {
       const payload = await invoke<DesktopWallpaperPayload>(
         "get_desktop_wallpaper_payload",
