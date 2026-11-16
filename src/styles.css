@@ -345,16 +345,16 @@ button.active {
   pointer-events: none;
 }
 
-#app .titlebar,
+#app .titlebar {
+  position: relative;
+  z-index: 12;
+}
+
 #app .lyrics-panel,
 #app .hints,
 #app .debug-panel {
   position: relative;
   z-index: 2;
-}
-
-#app.visualizer-on .titlebar {
-  z-index: 5;
 }
 
 #app.visualizer-on .lyrics-lines,
