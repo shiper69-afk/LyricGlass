@@ -6,10 +6,9 @@ use std::cmp::Ordering;
 pub fn normalize_version_string(s: &str) -> String {
     s.trim()
         .replace(',', ".")
-        .split_whitespace()
-        .next()
-        .unwrap_or("")
-        .to_string()
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect()
 }
 
 /// Parse `major.minor.patch` (optional `v` prefix; patch may include non-digit suffix).
