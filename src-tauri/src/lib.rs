@@ -9,6 +9,7 @@ mod wallpaper_hooks;
 mod wallpaper_placement;
 mod wallpaper_log;
 mod wallpaper_select;
+mod wallpaper_subclass;
 mod wallpaper_webview;
 #[cfg(windows)]
 mod wallpaper_selftest;

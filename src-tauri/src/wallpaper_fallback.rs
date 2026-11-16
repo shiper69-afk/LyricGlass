@@ -4,15 +4,15 @@
 mod imp {
     use std::sync::atomic::{AtomicBool, Ordering};
 
+    use crate::wallpaper_subclass;
     use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
     use windows::Win32::Graphics::Gdi::{
         GetMonitorInfoW, MonitorFromWindow, MONITOR_DEFAULTTOPRIMARY, MONITORINFO,
     };
     use windows::Win32::UI::WindowsAndMessaging::{
-        DefSubclassProc, GetWindowLongPtrW, RemoveWindowSubclass, SetParent, SetWindowLongPtrW,
-        SetWindowPos, SetWindowSubclass, ShowWindow, WINDOWPOS, WM_WINDOWPOSCHANGING, GWL_EXSTYLE,
-        HWND_BOTTOM, SHOW_WINDOW_CMD, SWP_NOACTIVATE, SWP_SHOWWINDOW, SW_SHOWNA, WS_EX_NOACTIVATE,
-        WS_EX_TOOLWINDOW,
+        GetWindowLongPtrW, SetParent, SetWindowLongPtrW, SetWindowPos, ShowWindow, WINDOWPOS,
+        WM_WINDOWPOSCHANGING, GWL_EXSTYLE, HWND_BOTTOM, SWP_NOACTIVATE, SWP_SHOWWINDOW, SW_SHOWNA,
+        WS_EX_NOACTIVATE, WS_EX_TOOLWINDOW,
     };
 
     const FALLBACK_SUBCLASS_ID: usize = 0x4c47_0001;
@@ -32,7 +32,7 @@ mod imp {
                 pos.hwndInsertAfter = HWND_BOTTOM;
             }
         }
-        DefSubclassProc(hwnd, msg, wparam, lparam)
+        wallpaper_subclass::def_subclass_proc(hwnd, msg, wparam, lparam)
     }
 
     fn monitor_rect_for_window(hwnd: HWND) -> windows::Win32::Foundation::RECT {
@@ -73,18 +73,14 @@ mod imp {
                 h,
                 SWP_NOACTIVATE | SWP_SHOWWINDOW,
             );
-            let ok = SetWindowSubclass(
+            wallpaper_subclass::set_subclass(
                 main_hwnd,
                 Some(bottom_most_subclass),
                 FALLBACK_SUBCLASS_ID,
-                0,
-            );
-            if !ok.as_bool() {
-                return Err("SetWindowSubclass fallback failed".into());
-            }
+            )?;
             FALLBACK_ACTIVE.store(true, Ordering::Relaxed);
             diag.push_str("fallback: main bottom-most + WM_WINDOWPOSCHANGING subclass\n");
-            let _ = ShowWindow(main_hwnd, SHOW_WINDOW_CMD(SW_SHOWNA));
+            let _ = ShowWindow(main_hwnd, SW_SHOWNA);
             Ok(())
         }
     }
@@ -92,7 +88,7 @@ mod imp {
     pub fn leave_main_fallback(main_hwnd: HWND, diag: &mut String) {
         unsafe {
             if FALLBACK_ACTIVE.load(Ordering::Relaxed) {
-                let _ = RemoveWindowSubclass(
+                wallpaper_subclass::remove_subclass(
                     main_hwnd,
                     Some(bottom_most_subclass),
                     FALLBACK_SUBCLASS_ID,

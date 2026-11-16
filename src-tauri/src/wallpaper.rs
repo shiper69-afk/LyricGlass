@@ -1149,7 +1149,7 @@ mod imp {
 
         unsafe {
             if IsIconic(wallpaper_hwnd).as_bool() || IsZoomed(wallpaper_hwnd).as_bool() {
-                let _ = ShowWindow(wallpaper_hwnd, SHOW_WINDOW_CMD(SW_RESTORE));
+                let _ = ShowWindow(wallpaper_hwnd, SW_RESTORE);
                 diag.push_str("ShowWindow(SW_RESTORE) before attach\n");
             }
         }

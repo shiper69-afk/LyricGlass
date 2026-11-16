@@ -2,17 +2,15 @@
 
 #[cfg(windows)]
 mod imp {
-    use std::sync::atomic::{AtomicU32, Ordering};
+    use std::sync::atomic::{AtomicU32, AtomicUsize, Ordering};
     use std::sync::{Arc, OnceLock};
 
-    use parking_lot::Mutex;
-    use tauri::AppHandle;
-    use windows::core::{w, BOOL};
+    use crate::wallpaper_subclass;
+    use windows::core::w;
     use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
     use windows::Win32::UI::Accessibility::{SetWinEventHook, UnhookWinEvent, HWINEVENTHOOK};
     use windows::Win32::UI::WindowsAndMessaging::{
-        DefSubclassProc, FindWindowExW, FindWindowW, GetClassNameW, RegisterWindowMessageW,
-        SetWindowSubclass, RemoveWindowSubclass,
+        FindWindowExW, FindWindowW, GetClassNameW, RegisterWindowMessageW,
     };
 
     const EVENT_OBJECT_DESTROY: u32 = 0x8001;
@@ -21,21 +19,20 @@ mod imp {
     const HOOK_SUBCLASS_ID: usize = 0x4c47_0002;
     static TASKBAR_CREATED_MSG: AtomicU32 = AtomicU32::new(0);
     static REATTACH: OnceLock<Arc<dyn Fn(&str) + Send + Sync>> = OnceLock::new();
-    static WIN_EVENT_HOOK: Mutex<Option<HWINEVENTHOOK>> = Mutex::new(None);
+    static WIN_EVENT_HOOK_PTR: AtomicUsize = AtomicUsize::new(0);
 
     pub fn set_reattach_handler(handler: Arc<dyn Fn(&str) + Send + Sync>) {
         let _ = REATTACH.set(handler);
     }
 
-    pub fn install(main_hwnd: HWND, _app: AppHandle) {
+    pub fn install(main_hwnd: HWND, _app: tauri::AppHandle) {
         unsafe {
             let msg = RegisterWindowMessageW(w!("TaskbarCreated"));
             TASKBAR_CREATED_MSG.store(msg, Ordering::Relaxed);
-            let _ = SetWindowSubclass(
+            let _ = wallpaper_subclass::set_subclass(
                 main_hwnd,
                 Some(main_hook_subclass),
                 HOOK_SUBCLASS_ID,
-                0,
             );
         }
         install_workerw_destroy_hook();
@@ -78,16 +75,17 @@ mod imp {
             if hook.0.is_null() {
                 return;
             }
-            *WIN_EVENT_HOOK.lock() = Some(hook);
+            WIN_EVENT_HOOK_PTR.store(hook.0 as usize, Ordering::Relaxed);
         }
     }
 
     pub fn drop_hooks(main_hwnd: HWND) {
         unsafe {
-            if let Some(h) = WIN_EVENT_HOOK.lock().take() {
-                let _ = UnhookWinEvent(h);
+            let ptr = WIN_EVENT_HOOK_PTR.swap(0, Ordering::Relaxed);
+            if ptr != 0 {
+                let _ = UnhookWinEvent(HWINEVENTHOOK(ptr as _));
             }
-            let _ = RemoveWindowSubclass(
+            wallpaper_subclass::remove_subclass(
                 main_hwnd,
                 Some(main_hook_subclass),
                 HOOK_SUBCLASS_ID,
@@ -107,7 +105,7 @@ mod imp {
         if taskbar != 0 && msg == taskbar {
             schedule_reattach("taskbar-created");
         }
-        DefSubclassProc(hwnd, msg, wparam, lparam)
+        wallpaper_subclass::def_subclass_proc(hwnd, msg, wparam, lparam)
     }
 
     fn schedule_reattach(trigger: &'static str) {
