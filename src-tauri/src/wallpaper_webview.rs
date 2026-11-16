@@ -3,24 +3,26 @@
 #[cfg(windows)]
 pub fn sync_webview_controller(window: &tauri::WebviewWindow, diag: &mut String) {
     let host_usize = match window.hwnd() {
-        Ok(h) => h.0 as usize,
+        Ok(h) => h.0,
         Err(_) => {
             diag.push_str("sync_webview: hwnd unavailable\n");
             return;
         }
     };
 
-    let trace = window.with_webview(move |platform| {
-        let mut local = String::new();
+    let trace = std::sync::Arc::new(parking_lot::Mutex::new(String::new()));
+    let trace_cb = trace.clone();
+    let result = window.with_webview(move |platform| {
+        let mut local = trace_cb.lock();
         unsafe {
             use windows::Win32::Foundation::HWND;
             use windows::Win32::UI::WindowsAndMessaging::GetClientRect;
 
-            let host = HWND(host_usize as _);
+            let host = HWND(host_usize);
             let mut client = windows::Win32::Foundation::RECT::default();
             if GetClientRect(host, &mut client).is_err() {
                 local.push_str("sync_webview: GetClientRect failed\n");
-                return local;
+                return;
             }
 
             let controller = platform.controller();
@@ -37,13 +39,12 @@ pub fn sync_webview_controller(window: &tauri::WebviewWindow, diag: &mut String)
                 local.push_str("sync_webview: controller SetBounds/Visible/NotifyParent ok\n");
             }
         }
-        local
     });
 
-    match trace {
-        Ok(mut local) => diag.append(&mut local),
-        Err(e) => diag.push_str(&format!("sync_webview: with_webview err={e}\n")),
+    if let Err(e) = result {
+        diag.push_str(&format!("sync_webview: with_webview err={e}\n"));
     }
+    diag.push_str(&trace.lock());
 }
 
 #[cfg(not(windows))]
