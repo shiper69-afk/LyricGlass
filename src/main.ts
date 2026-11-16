@@ -31,6 +31,10 @@ import {
 } from "./wallpaper-status";
 import { BOUNCER_META, normalizeBouncerId } from "./bouncers/ids";
 import { bouncerSvgMarkup } from "./bouncers/svg-store";
+import "./fonts/faces";
+import { applyLyricsFont, setLyricsFontChangeHook } from "./fonts/apply";
+import { buildFontPicker, setFontPickerSelection } from "./font-picker";
+import { initSettingsTabs } from "./settings-tabs";
 
 interface UiState {
   alwaysOnTop: boolean;
@@ -45,6 +49,7 @@ interface AppearanceState {
   karaokeBallColor: string;
   sungHighlightColor: string;
   karaokeBouncer: string;
+  lyricsFont: string;
 }
 
 const DEFAULT_BALL_COLOR = "#ffc857";
@@ -55,6 +60,7 @@ let wallpaperSurface =
 
 const lyricsRoot = document.getElementById("lyrics-root")!;
 const lyricsView = new LyricsView(lyricsRoot);
+setLyricsFontChangeHook(() => lyricsView.onLyricsFontChanged());
 const appRoot = document.getElementById("app")!;
 
 /** E2e / `?mode=wallpaper` harness: chrome before async Tauri boot. */
@@ -101,6 +107,7 @@ const els = {
   colorsReset: document.getElementById("colors-reset") as HTMLButtonElement,
   btnOpenLogFolder: document.getElementById("btn-open-log-folder") as HTMLButtonElement,
   bouncerPicker: document.getElementById("bouncer-picker") as HTMLDivElement,
+  fontPicker: document.getElementById("font-picker") as HTMLDivElement,
 };
 
 let latestMedia: FullMediaState | null = null;
@@ -163,12 +170,32 @@ function buildBouncerPicker() {
   }
 }
 
+async function applyLyricsFontSelection(fontId: string) {
+  const id = await applyLyricsFont(fontId);
+  setFontPickerSelection(els.fontPicker, id);
+  return id;
+}
+
+function buildFontPickerUi() {
+  buildFontPicker(els.fontPicker, (id) => {
+    void (async () => {
+      await applyLyricsFontSelection(id);
+      try {
+        await invoke("set_lyrics_font", { fontId: id });
+      } catch {
+        /* harness */
+      }
+    })();
+  });
+}
+
 function applyAppearanceSettings(state: AppearanceState) {
   applyAppearance(state.overlayOpacity);
   els.karaokeToggle.checked = state.karaokeBall;
   lyricsView.setKaraokeEnabled(state.karaokeBall);
   applyKaraokeColors(state.karaokeBallColor, state.sungHighlightColor);
   applyBouncerSelection(state.karaokeBouncer ?? "glow-orb");
+  void applyLyricsFontSelection(state.lyricsFont ?? "default");
 }
 
 function updateTimingReadout(ms: number) {
@@ -497,6 +524,8 @@ async function boot() {
   }
 
   buildBouncerPicker();
+  buildFontPickerUi();
+  initSettingsTabs(els.settingsPopover);
 
   if (wallpaperSurface) {
     primeWallpaperSurfaceChrome();

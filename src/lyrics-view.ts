@@ -236,6 +236,20 @@ export class LyricsView {
     this.karaoke.setBouncerType(bouncerId);
   }
 
+  /** Re-measure karaoke + wallpaper line window after lyrics font loads. */
+  async onLyricsFontChanged(): Promise<void> {
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      await document.fonts.ready;
+    }
+    this.karaoke.invalidate();
+    const active = this.scrollInner.querySelector<HTMLElement>(".lyric-line.active");
+    if (active) {
+      this.karaoke.scheduleMeasure(active);
+      requestAnimationFrame(() => this.karaoke.scheduleMeasure(active));
+    }
+    this.onWallpaperViewportChange();
+  }
+
   setKaraokeEnabled(enabled: boolean) {
     this.karaokeEnabled = enabled;
     this.karaoke.setEnabled(enabled);

@@ -147,6 +147,12 @@ export class KaraokeBall {
       if (gen !== this.measureGeneration) return;
       this.anchors = this.measureWords(activeLine);
     });
+    if (typeof document !== "undefined" && document.fonts?.ready) {
+      void document.fonts.ready.then(() => {
+        if (gen !== this.measureGeneration) return;
+        this.anchors = this.measureWords(activeLine);
+      });
+    }
   }
 
   measureWords(lineEl: HTMLElement): WordAnchor[] {

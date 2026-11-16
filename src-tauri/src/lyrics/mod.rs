@@ -83,6 +83,10 @@ impl LyricsService {
         self.cache.lock().set_wallpaper_mode(enabled)
     }
 
+    pub fn ensure_overlay_at_startup(&self) {
+        self.cache.lock().ensure_overlay_at_startup();
+    }
+
     pub fn get_karaoke_ball(&self) -> bool {
         self.cache.lock().get_karaoke_ball()
     }
@@ -117,6 +121,14 @@ impl LyricsService {
 
     pub fn set_karaoke_bouncer(&self, bouncer_id: &str) -> Result<String, String> {
         self.cache.lock().set_karaoke_bouncer(bouncer_id)
+    }
+
+    pub fn get_lyrics_font(&self) -> String {
+        self.cache.lock().get_lyrics_font()
+    }
+
+    pub fn set_lyrics_font(&self, font_id: &str) -> Result<String, String> {
+        self.cache.lock().set_lyrics_font(font_id)
     }
 
     pub fn add_sync_offset(

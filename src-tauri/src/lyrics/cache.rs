@@ -223,6 +223,13 @@ impl LyricsCache {
         .unwrap_or(false)
     }
 
+    /// Launch always in overlay mode even when `wallpaper_mode` was left on in settings.
+    pub fn ensure_overlay_at_startup(&self) {
+        if self.get_wallpaper_mode() {
+            let _ = self.set_wallpaper_mode(false);
+        }
+    }
+
     pub fn set_wallpaper_mode(&self, enabled: bool) -> Result<bool, String> {
         let conn = match &self.conn {
             Some(c) => c,
@@ -269,6 +276,29 @@ impl LyricsCache {
     pub const DEFAULT_KARAOKE_BALL_COLOR: &'static str = "#ffc857";
     pub const DEFAULT_SUNG_HIGHLIGHT_COLOR: &'static str = "#ffdc8c";
     pub const DEFAULT_KARAOKE_BOUNCER: &'static str = "glow-orb";
+
+    pub const DEFAULT_LYRICS_FONT: &'static str = "default";
+
+    pub const LYRICS_FONT_IDS: &[&str] = &[
+        "default",
+        "rubik",
+        "heebo",
+        "assistant",
+        "inter",
+        "varela-round",
+        "nunito",
+        "secular-one",
+        "bebas-neue",
+        "anton",
+        "frank-ruhl-libre",
+        "playfair-display",
+        "amatic-sc",
+        "caveat",
+        "pacifico",
+        "press-start-2p",
+        "monoton",
+        "bungee",
+    ];
 
     const BOUNCER_IDS: &[&str] = &[
         "glow-orb",
@@ -387,6 +417,42 @@ impl LyricsCache {
         };
         conn.execute(
             "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('karaoke_bouncer', ?1)",
+            params![normalized],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(normalized)
+    }
+
+    pub fn get_lyrics_font(&self) -> String {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Self::DEFAULT_LYRICS_FONT.to_string(),
+        };
+        Self::read_setting_string(conn, "lyrics_font")
+            .map(|v| {
+                let id = v.trim().to_lowercase();
+                if Self::LYRICS_FONT_IDS.contains(&id.as_str()) {
+                    id
+                } else {
+                    Self::DEFAULT_LYRICS_FONT.to_string()
+                }
+            })
+            .unwrap_or_else(|| Self::DEFAULT_LYRICS_FONT.to_string())
+    }
+
+    pub fn set_lyrics_font(&self, font_id: &str) -> Result<String, String> {
+        let id = font_id.trim().to_lowercase();
+        let normalized = if Self::LYRICS_FONT_IDS.contains(&id.as_str()) {
+            id
+        } else {
+            Self::DEFAULT_LYRICS_FONT.to_string()
+        };
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(normalized),
+        };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('lyrics_font', ?1)",
             params![normalized],
         )
         .map_err(|e| e.to_string())?;
@@ -521,6 +587,15 @@ mod settings_tests {
         cache.set_wallpaper_mode(true).expect("set");
         assert!(cache.get_wallpaper_mode());
         cache.set_wallpaper_mode(false).expect("clear");
+        assert!(!cache.get_wallpaper_mode());
+    }
+
+    #[test]
+    fn ensure_overlay_at_startup_clears_saved_wallpaper_mode() {
+        let cache = open_memory();
+        cache.set_wallpaper_mode(true).expect("set");
+        assert!(cache.get_wallpaper_mode());
+        cache.ensure_overlay_at_startup();
         assert!(!cache.get_wallpaper_mode());
     }
 }
