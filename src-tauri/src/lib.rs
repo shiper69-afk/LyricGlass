@@ -1,7 +1,9 @@
+mod app_version;
 mod clock;
 mod lyrics;
 mod media;
 mod startup;
+mod window_focus;
 mod desktop_wallpaper;
 mod wallpaper;
 mod wallpaper_clickthrough;
@@ -352,6 +354,24 @@ fn apply_wallpaper_shell(wallpaper: &WebviewWindow, enabled: bool) -> Result<(),
         let _ = wallpaper.set_focusable(false);
     }
     Ok(())
+}
+
+/// Detach wallpaper and show the normal overlay (used from focus / handoff paths only).
+pub(crate) fn detach_wallpaper_for_ui_focus(app: &AppHandle) {
+    if !wallpaper::is_attached() {
+        return;
+    }
+    let Some(main) = app.get_webview_window("main") else {
+        startup::step("focus: wallpaper attached but main missing");
+        return;
+    };
+    let flags = app.state::<SharedFlags>();
+    let service = app.state::<SharedLyricsService>();
+    if let Err(e) = set_wallpaper_mode_inner(&main, flags.inner(), &service, false, true, "focus") {
+        startup::step(&format!("focus: wallpaper detach failed: {e}"));
+    } else {
+        startup::step("focus: wallpaper detached for UI reveal");
+    }
 }
 
 fn set_wallpaper_mode_inner(
@@ -720,6 +740,13 @@ fn register_one_shortcut(app: &AppHandle, shortcut_str: &str, action: ShortcutAc
 }
 
 fn build_tray(app: &AppHandle) {
+    let show_window = match MenuItem::with_id(app, "show_window", "Show", true, None::<&str>) {
+        Ok(i) => i,
+        Err(e) => {
+            startup::step(&format!("tray menu item failed: {e}"));
+            return;
+        }
+    };
     let toggle_wallpaper = match MenuItem::with_id(app, "toggle_wallpaper", "Toggle wallpaper mode", true, None::<&str>) {
         Ok(i) => i,
         Err(e) => {
@@ -741,7 +768,7 @@ fn build_tray(app: &AppHandle) {
             return;
         }
     };
-    let menu = match Menu::with_items(app, &[&toggle_wallpaper, &toggle_debug, &quit]) {
+    let menu = match Menu::with_items(app, &[&show_window, &toggle_wallpaper, &toggle_debug, &quit]) {
         Ok(m) => m,
         Err(e) => {
             startup::step(&format!("tray menu failed: {e}"));
@@ -761,6 +788,12 @@ fn build_tray(app: &AppHandle) {
         .on_menu_event({
             let app_handle = app.clone();
             move |app, event| match event.id.as_ref() {
+                "show_window" => {
+                    let app_handle = app.clone();
+                    let _ = app_handle.run_on_main_thread(move || {
+                        window_focus::reveal_main_window(&app_handle, "tray-menu-show");
+                    });
+                }
                 "toggle_wallpaper" => {
                     if let Some(window) = app.get_webview_window("main") {
                         run_wallpaper_toggle_on_main(
@@ -794,10 +827,10 @@ fn build_tray(app: &AppHandle) {
             } = event
             {
                 let app = tray.app_handle();
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
+                let app_handle = app.clone();
+                let _ = app_handle.run_on_main_thread(move || {
+                    window_focus::reveal_main_window(&app_handle, "tray-left-click");
+                });
             }
         })
         .build(app)
@@ -857,13 +890,8 @@ pub fn run() {
     startup::step("entering tauri event loop");
     let builder = tauri::Builder::default();
     #[cfg(desktop)]
-    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
-        startup::step("single-instance: second launch — focusing existing window");
-        if let Some(window) = app.get_webview_window("main") {
-            let _ = window.unminimize();
-            let _ = window.show();
-            let _ = window.set_focus();
-        }
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+        window_focus::on_second_instance(app, argv, cwd);
     }));
     let run_result = builder
         .plugin({
@@ -873,6 +901,15 @@ pub fn run() {
         .manage(media_state.clone())
         .manage(lyrics_service)
         .manage(flags.clone())
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                if window.label() == "main" {
+                    api.prevent_close();
+                    let _ = window.hide();
+                    startup::step("main: close (X) — hidden to tray");
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             get_media_state,
             get_smoothed_position,
@@ -954,6 +991,25 @@ pub fn run() {
                         let _ = app.run_on_main_thread(move || {
                             toggle_debug_visible(&app_cb, &flags, "smoke");
                         });
+                    });
+                }
+                #[cfg(windows)]
+                if std::env::var("LYRICGLASS_SMOKE_SINGLE_INSTANCE").is_ok() {
+                    let app = app.handle().clone();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_secs(4));
+                        let app_hide = app.clone();
+                        let _ = app.run_on_main_thread(move || {
+                            if let Some(w) = app_hide.get_webview_window("main") {
+                                let _ = w.hide();
+                                startup::step("smoke: main hidden for single-instance test");
+                            }
+                        });
+                        std::thread::sleep(std::time::Duration::from_secs(1));
+                        if let Ok(exe) = std::env::current_exe() {
+                            let _ = std::process::Command::new(exe).spawn();
+                            startup::step("smoke: second instance launched");
+                        }
                     });
                 }
                 Ok(())

@@ -45,8 +45,9 @@ jobs:
           $exe = Resolve-Path "src-tauri/target/release/lyricglass.exe"
           Write-Host "Launching $exe for smoke test (diagnostics toggle)..."
           $env:LYRICGLASS_SMOKE_DIAG = "1"
+          $env:LYRICGLASS_SMOKE_SINGLE_INSTANCE = "1"
           $proc = Start-Process -FilePath $exe -PassThru
-          Start-Sleep -Seconds 18
+          Start-Sleep -Seconds 22
           if ($proc.HasExited) {
             throw "lyricglass.exe exited early with code $($proc.ExitCode)"
           }
@@ -70,6 +71,12 @@ jobs:
           }
           if ($text -notmatch 'GSMTC RequestAsync: (completed|TIMEOUT)') {
             throw "Media watcher did not complete or time out GSMTC RequestAsync"
+          }
+          if ($text -notmatch 'smoke: second instance launched') {
+            throw "Single-instance smoke did not launch second instance"
+          }
+          if ($text -notmatch 'focus \[single-instance/after\]: IsWindowVisible=true') {
+            throw "Second launch did not restore visible main window (see single-instance focus log)"
           }
           Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
           Write-Host "Smoke test passed (alive 12s, diagnostics toggle logged)"
