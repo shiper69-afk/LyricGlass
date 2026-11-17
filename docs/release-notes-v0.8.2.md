@@ -12,4 +12,4 @@
 | **LyricGlass_0.8.2_portable.exe** | Run anywhere; no install (same as CI `lyricglass.exe`). |
 | **LyricGlass_0.8.2_x64-setup.exe** | NSIS installer to `%LOCALAPPDATA%\LyricGlass` with uninstaller. |
 
-**Windows x64** and **WebView2 Runtime** are required. See [README.md](../README.md) for setup details.
+**Windows x64** and **WebView2 Runtime** are required. See [README](https://github.com/shiper69-afk/LyricGlass#readme) for setup details.
