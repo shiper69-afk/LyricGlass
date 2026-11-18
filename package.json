@@ -1,6 +1,7 @@
 {
   "name": "lyricglass",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "version": "0.8.2",
   "type": "module",
   "scripts": {

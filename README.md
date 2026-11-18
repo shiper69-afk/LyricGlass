@@ -144,4 +144,6 @@ Hebrew subsets are included where Fontsource provides them; families without Heb
 
 ## License
 
-Application source is provided in this repository; see repository licensing for the app itself. Third-party fonts are licensed under OFL 1.1 as above.
+LyricGlass application source is licensed under **GNU GPL version 3 or any later version** ([`LICENSE`](LICENSE), SPDX `GPL-3.0-or-later`).
+
+Bundled lyrics fonts remain under the **SIL Open Font License 1.1**; see [`licenses/fonts/`](licenses/fonts/) for each family’s `OFL.txt`. Font files are aggregated with the app and are not covered by the GPL.
