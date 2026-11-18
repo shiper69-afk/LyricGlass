@@ -29,7 +29,7 @@ encoding_rs = "0.8"
 aes = "0.8"
 ecb = "0.1"
 cipher = "0.4"
-md-5 = "0.10"
+md5 = "0.7"
 deunicode = "1"
 [target.'cfg(windows)'.dependencies]
 realfft = "3.4"

@@ -69,14 +69,27 @@ impl LyricsCache {
         Self { conn: None }
     }
 
-    fn key(artist: &str, track: &str, album: &str, duration_ms: u64, lyrics_source: &str) -> String {
+    fn track_key(artist: &str, track: &str, album: &str, duration_ms: u64) -> String {
         let norm = |s: &str| s.trim().to_lowercase();
         let duration_sec = duration_ms / 1000;
         format!(
-            "{}|{}|{}|{duration_sec}|{lyrics_source}",
+            "{}|{}|{}|{duration_sec}",
             norm(artist),
             norm(track),
-            norm(album),
+            norm(album)
+        )
+    }
+
+    fn lyrics_cache_key(
+        artist: &str,
+        track: &str,
+        album: &str,
+        duration_ms: u64,
+        lyrics_source: &str,
+    ) -> String {
+        format!(
+            "{}|{}",
+            Self::track_key(artist, track, album, duration_ms),
             lyrics_source.trim().to_lowercase()
         )
     }
@@ -97,7 +110,7 @@ impl LyricsCache {
         lyrics_source: &str,
     ) -> Option<LyricsResponse> {
         let conn = self.conn.as_ref()?;
-        let key = Self::key(artist, track, album, duration_ms, lyrics_source);
+        let key = Self::lyrics_cache_key(artist, track, album, duration_ms, lyrics_source);
         let now = Self::now();
         let mut stmt = conn
             .prepare("SELECT response_json FROM lyrics_cache WHERE cache_key = ?1 AND expires_at > ?2")
@@ -119,7 +132,7 @@ impl LyricsCache {
             Some(c) => c,
             None => return 0,
         };
-        let key = Self::key(artist, track, album, duration_ms);
+        let key = Self::track_key(artist, track, album, duration_ms);
         conn.query_row(
             "SELECT offset_ms FROM sync_offset WHERE cache_key = ?1",
             params![key],
@@ -140,7 +153,7 @@ impl LyricsCache {
             Some(c) => c,
             None => return Ok(()),
         };
-        let key = Self::key(artist, track, album, duration_ms);
+        let key = Self::track_key(artist, track, album, duration_ms);
         conn.execute(
             "INSERT OR REPLACE INTO sync_offset (cache_key, offset_ms) VALUES (?1, ?2)",
             params![key, offset_ms],
@@ -670,7 +683,7 @@ impl LyricsCache {
             Some(c) => c,
             None => return Ok(()),
         };
-        let key = Self::key(artist, track, album, duration_ms, lyrics_source);
+        let key = Self::lyrics_cache_key(artist, track, album, duration_ms, lyrics_source);
         let ttl = match response.status.as_str() {
             "not_found" | "error" => NOT_FOUND_TTL_SECS,
             _ => FOUND_TTL_SECS,

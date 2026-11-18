@@ -1,7 +1,8 @@
 //! Minimal NetEase eapi request encryption (song/lyric/v1).
 
-use aes::cipher::{block_padding::Pkcs7, BlockEncryptMut, KeyInit};
+use aes::cipher::{block_padding::Pkcs7, KeyInit};
 use aes::Aes128;
+use ecb::cipher::BlockEncryptMut;
 use ecb::Encryptor;
 use std::time::Duration;
 
@@ -13,10 +14,11 @@ pub fn encrypt_eapi_body(api_path: &str, plaintext: &str) -> String {
     let digest = md5::compute(format!("nobody{api_path}use{plaintext}md5forencrypt").as_bytes());
     let cipher = AesEcb::new_from_slice(digest.0.as_slice()).expect("md5 key len");
     let mut buf = vec![0u8; plaintext.len() + 16];
-    let enc = cipher
-        .encrypt_padded_b2b::<Pkcs7>(plaintext.as_bytes(), &mut buf)
-        .expect("pkcs7");
-    hex_encode(enc)
+    let enc_len = cipher
+        .encrypt_padded_b2b_mut::<Pkcs7>(plaintext.as_bytes(), &mut buf)
+        .expect("pkcs7")
+        .len();
+    hex_encode(&buf[..enc_len])
 }
 
 fn hex_encode(bytes: &[u8]) -> String {
