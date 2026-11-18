@@ -115,7 +115,7 @@ mod tests {
 12340,800(12500,200,0)爱(12700,300,0)你"#;
         let lrc = yrc_to_enhanced_lrc(yrc).expect("parsed");
         assert!(!lrc.contains('{'));
-        assert!(lrc.contains("<01:25.00>爱"));
+        assert!(lrc.contains("<00:12.50>爱"));
     }
 
     #[test]
