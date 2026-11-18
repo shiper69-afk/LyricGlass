@@ -10,7 +10,7 @@ import {
   type WallpaperStatus,
 } from "./wallpaper-status";
 
-const APP_VERSION = "0.9.0";
+const APP_VERSION = "0.9.1";
 
 export interface FullMediaState extends MediaState {
   sourceAppId: string;
@@ -61,6 +61,9 @@ export function buildDiagnosticsBlock(
     `  status: ${lyrics?.status ?? "—"}`,
     `  message: ${lyrics?.message ?? "—"}`,
     `  fromCache: ${lyrics?.fromCache ?? false}`,
+    ...(lyrics?.lookupTrace?.length
+      ? ["", "Lookup trace", ...lyrics.lookupTrace.map((line) => `  ${line}`)]
+      : []),
     "",
     "LRCLIB match",
     `  id: ${lyrics?.lrclibId ?? "—"}`,

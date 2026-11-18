@@ -39,6 +39,7 @@ pub fn post_eapi(
         .header("Content-Type", "application/x-www-form-urlencoded")
         .header("User-Agent", super::USER_AGENT)
         .header("Referer", "https://music.163.com/")
+        .header("Cookie", "os=pc")
         .timeout(Duration::from_secs(4))
         .body(body)
         .send()

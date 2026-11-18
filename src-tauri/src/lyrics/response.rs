@@ -33,6 +33,8 @@ pub struct LyricsResponse {
     pub netease_match_title: Option<String>,
     pub netease_match_artist: Option<String>,
     pub netease_duration_ms: Option<u64>,
+    #[serde(default)]
+    pub lookup_trace: Vec<String>,
 }
 
 impl LyricsResponse {
@@ -44,7 +46,7 @@ impl LyricsResponse {
         Self::base("not_found", "No lyrics found".into())
     }
 
-    fn base(status: &str, message: String) -> Self {
+    pub(crate) fn base(status: &str, message: String) -> Self {
         Self {
             status: status.into(),
             message,
@@ -70,6 +72,7 @@ impl LyricsResponse {
             netease_match_title: None,
             netease_match_artist: None,
             netease_duration_ms: None,
+            lookup_trace: Vec::new(),
         }
     }
 }

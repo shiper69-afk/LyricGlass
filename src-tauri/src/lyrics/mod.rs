@@ -5,9 +5,11 @@ mod lrclib;
 mod netease;
 mod response;
 mod shironet;
+mod source;
 
 use cache::LyricsCache;
 pub use response::{looks_hebrew, LyricsResponse};
+use source::should_try_shironet_auto;
 use parking_lot::Mutex;
 use std::sync::Arc;
 
@@ -15,40 +17,8 @@ pub struct LyricsService {
     cache: Mutex<LyricsCache>,
 }
 
-fn lrclib_has_lyrics(res: &LyricsResponse) -> bool {
+fn has_usable_lyrics(res: &LyricsResponse) -> bool {
     matches!(res.status.as_str(), "synced" | "plain" | "instrumental")
-}
-
-fn netease_has_lyrics(res: &LyricsResponse) -> bool {
-    matches!(res.status.as_str(), "synced")
-}
-
-fn should_try_shironet(artist: &str, track: &str, primary: &LyricsResponse) -> bool {
-    if lrclib_has_lyrics(primary) || netease_has_lyrics(primary) {
-        return false;
-    }
-    looks_hebrew(artist)
-        || looks_hebrew(track)
-        || matches!(primary.status.as_str(), "not_found")
-}
-
-fn apply_shironet_if_needed(
-    artist: &str,
-    track: &str,
-    primary: LyricsResponse,
-) -> LyricsResponse {
-    if !should_try_shironet(artist, track, &primary) {
-        return primary;
-    }
-    startup::step("lyrics: trying Shironet fallback");
-    let shironet = shironet::fetch_from_network(artist, track);
-    if shironet.status == "plain" && shironet.plain_lyrics.is_some() {
-        return shironet;
-    }
-    if primary.status == "not_found" && shironet.lyrics_source == "shironet" {
-        return shironet;
-    }
-    primary
 }
 
 impl LyricsService {
@@ -200,6 +170,11 @@ impl LyricsService {
             .add_sync_offset(artist, track, album, duration_ms, delta_ms)
     }
 
+    fn try_shironet(artist: &str, track: &str) -> LyricsResponse {
+        startup::step("lyrics: trying Shironet fallback (Auto mode)");
+        shironet::fetch_from_network(artist, track)
+    }
+
     pub fn fetch(
         &self,
         artist: &str,
@@ -218,27 +193,50 @@ impl LyricsService {
         }
 
         let result = match mode.as_str() {
-            "netease" => {
-                let ne = netease::fetch_from_network(artist, track, album, duration_ms);
-                apply_shironet_if_needed(artist, track, ne)
-            }
+            "netease" => netease::fetch_from_network(artist, track, album, duration_ms),
             "lrclib" => {
-                let lr = lrclib::fetch_from_network(artist, track, album, duration_ms);
-                apply_shironet_if_needed(artist, track, lr)
+                let mut lr = lrclib::fetch_from_network(artist, track, album, duration_ms);
+                if !has_usable_lyrics(&lr) && lr.status == "not_found" {
+                    lr.message = "No lyrics on LRCLIB".into();
+                    lr.lyrics_source = "lrclib".into();
+                }
+                lr
             }
             _ => {
-                // Auto: NetEase word-level when strict match, else LRCLIB, else Shironet
+                // Auto: NetEase → LRCLIB → Shironet (Hebrew / not_found only)
                 if duration_ms > 0 {
                     let ne = netease::fetch_from_network(artist, track, album, duration_ms);
-                    if netease_has_lyrics(&ne) {
+                    if has_usable_lyrics(&ne) {
                         ne
                     } else {
                         let lr = lrclib::fetch_from_network(artist, track, album, duration_ms);
-                        apply_shironet_if_needed(artist, track, lr)
+                        if has_usable_lyrics(&lr) {
+                            lr
+                        } else if should_try_shironet_auto("auto", artist, track, &lr) {
+                            let sh = Self::try_shironet(artist, track);
+                            if has_usable_lyrics(&sh) {
+                                sh
+                            } else if sh.lyrics_source == "shironet" && sh.status == "not_found" {
+                                sh
+                            } else {
+                                lr
+                            }
+                        } else {
+                            lr
+                        }
                     }
                 } else {
                     let lr = lrclib::fetch_from_network(artist, track, album, duration_ms);
-                    apply_shironet_if_needed(artist, track, lr)
+                    if should_try_shironet_auto("auto", artist, track, &lr) {
+                        let sh = Self::try_shironet(artist, track);
+                        if has_usable_lyrics(&sh) {
+                            sh
+                        } else {
+                            lr
+                        }
+                    } else {
+                        lr
+                    }
                 }
             }
         };
@@ -268,5 +266,18 @@ pub fn create_service() -> SharedLyricsService {
                 cache: Mutex::new(LyricsCache::disabled()),
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn auto_allows_shironet_gate_only() {
+        let nf = LyricsResponse::not_found();
+        assert!(should_try_shironet_auto("auto", "Noah", "Stick", &nf));
+        assert!(!should_try_shironet_auto("netease", "Noah", "Stick", &nf));
+        assert!(!should_try_shironet_auto("lrclib", "Noah", "Stick", &nf));
     }
 }

@@ -63,6 +63,7 @@ export interface LyricsResponse {
   neteaseMatchTitle?: string | null;
   neteaseMatchArtist?: string | null;
   neteaseDurationMs?: number | null;
+  lookupTrace?: string[];
 }
 
 export interface LineDiagnostics {
@@ -367,6 +368,7 @@ export class LyricsView {
 
     if (res.syncedLrc) {
       this.statusEl.textContent = res.fromCache ? `${res.message} (cached)` : "";
+      this.statusEl.classList.remove("hidden");
       this.parsed = parseLrc(res.syncedLrc);
       this.plainEl.classList.add("hidden");
       this.plainMode = false;
@@ -390,6 +392,7 @@ export class LyricsView {
       this.karaoke.hide();
     } else {
       this.statusEl.textContent = res.message;
+      this.statusEl.classList.remove("hidden");
       this.parsed = null;
       this.plainEl.classList.add("hidden");
       this.linesEl.classList.remove("hidden");

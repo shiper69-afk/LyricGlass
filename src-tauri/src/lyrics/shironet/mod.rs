@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use parse::{parse_lyrics_html, pick_best_search_hit, search_hits_from_html, SearchHit};
 use std::sync::LazyLock;
 
-const USER_AGENT: &str = "LyricGlass/0.9.0 https://github.com/shiper69-afk/LyricGlass";
+const USER_AGENT: &str = "LyricGlass/0.9.1 https://github.com/shiper69-afk/LyricGlass";
 const BASE: &str = "https://shironet.mako.co.il";
 const SEARCH_PATH: &str = "/searchSongs?type=lyrics&q=";
 const LYRICS_PATH: &str = "/artist?type=lyrics&lang=1";
@@ -159,6 +159,7 @@ pub fn fetch_from_network(artist: &str, track: &str) -> LyricsResponse {
             netease_match_title: None,
             netease_match_artist: None,
             netease_duration_ms: None,
+            lookup_trace: Vec::new(),
         },
         Err(reason) => {
             startup::step(&format!("shironet parse: {reason}"));

@@ -1,7 +1,7 @@
 use super::response::LyricsResponse;
 use serde::Deserialize;
 
-const USER_AGENT: &str = "LyricGlass/0.9.0 https://github.com/shiper69-afk/LyricGlass";
+const USER_AGENT: &str = "LyricGlass/0.9.1 https://github.com/shiper69-afk/LyricGlass";
 const BASE: &str = "https://lrclib.net";
 
 #[derive(Deserialize, Clone)]
@@ -70,6 +70,7 @@ fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> Lyr
             netease_match_title: None,
             netease_match_artist: None,
             netease_duration_ms: None,
+            lookup_trace: Vec::new(),
         }
     };
 

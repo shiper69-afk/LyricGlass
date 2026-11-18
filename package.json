@@ -1,8 +1,12 @@
 {
   "name": "lyricglass",
   "private": true,
+<<<<<<< HEAD
   "license": "GPL-3.0-or-later",
   "version": "0.9.0",
+=======
+  "version": "0.9.1",
+>>>>>>> 2cd5602 (fix: v0.9.1 isolate lyrics sources and improve NetEase search)
   "type": "module",
   "scripts": {
     "dev": "vite",

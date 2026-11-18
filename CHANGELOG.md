@@ -4,6 +4,14 @@ All notable user-facing changes to LyricGlass are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version lines align with squash-merged release pull requests where applicable.
 
+## [0.9.1] - 2026-11-18
+
+### Fixed
+
+- **Lyrics source isolation**: NetEase-only no longer invokes Shironet/LRCLIB; LRCLIB-only no longer invokes NetEase (Shironet remains Auto-only for Hebrew).
+- NetEase lookup uses **eapi cloud search** when the public web search returns the overseas encrypted payload; clearer per-source error messages and `lookupTrace` in diagnostics.
+- Duration matching: ±3 s default, or ±8 s when title and artist match exactly; picks closest duration among candidates.
+
 ## [0.9.0] - 2026-11-18
 
 ### Added
