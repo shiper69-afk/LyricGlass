@@ -409,7 +409,7 @@ pub fn fetch_from_network(
                 trace,
             );
         }
-        trace_push(&mut trace, "YRC parse produced no lines".into());
+        trace_push(&mut trace, "YRC parse produced no lines");
     }
 
     if let Some(lrc) = lyric
