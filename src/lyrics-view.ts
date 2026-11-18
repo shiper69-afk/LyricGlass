@@ -20,6 +20,7 @@ import {
   textLooksHebrew,
 } from "./plain-scroll";
 import { effectiveSyncOffsetMs, getBuiltinSyncLagMs } from "./sync-lag";
+import { lyricsProviderLabel } from "./lyrics-source-label";
 import {
   contextLineCount,
   estimateLineBlockPx,
@@ -52,11 +53,16 @@ export interface LyricsResponse {
   durationDeltaSec?: number | null;
   durationWarning?: boolean;
   lyricsSource?: string;
+  wordLevel?: boolean;
   shironetWrkid?: number | null;
   shironetPrfid?: number | null;
   shironetMatchTitle?: string | null;
   shironetMatchArtist?: string | null;
   shironetPageUrl?: string | null;
+  neteaseSongId?: number | null;
+  neteaseMatchTitle?: string | null;
+  neteaseMatchArtist?: string | null;
+  neteaseDurationMs?: number | null;
 }
 
 export interface LineDiagnostics {
@@ -100,6 +106,7 @@ export class LyricsView {
   private readonly plainEl: HTMLElement;
   private readonly plainScrollInner: HTMLDivElement;
   private readonly offsetEl: HTMLElement;
+  private readonly sourceBadgeEl: HTMLElement | null;
   private readonly durationWarnEl: HTMLElement | null;
 
   private plainMode = false;
@@ -121,6 +128,7 @@ export class LyricsView {
     this.plainScrollInner.dataset.testid = "plain-scroll-inner";
     this.plainEl.appendChild(this.plainScrollInner);
     this.offsetEl = root.querySelector("#sync-offset-label")!;
+    this.sourceBadgeEl = document.getElementById("lyrics-source-badge");
     this.durationWarnEl = document.getElementById("duration-warn");
     this.scrollInner = document.createElement("div");
     this.scrollInner.className = "lyrics-scroll-inner";
@@ -330,6 +338,7 @@ export class LyricsView {
   onLyricsLoading() {
     this.statusMessage = "Loading lyrics…";
     this.statusEl.textContent = this.statusMessage;
+    this.updateSourceBadge(null);
     this.scrollInner.replaceChildren();
     this.plainEl.classList.add("hidden");
     this.plainMode = false;
@@ -391,13 +400,37 @@ export class LyricsView {
     this.lastLineIndex = -2;
     this.lastTickPlaybackMs = -1;
     this.karaoke.invalidate();
+    this.updateSourceBadge(res);
+  }
+
+  private updateSourceBadge(res: LyricsResponse | null) {
+    if (!this.sourceBadgeEl) return;
+    if (!res || res.status === "not_found" || res.status === "error") {
+      this.sourceBadgeEl.textContent = "";
+      this.sourceBadgeEl.classList.add("hidden");
+      return;
+    }
+    const label = lyricsProviderLabel(res.lyricsSource, res.wordLevel);
+    if (!label) {
+      this.sourceBadgeEl.classList.add("hidden");
+      return;
+    }
+    this.sourceBadgeEl.textContent = label;
+    this.sourceBadgeEl.classList.remove("hidden");
   }
 
   private showDurationWarning(res: LyricsResponse) {
     if (!this.durationWarnEl) return;
-    const lrclib = res.lrclibDurationSec?.toFixed(1) ?? "?";
+    const durSec =
+      res.neteaseDurationMs != null
+        ? res.neteaseDurationMs / 1000
+        : res.lrclibDurationSec;
+    const lrclib = durSec?.toFixed(1) ?? "?";
     const delta = res.durationDeltaSec?.toFixed(1) ?? "?";
-    this.durationWarnEl.textContent = `Duration mismatch: LRCLIB ${lrclib}s vs Spotify (Δ ${delta}s) — timing may be off`;
+    const provider = res.lyricsSource?.startsWith("netease")
+      ? "NetEase"
+      : "LRCLIB";
+    this.durationWarnEl.textContent = `Duration mismatch: ${provider} ${lrclib}s vs Spotify (Δ ${delta}s) — timing may be off`;
     this.durationWarnEl.classList.remove("hidden");
   }
 

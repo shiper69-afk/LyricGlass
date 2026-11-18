@@ -122,6 +122,7 @@ struct AppearanceState {
     sung_highlight_color: String,
     karaoke_bouncer: String,
     lyrics_font: String,
+    lyrics_source: String,
     visualizer_kind: String,
     visualizer_intensity: f64,
     visualizer_opacity: f64,
@@ -135,6 +136,7 @@ fn appearance_from_service(service: &SharedLyricsService) -> AppearanceState {
         sung_highlight_color: service.get_sung_highlight_color(),
         karaoke_bouncer: service.get_karaoke_bouncer(),
         lyrics_font: service.get_lyrics_font(),
+        lyrics_source: service.get_lyrics_source(),
         visualizer_kind: service.get_visualizer_kind(),
         visualizer_intensity: service.get_visualizer_intensity(),
         visualizer_opacity: service.get_visualizer_opacity(),
@@ -320,6 +322,23 @@ fn set_lyrics_font(
 ) -> Result<String, String> {
     let value = service.set_lyrics_font(&font_id)?;
     emit_appearance(&service, &app);
+    Ok(value)
+}
+
+#[tauri::command]
+fn get_lyrics_source(service: tauri::State<SharedLyricsService>) -> String {
+    service.get_lyrics_source()
+}
+
+#[tauri::command]
+fn set_lyrics_source(
+    service: tauri::State<SharedLyricsService>,
+    mode: String,
+    app: AppHandle,
+) -> Result<String, String> {
+    let value = service.set_lyrics_source(&mode)?;
+    emit_appearance(&service, &app);
+    let _ = app.emit("lyrics-source-changed", value.clone());
     Ok(value)
 }
 
@@ -967,6 +986,8 @@ pub fn run() {
             reset_karaoke_colors,
             set_karaoke_bouncer,
             set_lyrics_font,
+            get_lyrics_source,
+            set_lyrics_source,
             set_visualizer_kind,
             set_visualizer_intensity,
             set_visualizer_opacity,

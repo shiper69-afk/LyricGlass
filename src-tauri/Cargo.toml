@@ -1,6 +1,6 @@
 [package]
 name = "lyricglass"
-version = "0.8.2"
+version = "0.9.0"
 description = "LyricGlass — synced lyrics overlay for Spotify on Windows"
 authors = ["LyricGlass"]
 license = "GPL-3.0-or-later"
@@ -26,6 +26,11 @@ urlencoding = "2"
 regex = "1"
 base64 = "0.22"
 encoding_rs = "0.8"
+aes = "0.8"
+ecb = "0.1"
+cipher = "0.4"
+md-5 = "0.10"
+deunicode = "1"
 [target.'cfg(windows)'.dependencies]
 realfft = "3.4"
 wasapi = "0.17"

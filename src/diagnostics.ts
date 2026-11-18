@@ -10,7 +10,7 @@ import {
   type WallpaperStatus,
 } from "./wallpaper-status";
 
-const APP_VERSION = "0.8.2";
+const APP_VERSION = "0.9.0";
 
 export interface FullMediaState extends MediaState {
   sourceAppId: string;
@@ -57,6 +57,7 @@ export function buildDiagnosticsBlock(
     "",
     "Lyrics source",
     `  provider: ${lyrics?.lyricsSource?.length ? lyrics.lyricsSource : "—"}`,
+    `  wordLevel: ${lyrics?.wordLevel ?? false}`,
     `  status: ${lyrics?.status ?? "—"}`,
     `  message: ${lyrics?.message ?? "—"}`,
     `  fromCache: ${lyrics?.fromCache ?? false}`,
@@ -68,6 +69,12 @@ export function buildDiagnosticsBlock(
     `  album: ${lyrics?.lrclibAlbumName ?? "—"}`,
     `  duration: ${lrclibDur}s`,
     `  delta vs GSMTC: ${lyrics?.durationDeltaSec != null ? lyrics.durationDeltaSec.toFixed(2) : "—"}s warning=${lyrics?.durationWarning ?? false}`,
+    "",
+    "NetEase match",
+    `  songId: ${lyrics?.neteaseSongId ?? "—"}`,
+    `  title: ${lyrics?.neteaseMatchTitle ?? "—"}`,
+    `  artist: ${lyrics?.neteaseMatchArtist ?? "—"}`,
+    `  durationMs: ${lyrics?.neteaseDurationMs ?? "—"}`,
     "",
     "Shironet match",
     `  wrkid: ${lyrics?.shironetWrkid ?? "—"}`,

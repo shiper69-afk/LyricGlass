@@ -1,7 +1,7 @@
 use super::response::LyricsResponse;
 use serde::Deserialize;
 
-const USER_AGENT: &str = "LyricGlass/0.8.2 https://github.com/shiper69-afk/LyricGlass";
+const USER_AGENT: &str = "LyricGlass/0.9.0 https://github.com/shiper69-afk/LyricGlass";
 const BASE: &str = "https://lrclib.net";
 
 #[derive(Deserialize, Clone)]
@@ -41,6 +41,10 @@ fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> Lyr
                   synced_lrc: Option<String>,
                   plain_lyrics: Option<String>,
                   instrumental: bool| {
+        let word_level = synced_lrc
+            .as_ref()
+            .map(|s| s.contains('<'))
+            .unwrap_or(false);
         LyricsResponse {
             status: status.into(),
             message,
@@ -49,6 +53,7 @@ fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> Lyr
             instrumental,
             from_cache: false,
             lyrics_source: lyrics_source.into(),
+            word_level,
             lrclib_id: Some(record.id),
             lrclib_duration_sec: record.duration,
             lrclib_track_name: record.track_name.clone(),
@@ -61,6 +66,10 @@ fn from_record(record: LrcRecord, source: &str, target_duration_sec: f64) -> Lyr
             shironet_match_title: None,
             shironet_match_artist: None,
             shironet_page_url: None,
+            netease_song_id: None,
+            netease_match_title: None,
+            netease_match_artist: None,
+            netease_duration_ms: None,
         }
     };
 

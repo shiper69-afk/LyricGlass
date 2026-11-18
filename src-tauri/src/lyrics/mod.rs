@@ -2,6 +2,7 @@ use crate::startup;
 
 mod cache;
 mod lrclib;
+mod netease;
 mod response;
 mod shironet;
 
@@ -18,13 +19,36 @@ fn lrclib_has_lyrics(res: &LyricsResponse) -> bool {
     matches!(res.status.as_str(), "synced" | "plain" | "instrumental")
 }
 
-fn should_try_shironet(artist: &str, track: &str, lrclib: &LyricsResponse) -> bool {
-    if lrclib_has_lyrics(lrclib) {
+fn netease_has_lyrics(res: &LyricsResponse) -> bool {
+    matches!(res.status.as_str(), "synced")
+}
+
+fn should_try_shironet(artist: &str, track: &str, primary: &LyricsResponse) -> bool {
+    if lrclib_has_lyrics(primary) || netease_has_lyrics(primary) {
         return false;
     }
     looks_hebrew(artist)
         || looks_hebrew(track)
-        || matches!(lrclib.status.as_str(), "not_found")
+        || matches!(primary.status.as_str(), "not_found")
+}
+
+fn apply_shironet_if_needed(
+    artist: &str,
+    track: &str,
+    primary: LyricsResponse,
+) -> LyricsResponse {
+    if !should_try_shironet(artist, track, &primary) {
+        return primary;
+    }
+    startup::step("lyrics: trying Shironet fallback");
+    let shironet = shironet::fetch_from_network(artist, track);
+    if shironet.status == "plain" && shironet.plain_lyrics.is_some() {
+        return shironet;
+    }
+    if primary.status == "not_found" && shironet.lyrics_source == "shironet" {
+        return shironet;
+    }
+    primary
 }
 
 impl LyricsService {
@@ -32,6 +56,14 @@ impl LyricsService {
         Ok(Self {
             cache: Mutex::new(LyricsCache::open()?),
         })
+    }
+
+    pub fn get_lyrics_source(&self) -> String {
+        self.cache.lock().get_lyrics_source()
+    }
+
+    pub fn set_lyrics_source(&self, mode: &str) -> Result<String, String> {
+        self.cache.lock().set_lyrics_source(mode)
     }
 
     pub fn get_sync_offset(
@@ -175,28 +207,50 @@ impl LyricsService {
         album: &str,
         duration_ms: u64,
     ) -> LyricsResponse {
-        if let Some(hit) = self.cache.lock().get(artist, track, album, duration_ms) {
+        let mode = self.get_lyrics_source();
+        if let Some(hit) = self
+            .cache
+            .lock()
+            .get(artist, track, album, duration_ms, &mode)
+        {
             startup::step("lyrics: cache hit");
             return hit;
         }
 
-        let mut result = lrclib::fetch_from_network(artist, track, album, duration_ms);
-
-        if should_try_shironet(artist, track, &result) {
-            startup::step("lyrics: trying Shironet fallback");
-            let shironet = shironet::fetch_from_network(artist, track);
-            if shironet.status == "plain" && shironet.plain_lyrics.is_some() {
-                result = shironet;
-            } else if result.status == "not_found" && shironet.lyrics_source == "shironet" {
-                result = shironet;
+        let result = match mode.as_str() {
+            "netease" => {
+                let ne = netease::fetch_from_network(artist, track, album, duration_ms);
+                apply_shironet_if_needed(artist, track, ne)
             }
-        }
+            "lrclib" => {
+                let lr = lrclib::fetch_from_network(artist, track, album, duration_ms);
+                apply_shironet_if_needed(artist, track, lr)
+            }
+            _ => {
+                // Auto: NetEase word-level when strict match, else LRCLIB, else Shironet
+                if duration_ms > 0 {
+                    let ne = netease::fetch_from_network(artist, track, album, duration_ms);
+                    if netease_has_lyrics(&ne) {
+                        ne
+                    } else {
+                        let lr = lrclib::fetch_from_network(artist, track, album, duration_ms);
+                        apply_shironet_if_needed(artist, track, lr)
+                    }
+                } else {
+                    let lr = lrclib::fetch_from_network(artist, track, album, duration_ms);
+                    apply_shironet_if_needed(artist, track, lr)
+                }
+            }
+        };
 
-        if let Err(e) = self
-            .cache
-            .lock()
-            .put(artist, track, album, duration_ms, &result)
-        {
+        if let Err(e) = self.cache.lock().put(
+            artist,
+            track,
+            album,
+            duration_ms,
+            &mode,
+            &result,
+        ) {
             startup::step(&format!("lyrics: cache write failed: {e}"));
         }
         result

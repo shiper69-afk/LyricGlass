@@ -10,9 +10,12 @@ pub struct LyricsResponse {
     pub instrumental: bool,
     #[serde(default)]
     pub from_cache: bool,
-    /// `lrclib-synced` | `lrclib-plain` | `shironet` | `instrumental` | empty
+    /// `lrclib-synced` | `lrclib-plain` | `netease-yrc` | `netease-synced` | `shironet` | `instrumental` | empty
     #[serde(default)]
     pub lyrics_source: String,
+    /// True when per-word timestamps are present (NetEase YRC or enhanced LRC).
+    #[serde(default)]
+    pub word_level: bool,
     pub lrclib_id: Option<i64>,
     pub lrclib_duration_sec: Option<f64>,
     pub lrclib_track_name: Option<String>,
@@ -26,6 +29,10 @@ pub struct LyricsResponse {
     pub shironet_match_title: Option<String>,
     pub shironet_match_artist: Option<String>,
     pub shironet_page_url: Option<String>,
+    pub netease_song_id: Option<i64>,
+    pub netease_match_title: Option<String>,
+    pub netease_match_artist: Option<String>,
+    pub netease_duration_ms: Option<u64>,
 }
 
 impl LyricsResponse {
@@ -46,6 +53,7 @@ impl LyricsResponse {
             instrumental: false,
             from_cache: false,
             lyrics_source: String::new(),
+            word_level: false,
             lrclib_id: None,
             lrclib_duration_sec: None,
             lrclib_track_name: None,
@@ -58,6 +66,10 @@ impl LyricsResponse {
             shironet_match_title: None,
             shironet_match_artist: None,
             shironet_page_url: None,
+            netease_song_id: None,
+            netease_match_title: None,
+            netease_match_artist: None,
+            netease_duration_ms: None,
         }
     }
 }

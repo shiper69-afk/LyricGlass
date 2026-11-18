@@ -17,6 +17,7 @@ import {
   type LyricsResponse,
 } from "./lyrics-view";
 import { plainSourceLabel } from "./plain-scroll";
+import { type LyricsSourceMode } from "./lyrics-source-label";
 import { applyWallpaperLayout } from "./wallpaper-ui";
 import {
   applyDesktopWallpaperCss,
@@ -53,6 +54,7 @@ interface AppearanceState {
   sungHighlightColor: string;
   karaokeBouncer: string;
   lyricsFont: string;
+  lyricsSource: string;
   visualizerKind: string;
   visualizerIntensity: number;
   visualizerOpacity: number;
@@ -118,6 +120,7 @@ const els = {
   visualizerPicker: document.getElementById("visualizer-picker") as HTMLDivElement,
   visualizerIntensity: document.getElementById("visualizer-intensity") as HTMLInputElement,
   visualizerOpacity: document.getElementById("visualizer-opacity") as HTMLInputElement,
+  lyricsSourceSelect: document.getElementById("lyrics-source-select") as HTMLSelectElement,
 };
 
 let latestMedia: FullMediaState | null = null;
@@ -223,6 +226,10 @@ function applyAppearanceSettings(state: AppearanceState) {
   applyKaraokeColors(state.karaokeBallColor, state.sungHighlightColor);
   applyBouncerSelection(state.karaokeBouncer ?? "glow-orb");
   void applyLyricsFontSelection(state.lyricsFont ?? "default");
+  const src = (state.lyricsSource ?? "auto") as LyricsSourceMode;
+  if (els.lyricsSourceSelect.value !== src) {
+    els.lyricsSourceSelect.value = src;
+  }
   applyVisualizerAppearance(state);
 }
 
@@ -236,6 +243,7 @@ function buildVisualizerPickerUi() {
       sungHighlightColor: els.sungColor.value,
       karaokeBouncer: "glow-orb",
       lyricsFont: "default",
+      lyricsSource: els.lyricsSourceSelect.value,
       visualizerKind: id,
       visualizerIntensity: Number(els.visualizerIntensity.value) / 100,
       visualizerOpacity: Number(els.visualizerOpacity.value) / 100,
@@ -502,6 +510,17 @@ els.karaokeToggle.addEventListener("change", () => {
   void invoke("set_karaoke_ball", { enabled: els.karaokeToggle.checked });
 });
 
+els.lyricsSourceSelect.addEventListener("change", () => {
+  void (async () => {
+    try {
+      await invoke("set_lyrics_source", { mode: els.lyricsSourceSelect.value });
+    } catch {
+      /* harness */
+    }
+    if (latestMedia) void loadLyrics(latestMedia);
+  })();
+});
+
 els.ballColor.addEventListener("input", () => {
   applyKaraokeColors(els.ballColor.value, els.sungColor.value);
   els.bouncerPicker
@@ -597,6 +616,12 @@ async function boot() {
   await listen<AppearanceState>("appearance-state", (e) =>
     applyAppearanceSettings(e.payload),
   );
+  await listen<string>("lyrics-source-changed", (e) => {
+    if (els.lyricsSourceSelect.value !== e.payload) {
+      els.lyricsSourceSelect.value = e.payload;
+    }
+    if (latestMedia) void loadLyrics(latestMedia);
+  });
   await listen<number>("sync-offset-absolute", (e) => {
     lyricsView.setSyncOffsetAbsolute(e.payload);
     updateTimingReadout(e.payload);

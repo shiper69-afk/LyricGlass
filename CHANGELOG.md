@@ -4,6 +4,19 @@ All notable user-facing changes to LyricGlass are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version lines align with squash-merged release pull requests where applicable.
 
+## [0.9.0] - 2026-11-18
+
+### Added
+
+- **NetEase Cloud Music** as an optional lyrics provider: web search + eapi `song/lyric/v1` for **YRC** word-level lyrics, converted to enhanced LRC for karaoke.
+- **Lyrics source** setting (General tab): **Auto** (NetEase when strict match, else LRCLIB, then Shironet), **LRCLIB only**, **NetEase only**; persisted in SQLite; changing it reloads the current track.
+- Strict title/artist/duration matching (~3 s) so the wrong song is never shown; Shironet Hebrew fallback unchanged in Auto/LRCLIB modes.
+- Subtle on-screen and diagnostics labels for lyrics provenance (`NetEase · word`, `LRCLIB`, `estimated`, `Shironet`).
+
+### Changed
+
+- Karaoke uses real YRC word timestamps when available; sync offset (+600 ms built-in + user slider) applies the same way for all providers.
+
 ## [0.8.2] - 2026-11-16
 
 [#9](https://github.com/shiper69-afk/LyricGlass/pull/9)
@@ -136,6 +149,7 @@ Initial Phase 1 merge versioning for [#2](https://github.com/shiper69-afk/LyricG
 
 - Phase 0 spike: Tauri shell, GSMTC Spotify listener, transparent overlay, WorkerW wallpaper proof-of-concept, startup logging.
 
+[0.9.0]: https://github.com/shiper69-afk/LyricGlass/compare/5908ccd...HEAD
 [0.8.2]: https://github.com/shiper69-afk/LyricGlass/compare/bed7c26...5908ccd
 [0.8.1]: https://github.com/shiper69-afk/LyricGlass/compare/20ac75d...bed7c26
 [0.7.2]: https://github.com/shiper69-afk/LyricGlass/compare/cdb7b81...20ac75d
