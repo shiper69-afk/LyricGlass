@@ -284,6 +284,28 @@ body.wallpaper-mode,
   font-variant-numeric: tabular-nums;
 }
 
+.lyrics-source-row {
+  grid-template-columns: 72px 1fr;
+}
+
+.lyrics-source-select {
+  width: 100%;
+  font-size: 11px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--text) 18%, transparent);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  color: inherit;
+}
+
+.lyrics-source-badge {
+  font-size: 10px;
+  opacity: 0.55;
+  letter-spacing: 0.02em;
+  margin: 0 0 4px;
+  text-align: center;
+}
+
 .mini-btn {
   font-size: 10px;
   padding: 2px 6px;

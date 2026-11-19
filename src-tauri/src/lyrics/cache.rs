@@ -69,7 +69,7 @@ impl LyricsCache {
         Self { conn: None }
     }
 
-    fn key(artist: &str, track: &str, album: &str, duration_ms: u64) -> String {
+    fn track_key(artist: &str, track: &str, album: &str, duration_ms: u64) -> String {
         let norm = |s: &str| s.trim().to_lowercase();
         let duration_sec = duration_ms / 1000;
         format!(
@@ -77,6 +77,20 @@ impl LyricsCache {
             norm(artist),
             norm(track),
             norm(album)
+        )
+    }
+
+    fn lyrics_cache_key(
+        artist: &str,
+        track: &str,
+        album: &str,
+        duration_ms: u64,
+        lyrics_source: &str,
+    ) -> String {
+        format!(
+            "{}|{}",
+            Self::track_key(artist, track, album, duration_ms),
+            lyrics_source.trim().to_lowercase()
         )
     }
 
@@ -93,9 +107,10 @@ impl LyricsCache {
         track: &str,
         album: &str,
         duration_ms: u64,
+        lyrics_source: &str,
     ) -> Option<LyricsResponse> {
         let conn = self.conn.as_ref()?;
-        let key = Self::key(artist, track, album, duration_ms);
+        let key = Self::lyrics_cache_key(artist, track, album, duration_ms, lyrics_source);
         let now = Self::now();
         let mut stmt = conn
             .prepare("SELECT response_json FROM lyrics_cache WHERE cache_key = ?1 AND expires_at > ?2")
@@ -117,7 +132,7 @@ impl LyricsCache {
             Some(c) => c,
             None => return 0,
         };
-        let key = Self::key(artist, track, album, duration_ms);
+        let key = Self::track_key(artist, track, album, duration_ms);
         conn.query_row(
             "SELECT offset_ms FROM sync_offset WHERE cache_key = ?1",
             params![key],
@@ -138,7 +153,7 @@ impl LyricsCache {
             Some(c) => c,
             None => return Ok(()),
         };
-        let key = Self::key(artist, track, album, duration_ms);
+        let key = Self::track_key(artist, track, album, duration_ms);
         conn.execute(
             "INSERT OR REPLACE INTO sync_offset (cache_key, offset_ms) VALUES (?1, ?2)",
             params![key, offset_ms],
@@ -278,6 +293,9 @@ impl LyricsCache {
     pub const DEFAULT_KARAOKE_BOUNCER: &'static str = "glow-orb";
 
     pub const DEFAULT_LYRICS_FONT: &'static str = "default";
+
+    pub const DEFAULT_LYRICS_SOURCE: &'static str = "auto";
+    const LYRICS_SOURCE_IDS: &[&str] = &["auto", "lrclib", "netease"];
 
     pub const DEFAULT_VISUALIZER_KIND: &'static str = "off";
     pub const DEFAULT_VISUALIZER_INTENSITY: f64 = 1.5;
@@ -616,19 +634,56 @@ impl LyricsCache {
         Ok(next)
     }
 
+    pub fn get_lyrics_source(&self) -> String {
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Self::DEFAULT_LYRICS_SOURCE.to_string(),
+        };
+        Self::read_setting_string(conn, "lyrics_source")
+            .map(|id| {
+                let id = id.trim().to_lowercase();
+                if Self::LYRICS_SOURCE_IDS.contains(&id.as_str()) {
+                    id
+                } else {
+                    Self::DEFAULT_LYRICS_SOURCE.to_string()
+                }
+            })
+            .unwrap_or_else(|| Self::DEFAULT_LYRICS_SOURCE.to_string())
+    }
+
+    pub fn set_lyrics_source(&self, mode: &str) -> Result<String, String> {
+        let id = mode.trim().to_lowercase();
+        let normalized = if Self::LYRICS_SOURCE_IDS.contains(&id.as_str()) {
+            id
+        } else {
+            Self::DEFAULT_LYRICS_SOURCE.to_string()
+        };
+        let conn = match &self.conn {
+            Some(c) => c,
+            None => return Ok(normalized),
+        };
+        conn.execute(
+            "INSERT OR REPLACE INTO app_settings (key, value) VALUES ('lyrics_source', ?1)",
+            params![normalized],
+        )
+        .map_err(|e| e.to_string())?;
+        Ok(normalized)
+    }
+
     pub fn put(
         &self,
         artist: &str,
         track: &str,
         album: &str,
         duration_ms: u64,
+        lyrics_source: &str,
         response: &LyricsResponse,
     ) -> Result<(), String> {
         let conn = match &self.conn {
             Some(c) => c,
             None => return Ok(()),
         };
-        let key = Self::key(artist, track, album, duration_ms);
+        let key = Self::lyrics_cache_key(artist, track, album, duration_ms, lyrics_source);
         let ttl = match response.status.as_str() {
             "not_found" | "error" => NOT_FOUND_TTL_SECS,
             _ => FOUND_TTL_SECS,

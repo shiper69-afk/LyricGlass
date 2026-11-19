@@ -16,6 +16,7 @@ export interface WallpaperSurfaceAppearance {
   sungHighlightColor: string;
   karaokeBouncer: string;
   lyricsFont: string;
+  lyricsSource: string;
   visualizerKind: string;
   visualizerIntensity: number;
   visualizerOpacity: number;

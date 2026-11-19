@@ -10,7 +10,7 @@
     <div id="app">
       <header class="titlebar">
         <span class="brand" data-tauri-drag-region>
-          LyricGlass <small id="app-version">0.8.2</small>
+          LyricGlass <small id="app-version">0.9.1</small>
         </span>
         <div class="titlebar-tools">
           <button
@@ -110,6 +110,14 @@
                   <button type="button" id="timing-reset" class="mini-btn">Reset</button>
                 </label>
                 <span id="timing-readout" class="timing-readout">0.0s</span>
+                <label class="setting-row lyrics-source-row">
+                  <span>Lyrics source</span>
+                  <select id="lyrics-source-select" class="lyrics-source-select" aria-label="Lyrics source">
+                    <option value="auto">Auto</option>
+                    <option value="lrclib">LRCLIB only</option>
+                    <option value="netease">NetEase only</option>
+                  </select>
+                </label>
                 <label class="setting-toggle">
                   <input type="checkbox" id="karaoke-ball-toggle" checked />
                   <span>Karaoke</span>
@@ -200,6 +208,7 @@
         <p id="duration-warn" class="duration-warn hidden" role="status"></p>
         <p id="lyrics-status" class="lyrics-status">Waiting for Spotify…</p>
         <p id="sync-offset-label" class="sync-offset" aria-live="polite"></p>
+        <p id="lyrics-source-badge" class="lyrics-source-badge hidden" aria-live="polite"></p>
         <div id="lyrics-lines" class="lyrics-lines" aria-live="polite"></div>
         <div id="lyrics-plain" class="lyrics-plain hidden" dir="auto"></div>
         <p class="plain-badge hidden" id="plain-badge">Untimed lyrics</p>

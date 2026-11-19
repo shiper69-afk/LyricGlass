@@ -4,6 +4,37 @@ All notable user-facing changes to LyricGlass are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version lines align with squash-merged release pull requests where applicable.
 
+## [0.9.1] - 2026-11-19
+
+[#11](https://github.com/shiper69-afk/LyricGlass/pull/11)
+
+### Fixed
+
+- **Lyrics source isolation**: **NetEase only** never calls LRCLIB or Shironet; **LRCLIB only** never calls NetEase (Shironet stays **Auto**-only for Hebrew).
+- Empty and error text names the **chosen source** and reason (for example `No lyrics on NetEase (no match)`, `NetEase unavailable (request failed)`), instead of surfacing another provider’s message.
+- **NetEase search**: dual queries (`title artist` and title alone), merge top candidates, and **eapi `cloudsearch/pc`** fallback when overseas **web search** returns the encrypted `abroad` payload instead of song JSON.
+- **Matcher**: ±3 s duration by default; ±8 s when normalized title and artist match exactly; never accept title/artist mismatch; prefer closest duration.
+- **Diagnostics**: step-by-step **`lookupTrace`** for NetEase lookups (query, candidate counts, rejection reasons, YRC present).
+
+### Added
+
+- Release packaging continues **0.9.0** features below; this patch is recommended over **0.9.0** for overseas NetEase and single-source modes.
+
+## [0.9.0] - 2026-11-18
+
+[#11](https://github.com/shiper69-afk/LyricGlass/pull/11) (development tag; shipped to users as **0.9.1**)
+
+### Added
+
+- **NetEase Cloud Music** as an optional lyrics provider: web search + eapi `song/lyric/v1` for **YRC** word-level lyrics, converted to enhanced LRC for karaoke.
+- **Lyrics source** setting (General tab): **Auto** (NetEase when strict match, else LRCLIB, then Shironet), **LRCLIB only**, **NetEase only**; persisted in SQLite; changing it reloads the current track.
+- Strict title/artist/duration matching so the wrong song is never shown.
+- **Source badge** on the lyrics overlay and matching diagnostics label when lyrics are shown (`NetEase · word`, `LRCLIB`, `estimated`, `Shironet`); hidden when no lyrics.
+
+### Changed
+
+- Karaoke uses real YRC word timestamps when available; sync offset (+600 ms built-in + user slider) applies the same way for all providers.
+
 ## [0.8.2] - 2026-11-16
 
 [#9](https://github.com/shiper69-afk/LyricGlass/pull/9)
@@ -136,6 +167,8 @@ Initial Phase 1 merge versioning for [#2](https://github.com/shiper69-afk/LyricG
 
 - Phase 0 spike: Tauri shell, GSMTC Spotify listener, transparent overlay, WorkerW wallpaper proof-of-concept, startup logging.
 
+[0.9.1]: https://github.com/shiper69-afk/LyricGlass/compare/4b10873...HEAD
+[0.9.0]: https://github.com/shiper69-afk/LyricGlass/compare/5908ccd...4b10873
 [0.8.2]: https://github.com/shiper69-afk/LyricGlass/compare/bed7c26...5908ccd
 [0.8.1]: https://github.com/shiper69-afk/LyricGlass/compare/20ac75d...bed7c26
 [0.7.2]: https://github.com/shiper69-afk/LyricGlass/compare/cdb7b81...20ac75d

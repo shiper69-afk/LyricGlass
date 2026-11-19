@@ -9,8 +9,11 @@ The overlay can run as a normal always-on-top window or attach behind desktop ic
 ### Spotify sync and lyrics
 
 - Reads playback state from **Windows Global System Media Transport Controls (GSMTC)**—no Spotify API login.
-- Fetches **synced (LRC)** lyrics from [LRCLIB](https://lrclib.net) when available; results are cached in a local SQLite database.
-- **Shironet** fallback for Hebrew tracks: when LRCLIB has no usable lyrics and the artist/title look Hebrew (or LRCLIB reports not found), the app tries [Shironet](https://shironet.mako.co.il) for plain lyrics (shown as untimed).
+- **Lyrics source** (General settings): **Auto** (default), **LRCLIB only**, or **NetEase only**—stored in SQLite; changing it reloads the current track.
+- **Auto**: tries **NetEase Cloud Music** first when Spotify duration is known and a **strict** title/artist/duration match succeeds, using unofficial `song/lyric/v1` **YRC** word-level lyrics when available; otherwise [LRCLIB](https://lrclib.net); then **Shironet** for Hebrew fallback as before.
+- **NetEase** uses short HTTP timeouts (~4 s), caches like LRCLIB, dual search queries plus eapi cloud search when web search is blocked overseas, and never shows a song unless title and artist match and duration fits (±3 s, or ±8 s when title and artist match exactly). Diagnostics include a **lookup trace** for troubleshooting.
+- When lyrics are on screen, a small **source badge** shows the active provider (hidden when there are no lyrics).
+- **Shironet** fallback for Hebrew tracks when the primary source has no lyrics: plain, untimed text from [Shironet](https://shironet.mako.co.il).
 - **RTL Hebrew** support: `dir="auto"` on lyric lines; karaoke bouncers that trail left are mirrored in RTL (Comet, Paper Plane).
 - **Per-track timing slider** (−10 s … +10 s, 100 ms steps) plus hotkeys; stored offset is per track. Playback position uses an additional built-in **+600 ms** compensation for typical Microsoft Store Spotify GSMTC lag (effective offset = stored value + 600 ms unless you adjust the slider).
 - Optional **diagnostics** panel (timeline, GSMTC fields, wallpaper status); **sync mark** hotkey writes a snapshot to the log.
@@ -19,7 +22,7 @@ The overlay can run as a normal always-on-top window or attach behind desktop ic
 
 - Optional **karaoke ball** with per-word motion when timed lyrics exist; ball and **sung-line** colors are configurable.
 - **12 SVG bouncers** (default **Glow Orb**): Glow Orb, Music Note, Spark, Heart, Glass Drop, Firefly, Comet, EQ Pulse, Mic, Paper Plane, Pixel, Crescent.
-- Smooth line scrolling, word-level timing from LRC tags when present, otherwise estimated from line duration and syllable weighting.
+- Smooth line scrolling; **per-word karaoke** from NetEase YRC or enhanced LRC tags when present, otherwise estimated from line duration and syllable weighting. A small label shows the active source (`NetEase · word`, `LRCLIB`, `estimated`, `Shironet`).
 
 ### Appearance and settings
 
@@ -27,7 +30,7 @@ Settings open from the gear menu with four tabs:
 
 | Tab | Contents |
 | --- | --- |
-| **General** | Overlay opacity, timing offset, karaoke on/off, wallpaper mode toggle, ball/sung colors, reset colors, open log folder |
+| **General** | Overlay opacity, timing offset, **lyrics source**, karaoke on/off, wallpaper mode toggle, ball/sung colors, reset colors, open log folder |
 | **Bouncer** | 12-tile bouncer picker |
 | **Font** | Bundled lyrics fonts (18 choices including system default) |
 | **Visualizer** | Style grid, intensity (0–3), opacity (0–100 %) |
