@@ -11,7 +11,8 @@ The overlay can run as a normal always-on-top window or attach behind desktop ic
 - Reads playback state from **Windows Global System Media Transport Controls (GSMTC)**—no Spotify API login.
 - **Lyrics source** (General settings): **Auto** (default), **LRCLIB only**, or **NetEase only**—stored in SQLite; changing it reloads the current track.
 - **Auto**: tries **NetEase Cloud Music** first when Spotify duration is known and a **strict** title/artist/duration match succeeds, using unofficial `song/lyric/v1` **YRC** word-level lyrics when available; otherwise [LRCLIB](https://lrclib.net); then **Shironet** for Hebrew fallback as before.
-- **NetEase** uses short HTTP timeouts (~4 s), caches like LRCLIB, and never shows a song unless title, artist, and duration (±3 s) all match.
+- **NetEase** uses short HTTP timeouts (~4 s), caches like LRCLIB, dual search queries plus eapi cloud search when web search is blocked overseas, and never shows a song unless title and artist match and duration fits (±3 s, or ±8 s when title and artist match exactly). Diagnostics include a **lookup trace** for troubleshooting.
+- When lyrics are on screen, a small **source badge** shows the active provider (hidden when there are no lyrics).
 - **Shironet** fallback for Hebrew tracks when the primary source has no lyrics: plain, untimed text from [Shironet](https://shironet.mako.co.il).
 - **RTL Hebrew** support: `dir="auto"` on lyric lines; karaoke bouncers that trail left are mirrored in RTL (Comet, Paper Plane).
 - **Per-track timing slider** (−10 s … +10 s, 100 ms steps) plus hotkeys; stored offset is per track. Playback position uses an additional built-in **+600 ms** compensation for typical Microsoft Store Spotify GSMTC lag (effective offset = stored value + 600 ms unless you adjust the slider).
