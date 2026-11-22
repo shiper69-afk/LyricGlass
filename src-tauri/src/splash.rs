@@ -32,10 +32,11 @@ pub fn arm_splash_watchdog(app: &AppHandle) {
     let handle = app.clone();
     std::thread::spawn(move || {
         std::thread::sleep(std::time::Duration::from_millis(4000));
+        let watchdog = handle.clone();
         let _ = handle.run_on_main_thread(move || {
-            if handle.get_webview_window("splash").is_some() {
+            if watchdog.get_webview_window("splash").is_some() {
                 startup::step("splash: watchdog handoff (timeout)");
-                finish_startup_splash(&handle);
+                finish_startup_splash(&watchdog);
             }
         });
     });
