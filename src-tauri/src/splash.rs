@@ -95,10 +95,15 @@ pub fn complete_startup_splash(app: AppHandle) -> Result<(), String> {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Mutex;
+
     use super::should_skip_splash;
+
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn skip_splash_is_false_without_env() {
+        let _guard = ENV_LOCK.lock().unwrap();
         std::env::remove_var("LYRICGLASS_SKIP_SPLASH");
         std::env::remove_var("LYRICGLASS_SMOKE_DIAG");
         std::env::remove_var("LYRICGLASS_SMOKE_SINGLE_INSTANCE");
@@ -108,6 +113,7 @@ mod tests {
 
     #[test]
     fn skip_splash_when_ci_env_set() {
+        let _guard = ENV_LOCK.lock().unwrap();
         std::env::set_var("CI", "true");
         assert!(should_skip_splash());
         std::env::remove_var("CI");
