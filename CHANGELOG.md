@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- **Startup splash**: one-shot Shiperverse Labs animation (2.6 s) on a dark `#161220` window before the lyrics overlay appears; GSMTC and lyrics work start in the background without waiting for the splash. The splash WebView is created only for real launches (skipped when `CI=true`, smoke diagnostics, or `LYRICGLASS_SKIP_SPLASH`).
+- **Startup splash**: one-shot Shiperverse Labs animation (2.6 s) on a dark `#161220` window before the lyrics overlay appears; GSMTC and lyrics work start in the background without waiting for the splash. The splash WebView is created only for real launches (skipped when `CI=true`, smoke diagnostics, or `LYRICGLASS_SKIP_SPLASH`). The 720×1080 artwork is letterboxed with `object-fit: contain` so the wordmark is not clipped at high DPI.
 - **About** settings tab with Shiperverse Labs branding and copyright.
 
 ### Changed

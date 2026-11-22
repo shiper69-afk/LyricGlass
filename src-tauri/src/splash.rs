@@ -49,7 +49,8 @@ fn ensure_splash_window(app: &AppHandle) -> Result<(), String> {
     }
     WebviewWindowBuilder::new(app, "splash", WebviewUrl::App("splash.html".into()))
         .title("LyricGlass")
-        .inner_size(400.0, 560.0)
+        // 2:3 art (720×1080) plus stage padding so descenders are not clipped at 125–150% DPI.
+        .inner_size(448.0, 736.0)
         .decorations(false)
         .transparent(false)
         .always_on_top(true)
