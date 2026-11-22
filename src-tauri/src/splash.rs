@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
 
 use crate::startup;
 
@@ -43,20 +43,47 @@ pub fn arm_splash_watchdog(app: &AppHandle) {
     });
 }
 
+fn ensure_splash_window(app: &AppHandle) -> Result<(), String> {
+    if app.get_webview_window("splash").is_some() {
+        return Ok(());
+    }
+    WebviewWindowBuilder::new(app, "splash", WebviewUrl::App("splash.html".into()))
+        .title("LyricGlass")
+        .inner_size(400.0, 560.0)
+        .decorations(false)
+        .transparent(false)
+        .always_on_top(true)
+        .resizable(false)
+        .shadow(false)
+        .skip_taskbar(true)
+        .center()
+        .build()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 pub fn initialize_startup_windows(app: &AppHandle) {
     if should_skip_splash() {
-        startup::step("splash: skipped (smoke or LYRICGLASS_SKIP_SPLASH)");
+        startup::step("splash: skipped (smoke, CI, or LYRICGLASS_SKIP_SPLASH)");
         finish_startup_splash(app);
         return;
     }
     if let Some(main) = app.get_webview_window("main") {
         let _ = main.hide();
     }
-    if let Some(splash) = app.get_webview_window("splash") {
-        let _ = splash.show();
-        let _ = splash.set_focus();
+    match ensure_splash_window(app) {
+        Ok(()) => {
+            if let Some(splash) = app.get_webview_window("splash") {
+                let _ = splash.show();
+                let _ = splash.set_focus();
+            }
+            startup::step("splash: showing startup animation");
+        }
+        Err(e) => {
+            startup::step(&format!("splash: create failed ({e}) — handoff to main"));
+            finish_startup_splash(app);
+        }
     }
-    startup::step("splash: showing startup animation");
 }
 
 #[tauri::command]
