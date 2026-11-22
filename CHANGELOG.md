@@ -4,6 +4,17 @@ All notable user-facing changes to LyricGlass are documented here.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and version lines align with squash-merged release pull requests where applicable.
 
+## [0.9.2] - 2026-11-22
+
+### Added
+
+- **Startup splash**: one-shot Shiperverse Labs animation (2.6 s) on a dark `#161220` window before the lyrics overlay appears; GSMTC and lyrics work start in the background without waiting for the splash.
+- **About** settings tab with Shiperverse Labs branding and copyright.
+
+### Changed
+
+- Windows installer and app metadata list **Shiperverse Labs** as publisher; copyright `(C) 2026 Shiperverse Labs`.
+
 ## [0.9.1] - 2026-11-19
 
 [#11](https://github.com/shiper69-afk/LyricGlass/pull/11)
@@ -167,7 +178,8 @@ Initial Phase 1 merge versioning for [#2](https://github.com/shiper69-afk/LyricG
 
 - Phase 0 spike: Tauri shell, GSMTC Spotify listener, transparent overlay, WorkerW wallpaper proof-of-concept, startup logging.
 
-[0.9.1]: https://github.com/shiper69-afk/LyricGlass/compare/4b10873...HEAD
+[0.9.2]: https://github.com/shiper69-afk/LyricGlass/compare/1565ae3...HEAD
+[0.9.1]: https://github.com/shiper69-afk/LyricGlass/compare/4b10873...1565ae3
 [0.9.0]: https://github.com/shiper69-afk/LyricGlass/compare/5908ccd...4b10873
 [0.8.2]: https://github.com/shiper69-afk/LyricGlass/compare/bed7c26...5908ccd
 [0.8.1]: https://github.com/shiper69-afk/LyricGlass/compare/20ac75d...bed7c26

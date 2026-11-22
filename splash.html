@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LyricGlass</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #161220;
+      }
+      #splash-stage {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #splash-img {
+        width: min(92vw, 360px);
+        height: auto;
+        display: block;
+        pointer-events: none;
+        user-select: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="splash-stage">
+      <img
+        id="splash-img"
+        src="/shiperverse/splash.webp"
+        width="720"
+        height="1080"
+        alt="Shiperverse Labs"
+        decoding="async"
+      />
+    </div>
+    <script type="module" src="/src/splash-main.ts"></script>
+  </body>
+</html>

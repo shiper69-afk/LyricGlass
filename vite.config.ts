@@ -15,6 +15,7 @@ export default defineConfig(() => ({
     rollupOptions: {
       input: {
         main: "index.html",
+        splash: "splash.html",
         scrollHarness: "scroll-harness.html",
         hebrewHarness: "hebrew-harness.html",
         gapHarness: "gap-harness.html",

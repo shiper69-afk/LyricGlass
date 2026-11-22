@@ -201,6 +201,7 @@ mod imp {
 
     pub fn reveal_main_window(app: &AppHandle, trigger: &str) {
         startup::step(&format!("focus [{trigger}]: begin"));
+        crate::splash::close_splash_window(app);
         detach_wallpaper_for_ui_focus(app);
         let Some(window) = ensure_main_window(app) else {
             startup::step(&format!("focus [{trigger}]: aborted — no main window"));
@@ -307,6 +308,7 @@ mod imp {
 
     pub fn reveal_main_window(app: &AppHandle, trigger: &str) {
         startup::step(&format!("focus [{trigger}]: begin (stub)"));
+        crate::splash::close_splash_window(app);
         if let Some(w) = app.get_webview_window("main") {
             let _ = w.unminimize();
             let _ = w.show();

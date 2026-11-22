@@ -67,6 +67,11 @@ Settings open from the gear menu with four tabs:
 
 **11 tiles** in the grid (10 animated styles plus Off).
 
+### Startup and company
+
+- On cold start, a short **Shiperverse Labs** splash (animated WebP on `#161220`) plays once, then the lyrics overlay appears. Media sync and lyrics fetching start immediately in the background.
+- **Settings → About** shows Shiperverse Labs branding. LyricGlass is published by **Shiperverse Labs** (GPL-3.0-or-later; see `LICENSE`).
+
 ### Tray, single instance, and updates
 
 - **Close (X)** hides the main window to the **system tray**; use the tray icon to show the window again or choose **Quit** to exit.

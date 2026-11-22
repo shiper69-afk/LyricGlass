@@ -11,7 +11,7 @@ use r#match::{
 use serde::Deserialize;
 use std::time::Duration;
 
-pub(crate) const USER_AGENT: &str = "LyricGlass/0.9.1 https://github.com/shiper69-afk/LyricGlass";
+pub(crate) const USER_AGENT: &str = "LyricGlass/0.9.2 https://github.com/shiper69-afk/LyricGlass";
 
 const EAPI_SEARCH_PATH: &str = "/api/cloudsearch/pc";
 

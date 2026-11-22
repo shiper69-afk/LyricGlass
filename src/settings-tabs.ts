@@ -1,8 +1,8 @@
-export type SettingsTab = "general" | "bouncer" | "font" | "visualizer";
+export type SettingsTab = "general" | "bouncer" | "font" | "visualizer" | "about";
 
 const STORAGE_KEY = "lyricglass-settings-tab";
 
-const VALID: SettingsTab[] = ["general", "bouncer", "font", "visualizer"];
+const VALID: SettingsTab[] = ["general", "bouncer", "font", "visualizer", "about"];
 
 export function readStoredSettingsTab(): SettingsTab {
   try {
