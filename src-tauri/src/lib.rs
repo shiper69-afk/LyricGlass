@@ -4,6 +4,7 @@ mod visualizer;
 mod visualizer_dsp;
 mod lyrics;
 mod media;
+mod splash;
 mod startup;
 mod window_focus;
 mod desktop_wallpaper;
@@ -1003,11 +1004,14 @@ pub fn run() {
             get_desktop_wallpaper_url,
             get_desktop_wallpaper_payload,
             get_wallpaper_surface_state,
+            splash::complete_startup_splash,
         ])
         .setup({
             let flags = flags.clone();
             move |app| {
                 startup::step("tauri setup: window shell");
+                splash::initialize_startup_windows(app.handle());
+                splash::arm_splash_watchdog(app.handle());
                 let service = app.state::<SharedLyricsService>();
                 {
                     let mut guard = flags.lock();

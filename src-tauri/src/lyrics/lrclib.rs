@@ -1,7 +1,7 @@
 use super::response::LyricsResponse;
 use serde::Deserialize;
 
-const USER_AGENT: &str = "LyricGlass/0.9.1 https://github.com/shiper69-afk/LyricGlass";
+const USER_AGENT: &str = "LyricGlass/0.9.2 https://github.com/shiper69-afk/LyricGlass";
 const BASE: &str = "https://lrclib.net";
 
 #[derive(Deserialize, Clone)]
