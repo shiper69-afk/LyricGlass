@@ -24,6 +24,23 @@ pub fn finish_startup_splash(app: &AppHandle) {
     startup::step("splash: handoff complete — main window shown");
 }
 
+/// If the splash WebView never calls `complete_startup_splash`, show main anyway.
+pub fn arm_splash_watchdog(app: &AppHandle) {
+    if should_skip_splash() {
+        return;
+    }
+    let handle = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(4000));
+        let _ = handle.run_on_main_thread(move || {
+            if handle.get_webview_window("splash").is_some() {
+                startup::step("splash: watchdog handoff (timeout)");
+                finish_startup_splash(&handle);
+            }
+        });
+    });
+}
+
 pub fn initialize_startup_windows(app: &AppHandle) {
     if should_skip_splash() {
         startup::step("splash: skipped (smoke or LYRICGLASS_SKIP_SPLASH)");

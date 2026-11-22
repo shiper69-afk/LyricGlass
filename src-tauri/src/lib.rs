@@ -1011,6 +1011,7 @@ pub fn run() {
             move |app| {
                 startup::step("tauri setup: window shell");
                 splash::initialize_startup_windows(app.handle());
+                splash::arm_splash_watchdog(app.handle());
                 let service = app.state::<SharedLyricsService>();
                 {
                     let mut guard = flags.lock();

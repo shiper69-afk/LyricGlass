@@ -44,9 +44,12 @@ jobs:
         run: |
           $exe = Resolve-Path "src-tauri/target/release/lyricglass.exe"
           Write-Host "Launching $exe for smoke test (diagnostics toggle)..."
-          $env:LYRICGLASS_SMOKE_DIAG = "1"
-          $env:LYRICGLASS_SMOKE_SINGLE_INSTANCE = "1"
-          $proc = Start-Process -FilePath $exe -PassThru
+          $smokeEnv = @{
+            LYRICGLASS_SMOKE_DIAG = "1"
+            LYRICGLASS_SMOKE_SINGLE_INSTANCE = "1"
+            LYRICGLASS_SKIP_SPLASH = "1"
+          }
+          $proc = Start-Process -FilePath $exe -PassThru -Environment $smokeEnv
           Start-Sleep -Seconds 22
           if ($proc.HasExited) {
             throw "lyricglass.exe exited early with code $($proc.ExitCode)"
