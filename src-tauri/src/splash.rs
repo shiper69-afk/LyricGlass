@@ -6,6 +6,7 @@ pub fn should_skip_splash() -> bool {
     std::env::var("LYRICGLASS_SKIP_SPLASH").is_ok()
         || std::env::var("LYRICGLASS_SMOKE_DIAG").is_ok()
         || std::env::var("LYRICGLASS_SMOKE_SINGLE_INSTANCE").is_ok()
+        || std::env::var("CI").ok().as_deref() == Some("true")
 }
 
 pub fn close_splash_window(app: &AppHandle) {
@@ -73,6 +74,14 @@ mod tests {
         std::env::remove_var("LYRICGLASS_SKIP_SPLASH");
         std::env::remove_var("LYRICGLASS_SMOKE_DIAG");
         std::env::remove_var("LYRICGLASS_SMOKE_SINGLE_INSTANCE");
+        std::env::remove_var("CI");
         assert!(!should_skip_splash());
+    }
+
+    #[test]
+    fn skip_splash_when_ci_env_set() {
+        std::env::set_var("CI", "true");
+        assert!(should_skip_splash());
+        std::env::remove_var("CI");
     }
 }
